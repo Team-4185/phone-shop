@@ -38,6 +38,13 @@
 
 	<build>
 		<!-- default plugins from parent -->
+		<plugins>
+			<plugin>
+				<groupId>org.springframework.boot</groupId>
+				<artifactId>spring-boot-maven-plugin</artifactId>
+				<version>3.5.0</version>
+			</plugin>
+		</plugins>
 	</build>
 	
 </project>
