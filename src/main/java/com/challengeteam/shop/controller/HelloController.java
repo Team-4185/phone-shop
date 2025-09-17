@@ -34,5 +34,17 @@ public class HelloController {
         return ResponseEntity.ok(response);
     }
 
+    @GetMapping("/my-name")
+    public ResponseEntity<String> getMyName() {
+        String response = """
+                {
+                    "name" : "Bohdan",
+                    "linkein" : "www.linkedin.com/in/bohdan-yarovyi"
+                }
+                """;
+
+        return ResponseEntity.ok(response);
+    }
+
 
 }
