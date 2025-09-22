@@ -1,0 +1,18 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/testdb
+    username: postgres
+    password: postgres
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate.dialect: org.hibernate.dialect.PostgreSQLDialect
+
+security:
+  jwt:
+    secret: bGtzZ2RmbkpOSktHU0ROZ2pkZm5namRuZmprZ2Rmbmdqc25zZ2puZGZqYmtsbXZzZGtpcnUgamRzbmpzZG5maWRzSUo4Mzg3aHZiIHNkaGp2IHNkaGpkIHZoc2R2a3NkYnZoc2RiS0pua2ogSEpCVkRzbnZoZHNidnNpdWR2bg==
+    access: 1
+    refresh: 24
