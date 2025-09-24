@@ -1,6 +1,6 @@
 package com.challengeteam.shop.config;
 
-import com.challengeteam.shop.security.JwtTokenFilter;
+import com.challengeteam.shop.security.filter.JwtTokenFilter;
 import com.challengeteam.shop.security.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;

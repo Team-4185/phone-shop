@@ -1,5 +1,6 @@
-package com.challengeteam.shop.security;
+package com.challengeteam.shop.security.filter;
 
+import com.challengeteam.shop.security.JwtTokenProvider;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
