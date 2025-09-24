@@ -1,4 +1,4 @@
-package com.challengeteam.shop.security;
+package com.challengeteam.shop.entity.jwt;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

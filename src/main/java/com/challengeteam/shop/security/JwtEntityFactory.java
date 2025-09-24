@@ -1,5 +1,6 @@
 package com.challengeteam.shop.security;
 
+import com.challengeteam.shop.entity.jwt.JwtEntity;
 import com.challengeteam.shop.entity.user.User;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
