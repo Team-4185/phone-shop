@@ -1,6 +1,7 @@
 package com.challengeteam.shop.security;
 
 import com.challengeteam.shop.entity.user.User;
+import com.challengeteam.shop.factory.JwtEntityFactory;
 import com.challengeteam.shop.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;

@@ -1,4 +1,4 @@
-package com.challengeteam.shop.security;
+package com.challengeteam.shop.factory;
 
 import com.challengeteam.shop.entity.jwt.JwtEntity;
 import com.challengeteam.shop.entity.user.User;
