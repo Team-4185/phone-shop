@@ -1,8 +1,12 @@
 spring:
+
+  config:
+    import: optional:file:.env[.properties]
+
   datasource:
-    url: jdbc:postgresql://localhost:5432/testdb
-    username: postgres
-    password: postgres
+    url: jdbc:postgresql://${HOST}/${DB_NAME}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
     driver-class-name: org.postgresql.Driver
 
   jpa:
@@ -13,6 +17,6 @@ spring:
 
 security:
   jwt:
-    secret: bGtzZ2RmbkpOSktHU0ROZ2pkZm5namRuZmprZ2Rmbmdqc25zZ2puZGZqYmtsbXZzZGtpcnUgamRzbmpzZG5maWRzSUo4Mzg3aHZiIHNkaGp2IHNkaGpkIHZoc2R2a3NkYnZoc2RiS0pua2ogSEpCVkRzbnZoZHNidnNpdWR2bg==
-    access: 1
-    refresh: 24
+    secret: ${JWT_SECRET}
+    access-token-expiration: ${JWT_ACCESS_TOKEN_EXPIRATION}
+    refresh-token-expiration: ${JWT_ACCESS_TOKEN_EXPIRATION}
