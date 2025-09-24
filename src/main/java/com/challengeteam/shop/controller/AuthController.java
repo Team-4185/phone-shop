@@ -1,7 +1,7 @@
 package com.challengeteam.shop.controller;
 
 import com.challengeteam.shop.dto.jwt.JwtRefreshRequest;
-import com.challengeteam.shop.dto.jwt.JwtRequest;
+import com.challengeteam.shop.dto.jwt.JwtLoginRequest;
 import com.challengeteam.shop.dto.jwt.JwtResponse;
 import com.challengeteam.shop.dto.user.UserRegisterRequest;
 import com.challengeteam.shop.service.AuthService;
@@ -26,8 +26,8 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<JwtResponse> login(@RequestBody JwtRequest jwtRequest) {
-        JwtResponse jwtResponse = authService.login(jwtRequest);
+    public ResponseEntity<JwtResponse> login(@RequestBody JwtLoginRequest jwtLoginRequest) {
+        JwtResponse jwtResponse = authService.login(jwtLoginRequest);
         return ResponseEntity.ok(jwtResponse);
     }
 

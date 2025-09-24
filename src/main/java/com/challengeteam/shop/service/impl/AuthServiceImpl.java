@@ -1,6 +1,6 @@
 package com.challengeteam.shop.service.impl;
 
-import com.challengeteam.shop.dto.jwt.JwtRequest;
+import com.challengeteam.shop.dto.jwt.JwtLoginRequest;
 import com.challengeteam.shop.dto.jwt.JwtResponse;
 import com.challengeteam.shop.dto.user.UserRegisterRequest;
 import com.challengeteam.shop.entity.user.User;
@@ -36,11 +36,11 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public JwtResponse login(JwtRequest jwtRequest) {
+    public JwtResponse login(JwtLoginRequest jwtLoginRequest) {
         authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(jwtRequest.getUsername(), jwtRequest.getPassword())
+                new UsernamePasswordAuthenticationToken(jwtLoginRequest.getUsername(), jwtLoginRequest.getPassword())
         );
-        User user = userService.getByUsername(jwtRequest.getUsername());
+        User user = userService.getByUsername(jwtLoginRequest.getUsername());
         return createJwtResponse(user);
     }
 

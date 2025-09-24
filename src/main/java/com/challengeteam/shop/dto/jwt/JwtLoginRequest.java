@@ -3,7 +3,7 @@ package com.challengeteam.shop.dto.jwt;
 import lombok.Data;
 
 @Data
-public class JwtRequest {
+public class JwtLoginRequest {
 
     private String username;
 
