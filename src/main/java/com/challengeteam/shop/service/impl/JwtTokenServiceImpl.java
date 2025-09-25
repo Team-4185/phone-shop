@@ -1,10 +1,11 @@
-package com.challengeteam.shop.security;
+package com.challengeteam.shop.service.impl;
 
 import com.challengeteam.shop.dto.jwt.JwtResponse;
 import com.challengeteam.shop.entity.user.Role;
 import com.challengeteam.shop.entity.user.User;
 import com.challengeteam.shop.exception.AccessDeniedException;
 import com.challengeteam.shop.properties.JwtProperties;
+import com.challengeteam.shop.service.JwtTokenService;
 import com.challengeteam.shop.service.UserService;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
@@ -24,7 +25,7 @@ import java.util.Date;
 
 @Service
 @RequiredArgsConstructor
-public class JwtTokenProvider {
+public class JwtTokenServiceImpl implements JwtTokenService {
 
     private final JwtProperties jwtProperties;
 
@@ -45,7 +46,7 @@ public class JwtTokenProvider {
                 .add("userId", userId)
                 .add("role", role.name())
                 .build();
-        Instant expiration = Instant.now().plus(jwtProperties.getAccess(), ChronoUnit.MINUTES);
+        Instant expiration = Instant.now().plus(jwtProperties.getAccessTokenExpiration(), ChronoUnit.MINUTES);
         return createToken(claims, expiration);
     }
 
@@ -54,7 +55,7 @@ public class JwtTokenProvider {
                 .subject(username)
                 .add("userId", userId)
                 .build();
-        Instant expiration = Instant.now().plus(jwtProperties.getRefresh(), ChronoUnit.HOURS);
+        Instant expiration = Instant.now().plus(jwtProperties.getRefreshTokenExpiration(), ChronoUnit.HOURS);
         return createToken(claims, expiration);
     }
 
@@ -79,6 +80,7 @@ public class JwtTokenProvider {
     }
 
     public boolean isValid(String token) {
+
         return getClaims(token).getExpiration().after(new Date());
     }
 

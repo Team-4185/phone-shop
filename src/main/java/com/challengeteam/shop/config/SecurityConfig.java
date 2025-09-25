@@ -1,7 +1,7 @@
 package com.challengeteam.shop.config;
 
 import com.challengeteam.shop.security.filter.JwtTokenFilter;
-import com.challengeteam.shop.security.JwtTokenProvider;
+import com.challengeteam.shop.service.JwtTokenService;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import org.springframework.context.annotation.Bean;
@@ -22,7 +22,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @RequiredArgsConstructor(onConstructor = @__(@Lazy))
 public class SecurityConfig {
 
-    private final JwtTokenProvider jwtTokenProvider;
+    private final JwtTokenService jwtTokenService;
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -43,7 +43,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/**").permitAll()
                         .anyRequest().authenticated()
                 )
-                .addFilterBefore(new JwtTokenFilter(jwtTokenProvider), UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(new JwtTokenFilter(jwtTokenService), UsernamePasswordAuthenticationFilter.class)
                 .build();
     }
 

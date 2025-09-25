@@ -4,8 +4,8 @@ import com.challengeteam.shop.dto.jwt.JwtLoginRequest;
 import com.challengeteam.shop.dto.jwt.JwtResponse;
 import com.challengeteam.shop.dto.user.UserRegisterRequest;
 import com.challengeteam.shop.entity.user.User;
-import com.challengeteam.shop.security.JwtTokenProvider;
 import com.challengeteam.shop.service.AuthService;
+import com.challengeteam.shop.service.JwtTokenService;
 import com.challengeteam.shop.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -18,7 +18,7 @@ public class AuthServiceImpl implements AuthService {
 
     private final UserService userService;
 
-    private final JwtTokenProvider jwtTokenProvider;
+    private final JwtTokenService jwtTokenService;
 
     private final AuthenticationManager authenticationManager;
 
@@ -46,7 +46,7 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public JwtResponse refresh(String refreshToken) {
-        return jwtTokenProvider.refreshTokens(refreshToken);
+        return jwtTokenService.refreshTokens(refreshToken);
     }
 
     private JwtResponse createJwtResponse(User user) {
@@ -54,10 +54,10 @@ public class AuthServiceImpl implements AuthService {
         jwtResponse.setUserId(user.getId());
         jwtResponse.setUsername(user.getUsername());
         jwtResponse.setAccessToken(
-                jwtTokenProvider.createAccessToken(user.getId(), user.getUsername(), user.getRole())
+                jwtTokenService.createAccessToken(user.getId(), user.getUsername(), user.getRole())
         );
         jwtResponse.setRefreshToken(
-                jwtTokenProvider.createRefreshToken(user.getId(), user.getUsername())
+                jwtTokenService.createRefreshToken(user.getId(), user.getUsername())
         );
         return jwtResponse;
     }
