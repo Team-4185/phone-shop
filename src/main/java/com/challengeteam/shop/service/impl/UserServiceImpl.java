@@ -1,6 +1,5 @@
 package com.challengeteam.shop.service.impl;
 
-import com.challengeteam.shop.dto.user.UserRegisterRequest;
 import com.challengeteam.shop.entity.user.Role;
 import com.challengeteam.shop.entity.user.User;
 import com.challengeteam.shop.exception.ResourceNotFoundException;
@@ -31,10 +30,8 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public User create(UserRegisterRequest userRegisterRequest) {
-        User user = new User();
-        user.setUsername(userRegisterRequest.getUsername());
-        user.setPassword(passwordEncoder.encode(userRegisterRequest.getPassword()));
+    public User create(User user) {
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
         user.setRole(Role.USER);
         return userRepository.save(user);
     }

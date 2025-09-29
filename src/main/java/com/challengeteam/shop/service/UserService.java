@@ -9,7 +9,7 @@ public interface UserService {
 
     User getByUsername(String username);
 
-    User create(UserRegisterRequest userRegisterRequest);
+    User create(User user);
 
     boolean existsByUsername(String username);
 

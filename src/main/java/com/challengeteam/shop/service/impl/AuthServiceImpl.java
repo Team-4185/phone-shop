@@ -4,6 +4,7 @@ import com.challengeteam.shop.dto.jwt.JwtLoginRequest;
 import com.challengeteam.shop.dto.jwt.JwtResponse;
 import com.challengeteam.shop.dto.user.UserRegisterRequest;
 import com.challengeteam.shop.entity.user.User;
+import com.challengeteam.shop.mapper.UserMapper;
 import com.challengeteam.shop.service.AuthService;
 import com.challengeteam.shop.service.JwtTokenService;
 import com.challengeteam.shop.service.UserService;
@@ -18,6 +19,8 @@ public class AuthServiceImpl implements AuthService {
 
     private final UserService userService;
 
+    private final UserMapper userMapper;
+
     private final JwtTokenService jwtTokenService;
 
     private final AuthenticationManager authenticationManager;
@@ -31,7 +34,7 @@ public class AuthServiceImpl implements AuthService {
         if(!userRegisterRequest.getPassword().equals(userRegisterRequest.getPasswordConfirmation())) {
             throw new IllegalStateException("Password and confirmation do not match");
         }
-        User user = userService.create(userRegisterRequest);
+        User user = userService.create(userMapper.toUser(userRegisterRequest));
         return createJwtResponse(user);
     }
 
