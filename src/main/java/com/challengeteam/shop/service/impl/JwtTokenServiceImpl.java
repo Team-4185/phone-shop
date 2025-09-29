@@ -7,14 +7,19 @@ import com.challengeteam.shop.properties.JwtProperties;
 import com.challengeteam.shop.service.JwtTokenService;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.security.Keys;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
 import org.springframework.stereotype.Service;
 
-import javax.crypto.SecretKey;
+import java.security.KeyFactory;
+import java.security.PrivateKey;
+import java.security.PublicKey;
+import java.security.spec.PKCS8EncodedKeySpec;
+import java.security.spec.X509EncodedKeySpec;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.Base64;
 import java.util.Date;
 
 @Service
@@ -23,11 +28,30 @@ public class JwtTokenServiceImpl implements JwtTokenService {
 
     private final JwtProperties jwtProperties;
 
-    private SecretKey key;
+    private PrivateKey privateKey;
+
+    private PublicKey publicKey;
 
     @PostConstruct
     public void init() {
-        this.key = Keys.hmacShaKeyFor(jwtProperties.getSecret().getBytes());
+        this.privateKey = loadPrivateKey(jwtProperties.getPrivateKey());
+        this.publicKey = loadPublicKey(jwtProperties.getPublicKey());
+    }
+
+    @SneakyThrows
+    private PrivateKey loadPrivateKey(String privateKey) {
+        byte[] keyBytes = Base64.getDecoder().decode(privateKey);
+        PKCS8EncodedKeySpec spec = new PKCS8EncodedKeySpec(keyBytes);
+        KeyFactory keyFactory = KeyFactory.getInstance("RSA");
+        return keyFactory.generatePrivate(spec);
+    }
+
+    @SneakyThrows
+    private PublicKey loadPublicKey(String publicKey) {
+        byte[] keyBytes = Base64.getDecoder().decode(publicKey);
+        X509EncodedKeySpec spec = new X509EncodedKeySpec(keyBytes);
+        KeyFactory keyFactory = KeyFactory.getInstance("RSA");
+        return keyFactory.generatePublic(spec);
     }
 
     @Override
@@ -58,7 +82,7 @@ public class JwtTokenServiceImpl implements JwtTokenService {
             throw new AccessDeniedException("The refresh token is invalid");
         }
         Long userId = getClaims(refreshToken).get("userId", Long.class);
-        String username = getClaims(refreshToken).get("username", String.class);
+        String username = getClaims(refreshToken).getSubject();
         Role role = getClaims(refreshToken).get("role", Role.class);
         JwtResponse jwtResponse = new JwtResponse();
         jwtResponse.setUserId(userId);
@@ -81,7 +105,7 @@ public class JwtTokenServiceImpl implements JwtTokenService {
 
     private Claims getClaims(String token) {
         return Jwts.parser()
-                .verifyWith(key)
+                .verifyWith(publicKey)
                 .build()
                 .parseSignedClaims(token)
                 .getPayload();
@@ -91,7 +115,7 @@ public class JwtTokenServiceImpl implements JwtTokenService {
         return Jwts.builder()
                 .claims(claims)
                 .expiration(Date.from(expiration))
-                .signWith(key)
+                .signWith(privateKey)
                 .compact();
     }
 

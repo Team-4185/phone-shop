@@ -9,7 +9,9 @@ import org.springframework.stereotype.Service;
 @Data
 public class JwtProperties {
 
-    private String secret;
+    private String privateKey;
+
+    private String publicKey;
 
     private long accessTokenExpiration;
 
