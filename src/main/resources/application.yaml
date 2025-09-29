@@ -9,6 +9,12 @@ spring:
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
     driver-class-name: org.postgresql.Driver
+    hikari:
+      connection-timeout: 60000   # 1 min
+      idle-timeout: 600000        # 10 min
+      max-lifetime: 1800000       # 30 min
+      maximum-pool-size: 10
+      minimum-idle: 5
   jpa:
     open-in-view: false
     hibernate:
