@@ -1,14 +1,8 @@
 package com.challengeteam.shop.dto.user;
 
-import lombok.Data;
-
-@Data
-public class UserRegisterRequest {
-
-    private String username;
-
-    private String password;
-
-    private String passwordConfirmation;
-
+public record UserRegisterRequest (
+        String email,
+        String password,
+        String passwordConfirmation
+) {
 }

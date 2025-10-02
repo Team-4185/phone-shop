@@ -82,17 +82,20 @@ public class JwtTokenServiceImpl implements JwtTokenService {
             throw new AccessDeniedException("The refresh token is invalid");
         }
         Long userId = getClaims(refreshToken).get("userId", Long.class);
-        String username = getClaims(refreshToken).getSubject();
+        String email = getClaims(refreshToken).getSubject();
         String roleName = getClaims(refreshToken).get("role", String.class);
 
         Role role = new Role();
         role.setName(roleName);
-        JwtResponse jwtResponse = new JwtResponse();
-        jwtResponse.setUserId(userId);
-        jwtResponse.setUsername(username);
-        jwtResponse.setAccessToken(createAccessToken(userId, username, role));
-        jwtResponse.setRefreshToken(createRefreshToken(userId, username, role));
-        return jwtResponse;
+        String newAccessToken = createAccessToken(userId, email, role);
+        String newRefreshToken = createRefreshToken(userId, email, role);
+
+        return new JwtResponse(
+                userId,
+                email,
+                newRefreshToken,
+                newAccessToken
+        );
     }
 
     @Override
