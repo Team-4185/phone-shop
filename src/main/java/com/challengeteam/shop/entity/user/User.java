@@ -1,22 +1,53 @@
 package com.challengeteam.shop.entity.user;
 
+import com.challengeteam.shop.entity.BaseEntity;
 import jakarta.persistence.*;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
+@Getter
+@Setter
 @Entity
 @Table(name = "users")
-@Data
-public class User {
+public class User extends BaseEntity {
+    @Column(nullable = false)
+    private String email;
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
-    private String username;
-
+    @Column(nullable = false)
     private String password;
 
-    @Enumerated(EnumType.STRING)
+    @Column(nullable = true)
+    private String firstName;
+
+    @Column(nullable = true)
+    private String lastName;
+
+    @Column(nullable = true)
+    private String city;
+
+    @Column(nullable = true)
+    private String phoneNumber;
+
+    @ManyToOne
+    @JoinColumn(nullable = false, name = "fk_role_id")
     private Role role;
+
+
+    public User() {
+        super();
+    }
+
+    @Override
+    public String toString() {
+        return "User{" +
+               "email='" + email + '\'' +
+               ", password='" + password + '\'' +
+               ", firstName='" + firstName + '\'' +
+               ", lastName='" + lastName + '\'' +
+               ", city='" + city + '\'' +
+               ", phoneNumber='" + phoneNumber + '\'' +
+               ", role=" + role +
+               "} " + super.toString();
+    }
 
 }

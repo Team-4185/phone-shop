@@ -59,7 +59,7 @@ public class JwtTokenServiceImpl implements JwtTokenService {
         Claims claims = Jwts.claims()
                 .subject(username)
                 .add("userId", userId)
-                .add("role", role.name())
+                .add("role", role.getName())
                 .build();
         Instant expiration = Instant.now().plus(jwtProperties.getAccessTokenExpiration(), ChronoUnit.MINUTES);
         return createToken(claims, expiration);
@@ -70,7 +70,7 @@ public class JwtTokenServiceImpl implements JwtTokenService {
         Claims claims = Jwts.claims()
                 .subject(username)
                 .add("userId", userId)
-                .add("role", role.name())
+                .add("role", role.getName())
                 .build();
         Instant expiration = Instant.now().plus(jwtProperties.getRefreshTokenExpiration(), ChronoUnit.HOURS);
         return createToken(claims, expiration);
@@ -83,7 +83,10 @@ public class JwtTokenServiceImpl implements JwtTokenService {
         }
         Long userId = getClaims(refreshToken).get("userId", Long.class);
         String username = getClaims(refreshToken).getSubject();
-        Role role = Role.valueOf(getClaims(refreshToken).get("role", String.class));
+        String roleName = getClaims(refreshToken).get("role", String.class);
+
+        Role role = new Role();
+        role.setName(roleName);
         JwtResponse jwtResponse = new JwtResponse();
         jwtResponse.setUserId(userId);
         jwtResponse.setUsername(username);

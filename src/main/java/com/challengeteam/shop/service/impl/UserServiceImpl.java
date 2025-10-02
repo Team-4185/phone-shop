@@ -25,20 +25,24 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public User getByUsername(String username) {
-        return userRepository.findByUsername(username)
+        return userRepository.findByEmail(username)
                 .orElseThrow(() -> new ResourceNotFoundException("User with username " + username + " not found"));
     }
 
     @Override
     public User create(User user) {
+        var role = new Role();
+        role.setId(1L);
+        role.setName("USER");
+
         user.setPassword(passwordEncoder.encode(user.getPassword()));
-        user.setRole(Role.USER);
+        user.setRole(role);
         return userRepository.save(user);
     }
 
     @Override
     public boolean existsByUsername(String username) {
-        return userRepository.existsByUsername(username);
+        return userRepository.existsByEmail(username);
     }
 
 }

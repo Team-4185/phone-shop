@@ -1,0 +1,8 @@
+CREATE TABLE roles
+(
+    id BIGINT GENERATED ALWAYS AS IDENTITY,
+    created_at TIMESTAMP NOT NULL,
+    updated_at TIMESTAMP,
+    name VARCHAR(64) NOT NULL UNIQUE,
+    CONSTRAINT PK_roles_id PRIMARY KEY (id)
+);

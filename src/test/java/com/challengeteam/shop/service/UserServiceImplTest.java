@@ -33,7 +33,7 @@ public class UserServiceImplTest {
     void testGetById_UserExists() {
         User user = new User();
         user.setId(1L);
-        user.setUsername("username");
+        user.setEmail("username");
 
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
 
@@ -41,7 +41,7 @@ public class UserServiceImplTest {
 
         assertNotNull(result);
         assertEquals(user.getId(), result.getId());
-        assertEquals(user.getUsername(), result.getUsername());
+        assertEquals(user.getEmail(), result.getEmail());
     }
 
     @Test
@@ -55,20 +55,20 @@ public class UserServiceImplTest {
     void testGetByUsername_UserExists() {
         User user = new User();
         user.setId(1L);
-        user.setUsername("username");
+        user.setEmail("username");
 
-        when(userRepository.findByUsername("username")).thenReturn(Optional.of(user));
+        when(userRepository.findByEmail("username")).thenReturn(Optional.of(user));
 
         User result = userService.getByUsername("username");
 
         assertNotNull(result);
         assertEquals(user.getId(), result.getId());
-        assertEquals(user.getUsername(), result.getUsername());
+        assertEquals(user.getEmail(), result.getEmail());
     }
 
     @Test
     void testGetByUsername_UserNotFound() {
-        when(userRepository.findByUsername("username")).thenReturn(Optional.empty());
+        when(userRepository.findByEmail("username")).thenReturn(Optional.empty());
 
         assertThrows(ResourceNotFoundException.class, () -> userService.getByUsername("username"));
     }
@@ -77,8 +77,12 @@ public class UserServiceImplTest {
     void testCreate() {
         User user = new User();
         user.setId(1L);
-        user.setUsername("username");
+        user.setEmail("username");
         user.setPassword("password");
+
+        var role = new Role();
+        role.setId(1L);
+        role.setName("USER");
 
         when(passwordEncoder.encode(user.getPassword())).thenReturn("encodedPassword");
         when(userRepository.save(user)).thenReturn(user);
@@ -87,13 +91,13 @@ public class UserServiceImplTest {
 
         assertNotNull(result);
         assertEquals(user.getId(), result.getId());
-        assertEquals(user.getUsername(), result.getUsername());
-        assertEquals(Role.USER, result.getRole());
+        assertEquals(user.getEmail(), result.getEmail());
+        assertEquals(role, result.getRole());
     }
 
     @Test
     void testExistsByUsername_UserExists() {
-        when(userRepository.existsByUsername("username")).thenReturn(true);
+        when(userRepository.existsByEmail("username")).thenReturn(true);
 
         boolean result = userService.existsByUsername("username");
 
@@ -102,7 +106,7 @@ public class UserServiceImplTest {
 
     @Test
     void testExistsByUsername_UserDoesNotExists() {
-        when(userRepository.existsByUsername("username")).thenReturn(false);
+        when(userRepository.existsByEmail("username")).thenReturn(false);
 
         boolean result = userService.existsByUsername("username");
 
