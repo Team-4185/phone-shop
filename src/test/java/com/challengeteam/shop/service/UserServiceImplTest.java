@@ -57,14 +57,14 @@ public class UserServiceImplTest {
     }
 
     @Test
-    void testEmail_UserExists() {
+    void testGetByEmail_UserExists() {
         User user = new User();
         user.setId(1L);
         user.setEmail("username");
 
         when(userRepository.findByEmail("username")).thenReturn(Optional.of(user));
 
-        User result = userService.email("username");
+        User result = userService.getByEmail("username");
 
         assertNotNull(result);
         assertEquals(user.getId(), result.getId());
@@ -72,10 +72,10 @@ public class UserServiceImplTest {
     }
 
     @Test
-    void testEmail_UserNotFound() {
+    void testGetByEmail_UserNotFound() {
         when(userRepository.findByEmail("username")).thenReturn(Optional.empty());
 
-        assertThrows(ResourceNotFoundException.class, () -> userService.email("username"));
+        assertThrows(ResourceNotFoundException.class, () -> userService.getByEmail("username"));
     }
 
     @Test

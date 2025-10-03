@@ -43,7 +43,7 @@ public class AuthServiceImpl implements AuthService {
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(jwtLoginRequest.getUsername(), jwtLoginRequest.getPassword())
         );
-        User user = userService.email(jwtLoginRequest.getUsername());
+        User user = userService.getByEmail(jwtLoginRequest.getUsername());
         return createJwtResponse(user);
     }
 
