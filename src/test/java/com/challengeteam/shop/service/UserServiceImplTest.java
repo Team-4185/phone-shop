@@ -3,6 +3,7 @@ package com.challengeteam.shop.service;
 import com.challengeteam.shop.entity.user.Role;
 import com.challengeteam.shop.entity.user.User;
 import com.challengeteam.shop.exception.ResourceNotFoundException;
+import com.challengeteam.shop.repository.RoleRepository;
 import com.challengeteam.shop.repository.UserRepository;
 import com.challengeteam.shop.service.impl.UserServiceImpl;
 import org.junit.jupiter.api.Test;
@@ -23,6 +24,10 @@ public class UserServiceImplTest {
     @Mock
     private UserRepository userRepository;
 
+    @Mock
+    private RoleRepository roleRepository;
+
+    // todo: here better to have an instance
     @Mock
     private PasswordEncoder passwordEncoder;
 
@@ -52,14 +57,14 @@ public class UserServiceImplTest {
     }
 
     @Test
-    void testGetByUsername_UserExists() {
+    void testGetByEmail_UserExists() {
         User user = new User();
         user.setId(1L);
         user.setEmail("username");
 
         when(userRepository.findByEmail("username")).thenReturn(Optional.of(user));
 
-        User result = userService.getByUsername("username");
+        User result = userService.getByEmail("username");
 
         assertNotNull(result);
         assertEquals(user.getId(), result.getId());
@@ -67,10 +72,10 @@ public class UserServiceImplTest {
     }
 
     @Test
-    void testGetByUsername_UserNotFound() {
+    void testGetByEmail_UserNotFound() {
         when(userRepository.findByEmail("username")).thenReturn(Optional.empty());
 
-        assertThrows(ResourceNotFoundException.class, () -> userService.getByUsername("username"));
+        assertThrows(ResourceNotFoundException.class, () -> userService.getByEmail("username"));
     }
 
     @Test
@@ -86,6 +91,7 @@ public class UserServiceImplTest {
 
         when(passwordEncoder.encode(user.getPassword())).thenReturn("encodedPassword");
         when(userRepository.save(user)).thenReturn(user);
+        when(roleRepository.findByName("USER")).thenReturn(Optional.of(role));
 
         User result = userService.create(user);
 
@@ -99,7 +105,7 @@ public class UserServiceImplTest {
     void testExistsByUsername_UserExists() {
         when(userRepository.existsByEmail("username")).thenReturn(true);
 
-        boolean result = userService.existsByUsername("username");
+        boolean result = userService.existsByEmail("username");
 
         assertTrue(result);
     }
@@ -108,7 +114,7 @@ public class UserServiceImplTest {
     void testExistsByUsername_UserDoesNotExists() {
         when(userRepository.existsByEmail("username")).thenReturn(false);
 
-        boolean result = userService.existsByUsername("username");
+        boolean result = userService.existsByEmail("username");
 
         assertFalse(result);
     }

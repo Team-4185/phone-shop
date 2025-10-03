@@ -27,13 +27,13 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public JwtResponse register(UserRegisterRequest userRegisterRequest) {
-        if(userService.existsByUsername(userRegisterRequest.getUsername())) {
+        if(userService.existsByEmail(userRegisterRequest.email())) {
             throw new IllegalStateException("Username already exists");
         }
-
-        if(!userRegisterRequest.getPassword().equals(userRegisterRequest.getPasswordConfirmation())) {
+        if(!userRegisterRequest.password().equals(userRegisterRequest.passwordConfirmation())) {
             throw new IllegalStateException("Password and confirmation do not match");
         }
+
         User user = userService.create(userMapper.toUser(userRegisterRequest));
         return createJwtResponse(user);
     }
@@ -43,7 +43,7 @@ public class AuthServiceImpl implements AuthService {
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(jwtLoginRequest.getUsername(), jwtLoginRequest.getPassword())
         );
-        User user = userService.getByUsername(jwtLoginRequest.getUsername());
+        User user = userService.getByEmail(jwtLoginRequest.getUsername());
         return createJwtResponse(user);
     }
 
@@ -53,16 +53,15 @@ public class AuthServiceImpl implements AuthService {
     }
 
     private JwtResponse createJwtResponse(User user) {
-        JwtResponse jwtResponse = new JwtResponse();
-        jwtResponse.setUserId(user.getId());
-        jwtResponse.setUsername(user.getEmail());
-        jwtResponse.setAccessToken(
-                jwtTokenService.createAccessToken(user.getId(), user.getEmail(), user.getRole())
+        String accessToken = jwtTokenService.createAccessToken(user.getId(), user.getEmail(), user.getRole());
+        String refreshToken = jwtTokenService.createRefreshToken(user.getId(), user.getEmail(), user.getRole());
+
+        return new JwtResponse(
+                user.getId(),
+                user.getEmail(),
+                accessToken,
+                refreshToken
         );
-        jwtResponse.setRefreshToken(
-                jwtTokenService.createRefreshToken(user.getId(), user.getEmail(), user.getRole())
-        );
-        return jwtResponse;
     }
 
 }
