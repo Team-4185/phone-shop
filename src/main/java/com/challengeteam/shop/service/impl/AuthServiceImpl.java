@@ -55,12 +55,12 @@ public class AuthServiceImpl implements AuthService {
     private JwtResponse createJwtResponse(User user) {
         JwtResponse jwtResponse = new JwtResponse();
         jwtResponse.setUserId(user.getId());
-        jwtResponse.setUsername(user.getUsername());
+        jwtResponse.setUsername(user.getEmail());
         jwtResponse.setAccessToken(
-                jwtTokenService.createAccessToken(user.getId(), user.getUsername(), user.getRole())
+                jwtTokenService.createAccessToken(user.getId(), user.getEmail(), user.getRole())
         );
         jwtResponse.setRefreshToken(
-                jwtTokenService.createRefreshToken(user.getId(), user.getUsername(), user.getRole())
+                jwtTokenService.createRefreshToken(user.getId(), user.getEmail(), user.getRole())
         );
         return jwtResponse;
     }

@@ -11,9 +11,9 @@ public class JwtEntityFactory {
     public static JwtEntity create(User user) {
         return new JwtEntity(
                 user.getId(),
-                user.getUsername(),
+                user.getEmail(),
                 user.getPassword(),
-                List.of(new SimpleGrantedAuthority("ROLE_" + user.getRole().name()))
+                List.of(new SimpleGrantedAuthority("ROLE_" + user.getRole().getName()))
         );
     }
 
