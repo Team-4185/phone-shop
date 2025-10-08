@@ -2,7 +2,7 @@ package com.challengeteam.shop.service;
 
 import com.challengeteam.shop.dto.jwt.JwtLoginRequest;
 import com.challengeteam.shop.dto.jwt.JwtResponse;
-import com.challengeteam.shop.dto.user.UserRegisterRequest;
+import com.challengeteam.shop.dto.user.UserRegisterRequestDto;
 import com.challengeteam.shop.entity.user.Role;
 import com.challengeteam.shop.entity.user.User;
 import com.challengeteam.shop.mapper.UserMapper;
@@ -46,8 +46,8 @@ public class AuthServiceImplTest {
 
     @Test
     void testRegister() {
-        UserRegisterRequest userRegisterRequest =
-                new UserRegisterRequest(email, password, passwordConfirmation);
+        UserRegisterRequestDto userRegisterRequestDto =
+                new UserRegisterRequestDto(email, password, passwordConfirmation);
 
         Role role = new Role();
         role.setName("USER");
@@ -56,13 +56,13 @@ public class AuthServiceImplTest {
         user.setEmail(email);
         user.setRole(role);
 
-        when(userService.existsByEmail(userRegisterRequest.email())).thenReturn(false);
-        when(userMapper.toUser(userRegisterRequest)).thenReturn(user);
+        when(userService.existsByEmail(userRegisterRequestDto.email())).thenReturn(false);
+        when(userMapper.toUser(userRegisterRequestDto)).thenReturn(user);
         when(userService.createDefaultUser(user)).thenReturn(user);
         when(jwtTokenService.createAccessToken(user.getId(), user.getEmail(), user.getRole())).thenReturn(accessToken);
         when(jwtTokenService.createRefreshToken(user.getId(), user.getEmail(), user.getRole())).thenReturn(refreshToken);
 
-        JwtResponse jwtResponse = authService.register(userRegisterRequest);
+        JwtResponse jwtResponse = authService.register(userRegisterRequestDto);
 
         assertNotNull(jwtResponse);
         assertEquals(user.getId(), jwtResponse.userId());
@@ -73,22 +73,22 @@ public class AuthServiceImplTest {
 
     @Test
     void testRegister_UsernameAlreadyExists() {
-        UserRegisterRequest userRegisterRequest = new
-                UserRegisterRequest(email, password, passwordConfirmation);
+        UserRegisterRequestDto userRegisterRequestDto = new
+                UserRegisterRequestDto(email, password, passwordConfirmation);
 
-        when(userService.existsByEmail(userRegisterRequest.email())).thenReturn(true);
+        when(userService.existsByEmail(userRegisterRequestDto.email())).thenReturn(true);
 
-        assertThrows(IllegalStateException.class, () -> authService.register(userRegisterRequest));
+        assertThrows(IllegalStateException.class, () -> authService.register(userRegisterRequestDto));
     }
 
     @Test
     void testRegister_PasswordsNotMatch() {
-        UserRegisterRequest userRegisterRequest = new
-                UserRegisterRequest(email, password, passwordConfirmation + "123");
+        UserRegisterRequestDto userRegisterRequestDto = new
+                UserRegisterRequestDto(email, password, passwordConfirmation + "123");
 
-        when(userService.existsByEmail(userRegisterRequest.email())).thenReturn(false);
+        when(userService.existsByEmail(userRegisterRequestDto.email())).thenReturn(false);
 
-        assertThrows(IllegalStateException.class, () -> authService.register(userRegisterRequest));
+        assertThrows(IllegalStateException.class, () -> authService.register(userRegisterRequestDto));
     }
 
     @Test

@@ -2,7 +2,7 @@ package com.challengeteam.shop.service.impl;
 
 import com.challengeteam.shop.dto.jwt.JwtLoginRequest;
 import com.challengeteam.shop.dto.jwt.JwtResponse;
-import com.challengeteam.shop.dto.user.UserRegisterRequest;
+import com.challengeteam.shop.dto.user.UserRegisterRequestDto;
 import com.challengeteam.shop.entity.user.User;
 import com.challengeteam.shop.mapper.UserMapper;
 import com.challengeteam.shop.service.AuthService;
@@ -26,15 +26,15 @@ public class AuthServiceImpl implements AuthService {
     private final AuthenticationManager authenticationManager;
 
     @Override
-    public JwtResponse register(UserRegisterRequest userRegisterRequest) {
-        if(userService.existsByEmail(userRegisterRequest.email())) {
+    public JwtResponse register(UserRegisterRequestDto userRegisterRequestDto) {
+        if(userService.existsByEmail(userRegisterRequestDto.email())) {
             throw new IllegalStateException("Username already exists");
         }
-        if(!userRegisterRequest.password().equals(userRegisterRequest.passwordConfirmation())) {
+        if(!userRegisterRequestDto.password().equals(userRegisterRequestDto.passwordConfirmation())) {
             throw new IllegalStateException("Password and confirmation do not match");
         }
 
-        User user = userService.createDefaultUser(userMapper.toUser(userRegisterRequest));
+        User user = userService.createDefaultUser(userMapper.toUser(userRegisterRequestDto));
         return createJwtResponse(user);
     }
 

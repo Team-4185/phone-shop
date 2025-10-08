@@ -3,7 +3,7 @@ package com.challengeteam.shop.controller;
 import com.challengeteam.shop.dto.jwt.JwtRefreshRequest;
 import com.challengeteam.shop.dto.jwt.JwtLoginRequest;
 import com.challengeteam.shop.dto.jwt.JwtResponse;
-import com.challengeteam.shop.dto.user.UserRegisterRequest;
+import com.challengeteam.shop.dto.user.UserRegisterRequestDto;
 import com.challengeteam.shop.service.AuthService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -20,8 +20,8 @@ public class AuthController {
     private final AuthService authService;
 
     @PostMapping("/register")
-    public ResponseEntity<JwtResponse> register(@RequestBody UserRegisterRequest userRegisterRequest) {
-        JwtResponse jwtResponse = authService.register(userRegisterRequest);
+    public ResponseEntity<JwtResponse> register(@RequestBody UserRegisterRequestDto userRegisterRequestDto) {
+        JwtResponse jwtResponse = authService.register(userRegisterRequestDto);
         return ResponseEntity.ok(jwtResponse);
     }
 
