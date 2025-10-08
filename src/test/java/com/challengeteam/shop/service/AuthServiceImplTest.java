@@ -58,7 +58,7 @@ public class AuthServiceImplTest {
 
         when(userService.existsByEmail(userRegisterRequest.email())).thenReturn(false);
         when(userMapper.toUser(userRegisterRequest)).thenReturn(user);
-        when(userService.create(user)).thenReturn(user);
+        when(userService.createDefaultUser(user)).thenReturn(user);
         when(jwtTokenService.createAccessToken(user.getId(), user.getEmail(), user.getRole())).thenReturn(accessToken);
         when(jwtTokenService.createRefreshToken(user.getId(), user.getEmail(), user.getRole())).thenReturn(refreshToken);
 

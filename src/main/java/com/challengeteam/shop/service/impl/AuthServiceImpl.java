@@ -34,7 +34,7 @@ public class AuthServiceImpl implements AuthService {
             throw new IllegalStateException("Password and confirmation do not match");
         }
 
-        User user = userService.create(userMapper.toUser(userRegisterRequest));
+        User user = userService.createDefaultUser(userMapper.toUser(userRegisterRequest));
         return createJwtResponse(user);
     }
 

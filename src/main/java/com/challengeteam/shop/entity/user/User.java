@@ -2,11 +2,13 @@ package com.challengeteam.shop.entity.user;
 
 import com.challengeteam.shop.entity.BaseEntity;
 import jakarta.persistence.*;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 
 @Getter
 @Setter
+@Builder
 @Entity
 @Table(name = "users")
 public class User extends BaseEntity {
@@ -44,7 +46,7 @@ public class User extends BaseEntity {
                ", password='" + password + '\'' +
                ", firstName='" + firstName + '\'' +
                ", lastName='" + lastName + '\'' +
-               ", city='" + city + '\'' +
+               ", newCity='" + city + '\'' +
                ", phoneNumber='" + phoneNumber + '\'' +
                ", role=" + role +
                "} " + super.toString();

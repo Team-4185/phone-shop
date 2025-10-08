@@ -79,7 +79,7 @@ public class UserServiceImplTest {
     }
 
     @Test
-    void testCreate() {
+    void testCreateDefaultUser() {
         User user = new User();
         user.setId(1L);
         user.setEmail("username");
