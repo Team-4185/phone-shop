@@ -1,10 +1,11 @@
 package com.challengeteam.shop.service.impl;
 
-import com.challengeteam.shop.dto.jwt.JwtResponse;
+import com.challengeteam.shop.dto.jwt.JwtResponseDto;
 import com.challengeteam.shop.entity.user.Role;
+import com.challengeteam.shop.entity.user.User;
 import com.challengeteam.shop.exception.AccessDeniedException;
 import com.challengeteam.shop.properties.JwtProperties;
-import com.challengeteam.shop.service.JwtTokenService;
+import com.challengeteam.shop.service.JwtService;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import jakarta.annotation.PostConstruct;
@@ -24,7 +25,7 @@ import java.util.Date;
 
 @Service
 @RequiredArgsConstructor
-public class JwtTokenServiceImpl implements JwtTokenService {
+public class JwtServiceImpl implements JwtService {
 
     private final JwtProperties jwtProperties;
 
@@ -55,44 +56,37 @@ public class JwtTokenServiceImpl implements JwtTokenService {
     }
 
     @Override
-    public String createAccessToken(Long userId, String username, Role role) {
+    public String createAccessToken(User user) {
         Claims claims = Jwts.claims()
-                .subject(username)
-                .add("userId", userId)
-                .add("role", role.getName())
+                .subject(user.getEmail())
+                .add("userId", user.getId())
+                .add("role", user.getRole().getName())
                 .build();
+
         Instant expiration = Instant.now().plus(jwtProperties.getAccessTokenExpiration(), ChronoUnit.MINUTES);
         return createToken(claims, expiration);
     }
 
     @Override
-    public String createRefreshToken(Long userId, String username, Role role) {
+    public String createRefreshToken(User user) {
         Claims claims = Jwts.claims()
-                .subject(username)
-                .add("userId", userId)
-                .add("role", role.getName())
+                .subject(user.getEmail())
+                .add("userId", user.getId())
+                .add("role", user.getRole().getName())
                 .build();
+
         Instant expiration = Instant.now().plus(jwtProperties.getRefreshTokenExpiration(), ChronoUnit.HOURS);
         return createToken(claims, expiration);
     }
 
     @Override
-    public JwtResponse refreshTokens(String refreshToken) {
-        if (!isValid(refreshToken)) {
-            throw new AccessDeniedException("The refresh token is invalid");
-        }
-        Long userId = getClaims(refreshToken).get("userId", Long.class);
-        String email = getClaims(refreshToken).getSubject();
-        String roleName = getClaims(refreshToken).get("role", String.class);
+    public JwtResponseDto refreshTokens(String refreshToken, User user) {
+        String newAccessToken = createAccessToken(user);
+        String newRefreshToken = createRefreshToken(user);
 
-        Role role = new Role();
-        role.setName(roleName);
-        String newAccessToken = createAccessToken(userId, email, role);
-        String newRefreshToken = createRefreshToken(userId, email, role);
-
-        return new JwtResponse(
-                userId,
-                email,
+        return new JwtResponseDto(
+                user.getId(),
+                user.getEmail(),
                 newRefreshToken,
                 newAccessToken
         );
@@ -100,12 +94,13 @@ public class JwtTokenServiceImpl implements JwtTokenService {
 
     @Override
     public boolean isValid(String token) {
-
-        return getClaims(token).getExpiration().after(new Date());
+        return getClaims(token)
+                .getExpiration()
+                .after(new Date());
     }
 
     @Override
-    public String getUsernameFromToken(String token) {
+    public String getEmailFromToken(String token) {
         return getClaims(token).getSubject();
     }
 

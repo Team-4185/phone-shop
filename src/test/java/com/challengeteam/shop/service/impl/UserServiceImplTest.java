@@ -1,4 +1,4 @@
-package com.challengeteam.shop.service;
+package com.challengeteam.shop.service.impl;
 
 import com.challengeteam.shop.dto.user.CreateUserDto;
 import com.challengeteam.shop.dto.user.UpdateProfileDto;
@@ -8,10 +8,8 @@ import com.challengeteam.shop.exception.EmailAlreadyExistsException;
 import com.challengeteam.shop.exception.ResourceNotFoundException;
 import com.challengeteam.shop.repository.RoleRepository;
 import com.challengeteam.shop.repository.UserRepository;
-import com.challengeteam.shop.service.impl.UserServiceImpl;
 import com.challengeteam.shop.service.impl.merger.UserMerger;
 import com.challengeteam.shop.service.impl.validator.UserValidator;
-import org.hibernate.sql.Update;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;

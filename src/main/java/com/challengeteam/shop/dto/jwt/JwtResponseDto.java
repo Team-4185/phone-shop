@@ -1,6 +1,6 @@
 package com.challengeteam.shop.dto.jwt;
 
-public record JwtResponse(
+public record JwtResponseDto(
         Long userId,
         String email,
         String accessToken,

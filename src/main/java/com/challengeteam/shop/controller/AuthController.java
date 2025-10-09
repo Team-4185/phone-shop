@@ -1,10 +1,10 @@
 package com.challengeteam.shop.controller;
 
 import com.challengeteam.shop.dto.jwt.JwtRefreshRequest;
-import com.challengeteam.shop.dto.jwt.JwtLoginRequest;
-import com.challengeteam.shop.dto.jwt.JwtResponse;
+import com.challengeteam.shop.dto.user.UserLoginRequestDto;
+import com.challengeteam.shop.dto.jwt.JwtResponseDto;
 import com.challengeteam.shop.dto.user.UserRegisterRequestDto;
-import com.challengeteam.shop.service.AuthService;
+import com.challengeteam.shop.service.JwtAuthorizationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -17,24 +17,24 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class AuthController {
 
-    private final AuthService authService;
+    private final JwtAuthorizationService jwtAuthorizationService;
 
     @PostMapping("/register")
-    public ResponseEntity<JwtResponse> register(@RequestBody UserRegisterRequestDto userRegisterRequestDto) {
-        JwtResponse jwtResponse = authService.register(userRegisterRequestDto);
-        return ResponseEntity.ok(jwtResponse);
+    public ResponseEntity<JwtResponseDto> register(@RequestBody UserRegisterRequestDto userRegisterRequestDto) {
+        JwtResponseDto jwtResponseDto = jwtAuthorizationService.register(userRegisterRequestDto);
+        return ResponseEntity.ok(jwtResponseDto);
     }
 
     @PostMapping("/login")
-    public ResponseEntity<JwtResponse> login(@RequestBody JwtLoginRequest jwtLoginRequest) {
-        JwtResponse jwtResponse = authService.login(jwtLoginRequest);
-        return ResponseEntity.ok(jwtResponse);
+    public ResponseEntity<JwtResponseDto> login(@RequestBody UserLoginRequestDto userLoginRequestDto) {
+        JwtResponseDto jwtResponseDto = jwtAuthorizationService.login(userLoginRequestDto);
+        return ResponseEntity.ok(jwtResponseDto);
     }
 
     @PostMapping("/refresh")
-    public ResponseEntity<JwtResponse> refresh(@RequestBody JwtRefreshRequest jwtRefreshRequest) {
-        JwtResponse jwtResponse = authService.refresh(jwtRefreshRequest.getRefreshToken());
-        return ResponseEntity.ok(jwtResponse);
+    public ResponseEntity<JwtResponseDto> refresh(@RequestBody JwtRefreshRequest jwtRefreshRequest) {
+        JwtResponseDto jwtResponseDto = jwtAuthorizationService.refresh(jwtRefreshRequest.getRefreshToken());
+        return ResponseEntity.ok(jwtResponseDto);
     }
 
 }

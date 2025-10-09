@@ -1,6 +1,6 @@
 package com.challengeteam.shop.security.filter;
 
-import com.challengeteam.shop.service.JwtTokenService;
+import com.challengeteam.shop.service.JwtService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -20,7 +20,7 @@ import java.io.IOException;
 @RequiredArgsConstructor
 public class JwtTokenFilter extends OncePerRequestFilter {
 
-    private final JwtTokenService jwtTokenService;
+    private final JwtService jwtService;
 
     private final UserDetailsService userDetailsService;
 
@@ -30,8 +30,8 @@ public class JwtTokenFilter extends OncePerRequestFilter {
         if (bearerToken != null && bearerToken.startsWith("Bearer ")) {
             bearerToken = bearerToken.substring(7);
         }
-        if (bearerToken != null && jwtTokenService.isValid(bearerToken)) {
-            String username = jwtTokenService.getUsernameFromToken(bearerToken);
+        if (bearerToken != null && jwtService.isValid(bearerToken)) {
+            String username = jwtService.getEmailFromToken(bearerToken);
             UserDetails userDetails = userDetailsService.loadUserByUsername(username);
             Authentication authentication =
                     new UsernamePasswordAuthenticationToken(
