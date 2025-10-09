@@ -1,6 +1,6 @@
 package com.challengeteam.shop.controller;
 
-import com.challengeteam.shop.dto.jwt.JwtRefreshRequest;
+import com.challengeteam.shop.dto.jwt.JwtRefreshRequestDto;
 import com.challengeteam.shop.dto.user.UserLoginRequestDto;
 import com.challengeteam.shop.dto.jwt.JwtResponseDto;
 import com.challengeteam.shop.dto.user.UserRegisterRequestDto;
@@ -19,21 +19,26 @@ public class AuthController {
 
     private final JwtAuthorizationService jwtAuthorizationService;
 
+
     @PostMapping("/register")
     public ResponseEntity<JwtResponseDto> register(@RequestBody UserRegisterRequestDto userRegisterRequestDto) {
         JwtResponseDto jwtResponseDto = jwtAuthorizationService.register(userRegisterRequestDto);
+
         return ResponseEntity.ok(jwtResponseDto);
     }
 
     @PostMapping("/login")
     public ResponseEntity<JwtResponseDto> login(@RequestBody UserLoginRequestDto userLoginRequestDto) {
         JwtResponseDto jwtResponseDto = jwtAuthorizationService.login(userLoginRequestDto);
+
         return ResponseEntity.ok(jwtResponseDto);
     }
 
-    @PostMapping("/refresh")
-    public ResponseEntity<JwtResponseDto> refresh(@RequestBody JwtRefreshRequest jwtRefreshRequest) {
-        JwtResponseDto jwtResponseDto = jwtAuthorizationService.refresh(jwtRefreshRequest.getRefreshToken());
+    @PostMapping("/refresh-token")
+    public ResponseEntity<JwtResponseDto> refreshToken(@RequestBody JwtRefreshRequestDto jwtRefreshRequestDto) {
+        String refreshToken = jwtRefreshRequestDto.refreshToken();
+        JwtResponseDto jwtResponseDto = jwtAuthorizationService.refresh(refreshToken);
+
         return ResponseEntity.ok(jwtResponseDto);
     }
 

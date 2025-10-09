@@ -10,6 +10,7 @@ import com.challengeteam.shop.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.net.URI;
@@ -43,8 +44,9 @@ public class UserController {
     @PostMapping
     public ResponseEntity<Void> createDefaultUser(@RequestBody CreateUserDto createUserDto) {
         Long id = userService.createDefaultUser(createUserDto);
-        URI newUserLocation = UriComponentsBuilder.newInstance()
-                .path("/{id}")
+        URI newUserLocation = ServletUriComponentsBuilder
+                .fromCurrentContextPath()
+                .path("/api/v1/users/{id}")
                 .buildAndExpand(id)
                 .toUri();
 
