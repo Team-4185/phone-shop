@@ -9,6 +9,7 @@ import com.challengeteam.shop.repository.RoleRepository;
 import com.challengeteam.shop.repository.UserRepository;
 import com.challengeteam.shop.service.UserService;
 import com.challengeteam.shop.service.impl.merger.UserMerger;
+import com.challengeteam.shop.service.impl.validator.UserValidator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -23,12 +24,13 @@ import java.util.Optional;
 @Service
 @RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
-    private static final String DEFAULT_ROLE_NAME_FOR_CREATED_USER = "USER";
+    public static final String DEFAULT_ROLE_NAME_FOR_CREATED_USER = "USER";
 
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
     private final UserMerger userMerger;
+    private final UserValidator userValidator;
 
 
     @Transactional(readOnly = true)
@@ -61,6 +63,7 @@ public class UserServiceImpl implements UserService {
     public Long createDefaultUser(CreateUserDto createUserDto) {
         Objects.requireNonNull(createUserDto, "createUserDto");
 
+        userValidator.validateEmailIsUnique(createUserDto.email());
         String encoded = passwordEncoder.encode(createUserDto.password());
         Role defaultRole = roleRepository
                 .findByName(DEFAULT_ROLE_NAME_FOR_CREATED_USER)
@@ -103,6 +106,8 @@ public class UserServiceImpl implements UserService {
     @Transactional(readOnly = true)
     @Override
     public boolean existsByEmail(String email) {
+        Objects.requireNonNull(email, "email");
+
         log.debug("Called method 'existsByEmail' with email: {}", email);
         return userRepository.existsByEmail(email);
     }

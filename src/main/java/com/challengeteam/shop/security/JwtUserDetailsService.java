@@ -1,6 +1,7 @@
 package com.challengeteam.shop.security;
 
 import com.challengeteam.shop.entity.user.User;
+import com.challengeteam.shop.exception.ResourceNotFoundException;
 import com.challengeteam.shop.factory.JwtEntityFactory;
 import com.challengeteam.shop.service.UserService;
 import lombok.RequiredArgsConstructor;
@@ -17,7 +18,10 @@ public class JwtUserDetailsService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        User user = userService.getByEmail(username);
+        User user = userService
+                .getByEmail(username)
+                .orElseThrow(() -> new ResourceNotFoundException("Not found user with username: " + username));
+
         return JwtEntityFactory.create(user);
     }
 

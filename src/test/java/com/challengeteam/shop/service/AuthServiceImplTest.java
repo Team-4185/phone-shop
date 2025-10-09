@@ -2,11 +2,13 @@ package com.challengeteam.shop.service;
 
 import com.challengeteam.shop.dto.jwt.JwtLoginRequest;
 import com.challengeteam.shop.dto.jwt.JwtResponse;
+import com.challengeteam.shop.dto.user.CreateUserDto;
 import com.challengeteam.shop.dto.user.UserRegisterRequestDto;
 import com.challengeteam.shop.entity.user.Role;
 import com.challengeteam.shop.entity.user.User;
 import com.challengeteam.shop.mapper.UserMapper;
 import com.challengeteam.shop.service.impl.AuthServiceImpl;
+import com.challengeteam.shop.service.impl.UserServiceImpl;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -14,6 +16,8 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -46,23 +50,25 @@ public class AuthServiceImplTest {
 
     @Test
     void testRegister() {
-        UserRegisterRequestDto userRegisterRequestDto =
-                new UserRegisterRequestDto(email, password, passwordConfirmation);
+        var registerRequest = new UserRegisterRequestDto(email, password, passwordConfirmation);
 
         Role role = new Role();
-        role.setName("USER");
+        role.setName(UserServiceImpl.DEFAULT_ROLE_NAME_FOR_CREATED_USER);
+
         User user = new User();
         user.setId(userId);
         user.setEmail(email);
         user.setRole(role);
 
-        when(userService.existsByEmail(userRegisterRequestDto.email())).thenReturn(false);
-        when(userMapper.toUser(userRegisterRequestDto)).thenReturn(user);
-        when(userService.createDefaultUser(user)).thenReturn(user);
+        var createUserDto = new CreateUserDto(email, password);
+
+        when(userService.existsByEmail(registerRequest.email())).thenReturn(false);
+        when(userService.createDefaultUser(createUserDto)).thenReturn(user.getId());
+        when(userService.getById(userId)).thenReturn(Optional.of(user));
         when(jwtTokenService.createAccessToken(user.getId(), user.getEmail(), user.getRole())).thenReturn(accessToken);
         when(jwtTokenService.createRefreshToken(user.getId(), user.getEmail(), user.getRole())).thenReturn(refreshToken);
 
-        JwtResponse jwtResponse = authService.register(userRegisterRequestDto);
+        JwtResponse jwtResponse = authService.register(registerRequest);
 
         assertNotNull(jwtResponse);
         assertEquals(user.getId(), jwtResponse.userId());
@@ -110,7 +116,7 @@ public class AuthServiceImplTest {
                         jwtLoginRequest.getUsername(),
                         jwtLoginRequest.getPassword()
                 ));
-        when(userService.getByEmail(jwtLoginRequest.getUsername())).thenReturn(user);
+        when(userService.getByEmail(jwtLoginRequest.getUsername())).thenReturn(Optional.of(user));
         when(jwtTokenService.createAccessToken(user.getId(), user.getEmail(), user.getRole())).thenReturn(accessToken);
         when(jwtTokenService.createRefreshToken(user.getId(), user.getEmail(), user.getRole())).thenReturn(refreshToken);
 

@@ -2,13 +2,17 @@ package com.challengeteam.shop.entity.user;
 
 import com.challengeteam.shop.entity.BaseEntity;
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.time.Instant;
+
 @Getter
 @Setter
 @Builder
+@AllArgsConstructor
 @Entity
 @Table(name = "users")
 public class User extends BaseEntity {
@@ -37,6 +41,24 @@ public class User extends BaseEntity {
 
     public User() {
         super();
+    }
+
+    public User(Long id,
+                String email,
+                String password,
+                String firstName,
+                String lastName,
+                String city,
+                String phoneNumber,
+                Role role) {
+        super(id);
+        this.email = email;
+        this.password = password;
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.city = city;
+        this.phoneNumber = phoneNumber;
+        this.role = role;
     }
 
     @Override

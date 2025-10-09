@@ -2,8 +2,10 @@ package com.challengeteam.shop.service.impl;
 
 import com.challengeteam.shop.dto.jwt.JwtLoginRequest;
 import com.challengeteam.shop.dto.jwt.JwtResponse;
+import com.challengeteam.shop.dto.user.CreateUserDto;
 import com.challengeteam.shop.dto.user.UserRegisterRequestDto;
 import com.challengeteam.shop.entity.user.User;
+import com.challengeteam.shop.exception.ResourceNotFoundException;
 import com.challengeteam.shop.mapper.UserMapper;
 import com.challengeteam.shop.service.AuthService;
 import com.challengeteam.shop.service.JwtTokenService;
@@ -26,24 +28,33 @@ public class AuthServiceImpl implements AuthService {
     private final AuthenticationManager authenticationManager;
 
     @Override
-    public JwtResponse register(UserRegisterRequestDto userRegisterRequestDto) {
-        if(userService.existsByEmail(userRegisterRequestDto.email())) {
+    public JwtResponse register(UserRegisterRequestDto registerRequest) {
+        if(userService.existsByEmail(registerRequest.email())) {
             throw new IllegalStateException("Username already exists");
         }
-        if(!userRegisterRequestDto.password().equals(userRegisterRequestDto.passwordConfirmation())) {
+
+        if(!registerRequest.password().equals(registerRequest.passwordConfirmation())) {
             throw new IllegalStateException("Password and confirmation do not match");
         }
 
-        User user = userService.createDefaultUser(userMapper.toUser(userRegisterRequestDto));
+        CreateUserDto createUserDto = new CreateUserDto(registerRequest.email(), registerRequest.password());
+        Long id = userService.createDefaultUser(createUserDto);
+        User user = userService
+                .getById(id)
+                .orElseThrow(() -> new RuntimeException("Failed to get new user"));
         return createJwtResponse(user);
     }
 
     @Override
-    public JwtResponse login(JwtLoginRequest jwtLoginRequest) {
-        authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(jwtLoginRequest.getUsername(), jwtLoginRequest.getPassword())
-        );
-        User user = userService.getByEmail(jwtLoginRequest.getUsername());
+    public JwtResponse login(JwtLoginRequest loginRequest) {
+        String username = loginRequest.getUsername();
+
+        var authenticationToken = new UsernamePasswordAuthenticationToken(username, loginRequest.getPassword());
+        authenticationManager.authenticate(authenticationToken);
+
+        User user = userService
+                .getByEmail(username)
+                .orElseThrow(() -> new ResourceNotFoundException("Not found user with username: " + username));
         return createJwtResponse(user);
     }
 

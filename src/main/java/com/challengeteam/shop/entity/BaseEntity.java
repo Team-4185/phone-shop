@@ -1,6 +1,7 @@
 package com.challengeteam.shop.entity;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -9,6 +10,7 @@ import java.util.Objects;
 
 @Getter
 @Setter
+@AllArgsConstructor
 @MappedSuperclass
 public abstract class BaseEntity {
     @Id
@@ -23,6 +25,10 @@ public abstract class BaseEntity {
 
 
     public BaseEntity() {}
+
+    public BaseEntity(Long id) {
+        this.id = id;
+    }
 
     @PrePersist
     protected void onCreate() {
