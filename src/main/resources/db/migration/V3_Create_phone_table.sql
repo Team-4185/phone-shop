@@ -7,5 +7,6 @@ CREATE TABLE phones
     description  TEXT,
     price        DECIMAL NOT NULL,
     brand        VARCHAR NOT NULL,
-    release_year INT NOT NULL
+    release_year INT NOT NULL,
+    CONSTRAINT PK_phones_id PRIMARY KEY (id)
 );
