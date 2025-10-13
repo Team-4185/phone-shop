@@ -1,11 +1,9 @@
 package com.challengeteam.shop.security;
 
 import com.challengeteam.shop.entity.user.User;
-import com.challengeteam.shop.exception.ResourceNotFoundException;
+import com.challengeteam.shop.exceptionHandling.exception.ResourceNotFoundException;
 import com.challengeteam.shop.service.UserService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.authorization.AuthorizationManager;
-import org.springframework.security.config.core.GrantedAuthorityDefaults;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;

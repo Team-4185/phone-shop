@@ -5,7 +5,7 @@ import com.challengeteam.shop.dto.user.CreateUserDto;
 import com.challengeteam.shop.dto.user.UserLoginRequestDto;
 import com.challengeteam.shop.dto.user.UserRegisterRequestDto;
 import com.challengeteam.shop.entity.user.User;
-import com.challengeteam.shop.exception.*;
+import com.challengeteam.shop.exceptionHandling.exception.*;
 import com.challengeteam.shop.service.JwtAuthorizationService;
 import com.challengeteam.shop.service.JwtService;
 import com.challengeteam.shop.service.UserService;
@@ -102,7 +102,7 @@ public class JwtAuthorizationServiceImpl implements JwtAuthorizationService {
         } catch (DisabledException e) {
             throw new AccountDisabledException("Account is disabled");
         } catch (AuthenticationException e) {
-            throw new AuthenticationFailedException();
+            throw new AuthenticationFailedException(e);
         }
     }
 

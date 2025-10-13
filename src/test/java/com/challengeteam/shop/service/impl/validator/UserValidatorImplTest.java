@@ -1,6 +1,6 @@
 package com.challengeteam.shop.service.impl.validator;
 
-import com.challengeteam.shop.exception.EmailAlreadyExistsException;
+import com.challengeteam.shop.exceptionHandling.exception.EmailAlreadyExistsException;
 import com.challengeteam.shop.repository.UserRepository;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;

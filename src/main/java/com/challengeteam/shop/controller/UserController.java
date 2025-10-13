@@ -4,14 +4,13 @@ import com.challengeteam.shop.dto.user.CreateUserDto;
 import com.challengeteam.shop.dto.user.UpdateProfileDto;
 import com.challengeteam.shop.dto.user.UserResponseDto;
 import com.challengeteam.shop.entity.user.User;
-import com.challengeteam.shop.exception.ResourceNotFoundException;
+import com.challengeteam.shop.exceptionHandling.exception.ResourceNotFoundException;
 import com.challengeteam.shop.mapper.UserMapper;
 import com.challengeteam.shop.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
-import org.springframework.web.util.UriComponentsBuilder;
 
 import java.net.URI;
 import java.util.List;

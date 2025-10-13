@@ -1,16 +1,18 @@
 package com.challengeteam.shop.service.impl;
 
 import com.challengeteam.shop.dto.jwt.JwtResponseDto;
-import com.challengeteam.shop.entity.user.Role;
 import com.challengeteam.shop.entity.user.User;
-import com.challengeteam.shop.exception.AccessDeniedException;
+import com.challengeteam.shop.exceptionHandling.exception.InvalidTokenException;
 import com.challengeteam.shop.properties.JwtProperties;
 import com.challengeteam.shop.service.JwtService;
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.security.KeyFactory;
@@ -23,6 +25,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.Base64;
 import java.util.Date;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class JwtServiceImpl implements JwtService {
@@ -94,9 +97,13 @@ public class JwtServiceImpl implements JwtService {
 
     @Override
     public boolean isValid(String token) {
-        return getClaims(token)
-                .getExpiration()
-                .after(new Date());
+        try {
+            return getClaims(token)
+                    .getExpiration()
+                    .after(new Date());
+        } catch (InvalidTokenException e) {
+            return false;
+        }
     }
 
     @Override
@@ -105,11 +112,17 @@ public class JwtServiceImpl implements JwtService {
     }
 
     private Claims getClaims(String token) {
-        return Jwts.parser()
-                .verifyWith(publicKey)
-                .build()
-                .parseSignedClaims(token)
-                .getPayload();
+        try {
+            return Jwts.parser()
+                    .verifyWith(publicKey)
+                    .build()
+                    .parseSignedClaims(token)
+                    .getPayload();
+        } catch (ExpiredJwtException e) {
+            throw new InvalidTokenException("Token is expired");
+        } catch (JwtException | IllegalArgumentException e) {
+            throw new InvalidTokenException("Token is invalid");
+        }
     }
 
     private String createToken(Claims claims, Instant expiration) {

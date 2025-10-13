@@ -1,4 +1,4 @@
-package com.challengeteam.shop.exception;
+package com.challengeteam.shop.exceptionHandling.exception;
 
 public class EmailAlreadyExistsException extends RuntimeException {
     public EmailAlreadyExistsException() {

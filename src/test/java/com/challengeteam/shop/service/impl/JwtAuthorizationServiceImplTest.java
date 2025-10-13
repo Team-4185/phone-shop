@@ -5,10 +5,10 @@ import com.challengeteam.shop.dto.user.CreateUserDto;
 import com.challengeteam.shop.dto.user.UserLoginRequestDto;
 import com.challengeteam.shop.dto.user.UserRegisterRequestDto;
 import com.challengeteam.shop.entity.user.User;
-import com.challengeteam.shop.exception.EmailOrPasswordWrongException;
-import com.challengeteam.shop.exception.InvalidAPIRequestException;
-import com.challengeteam.shop.exception.InvalidTokenException;
-import com.challengeteam.shop.exception.ResourceNotFoundException;
+import com.challengeteam.shop.exceptionHandling.exception.EmailOrPasswordWrongException;
+import com.challengeteam.shop.exceptionHandling.exception.InvalidAPIRequestException;
+import com.challengeteam.shop.exceptionHandling.exception.InvalidTokenException;
+import com.challengeteam.shop.exceptionHandling.exception.ResourceNotFoundException;
 import com.challengeteam.shop.service.JwtService;
 import com.challengeteam.shop.service.UserService;
 import com.challengeteam.shop.testData.UserTestData;
@@ -21,7 +21,6 @@ import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 
 import java.util.Optional;
@@ -121,10 +120,6 @@ public class JwtAuthorizationServiceImplTest {
             // given
             User jeremy = UserTestData.getJeremy();
             var userLoginRequestDto = new UserLoginRequestDto(
-                    jeremy.getEmail(),
-                    jeremy.getPassword()
-            );
-            var authToken = new UsernamePasswordAuthenticationToken(
                     jeremy.getEmail(),
                     jeremy.getPassword()
             );

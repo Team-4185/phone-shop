@@ -4,7 +4,7 @@ import com.challengeteam.shop.dto.user.CreateUserDto;
 import com.challengeteam.shop.dto.user.UpdateProfileDto;
 import com.challengeteam.shop.entity.user.Role;
 import com.challengeteam.shop.entity.user.User;
-import com.challengeteam.shop.exception.ResourceNotFoundException;
+import com.challengeteam.shop.exceptionHandling.exception.ResourceNotFoundException;
 import com.challengeteam.shop.repository.RoleRepository;
 import com.challengeteam.shop.repository.UserRepository;
 import com.challengeteam.shop.service.UserService;
