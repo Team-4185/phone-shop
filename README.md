@@ -40,3 +40,4 @@ export JWT_PRIVATE_KEY=<your-private-key>
 export JWT_PUBLIC_KEY=<your-public-key>
 
 ./mvnw spring-boot:run
+```
