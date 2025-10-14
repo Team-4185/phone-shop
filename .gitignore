@@ -39,4 +39,6 @@ build/
 .DS_Store
 
 *.env
+env
 .run
+notes.txt

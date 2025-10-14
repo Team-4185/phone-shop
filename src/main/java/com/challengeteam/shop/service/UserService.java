@@ -1,14 +1,25 @@
 package com.challengeteam.shop.service;
 
+import com.challengeteam.shop.dto.user.CreateUserDto;
+import com.challengeteam.shop.dto.user.UpdateProfileDto;
 import com.challengeteam.shop.entity.user.User;
+
+import java.util.List;
+import java.util.Optional;
 
 public interface UserService {
 
-    User getById(Long id);
+    List<User> getAll();
 
-    User getByEmail(String email);
+    Optional<User> getById(Long id);
 
-    User create(User user);
+    Optional<User> getByEmail(String email);
+
+    Long createDefaultUser(CreateUserDto createUserDto);
+
+    void updateProfile(Long id, UpdateProfileDto updateProfileDto);
+
+    void delete(Long id);
 
     boolean existsByEmail(String email);
 
