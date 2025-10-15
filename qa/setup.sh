@@ -1,0 +1,2 @@
+echo "Starting up gadget-room..." && \
+docker compose --project-name gadget-room --env-file ./test.env up
