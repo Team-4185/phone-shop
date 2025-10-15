@@ -40,5 +40,5 @@ build/
 
 *.env
 env
+stash
 .run
-notes.txt
