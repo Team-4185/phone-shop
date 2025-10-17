@@ -25,6 +25,7 @@ public class MIMEType {
     @OneToMany(mappedBy = "mimeType")
     private List<Image> images;
 
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
