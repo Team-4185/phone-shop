@@ -35,6 +35,10 @@ security:
     access-token-expiration: ${JWT_ACCESS_TOKEN_EXPIRATION}     # minutes
     refresh-token-expiration: ${JWT_REFRESH_TOKEN_EXPIRATION}   # hours
 
+minio:
+  username: username
+  password: password
+
 logging:
   level:
     root: info

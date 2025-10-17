@@ -2,7 +2,10 @@ package com.challengeteam.shop.exceptionHandling;
 
 import com.challengeteam.shop.exceptionHandling.exception.*;
 import lombok.extern.slf4j.Slf4j;
+import org.flywaydb.core.api.ErrorDetails;
+import org.springdoc.api.ErrorMessage;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.ErrorResponse;
 import org.springframework.web.bind.annotation.ExceptionHandler;
