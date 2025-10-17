@@ -1,7 +1,7 @@
 package com.challengeteam.shop.service.impl.validator;
 
 import com.challengeteam.shop.exceptionHandling.exception.EmailAlreadyExistsException;
-import com.challengeteam.shop.repository.UserRepository;
+import com.challengeteam.shop.persistance.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 

@@ -1,4 +1,4 @@
-package com.challengeteam.shop.repository;
+package com.challengeteam.shop.persistance.repository;
 
 import com.challengeteam.shop.entity.user.Role;
 import org.springframework.data.jpa.repository.JpaRepository;
