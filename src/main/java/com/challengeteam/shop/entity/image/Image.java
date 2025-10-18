@@ -18,7 +18,7 @@ public class Image extends BaseEntity {
     private String name;
 
     @Column(nullable = false)
-    private String minioKey;
+    private String storageKey;
 
     @Column(nullable = false)
     private Long size;
@@ -36,7 +36,7 @@ public class Image extends BaseEntity {
     public String toString() {
         return "Image{" +
                "name='" + name + '\'' +
-               ", minioKey='" + minioKey + '\'' +
+               ", storageKey='" + storageKey + '\'' +
                ", size=" + size +
                ", mimeType=" + mimeType +
                "} " + super.toString();
