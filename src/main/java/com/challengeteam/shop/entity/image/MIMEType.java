@@ -1,6 +1,8 @@
 package com.challengeteam.shop.entity.image;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -9,6 +11,8 @@ import java.util.Objects;
 
 @Getter
 @Setter
+@AllArgsConstructor
+@Builder
 @Entity
 @Table(name = "mime_types")
 public class MIMEType {
@@ -25,6 +29,10 @@ public class MIMEType {
     @OneToMany(mappedBy = "mimeType")
     private List<Image> images;
 
+
+    public MIMEType() {
+        super();
+    }
 
     @Override
     public boolean equals(Object o) {
