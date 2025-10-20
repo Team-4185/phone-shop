@@ -3,7 +3,7 @@ package com.challengeteam.shop.service.impl;
 import com.challengeteam.shop.dto.jwt.JwtResponseDto;
 import com.challengeteam.shop.entity.user.User;
 import com.challengeteam.shop.properties.JwtProperties;
-import com.challengeteam.shop.testData.UserTestData;
+import com.challengeteam.shop.testData.user.UserTestData;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 

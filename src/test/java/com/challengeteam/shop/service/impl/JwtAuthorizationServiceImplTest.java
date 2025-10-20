@@ -11,7 +11,7 @@ import com.challengeteam.shop.exceptionHandling.exception.InvalidTokenException;
 import com.challengeteam.shop.exceptionHandling.exception.ResourceNotFoundException;
 import com.challengeteam.shop.service.JwtService;
 import com.challengeteam.shop.service.UserService;
-import com.challengeteam.shop.testData.UserTestData;
+import com.challengeteam.shop.testData.user.UserTestData;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
