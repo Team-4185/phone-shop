@@ -1,6 +1,7 @@
 package com.challengeteam.shop.entity.user;
 
 import com.challengeteam.shop.entity.BaseEntity;
+import com.challengeteam.shop.entity.cart.Cart;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -37,6 +38,9 @@ public class User extends BaseEntity {
     @ManyToOne
     @JoinColumn(nullable = false, name = "fk_role_id")
     private Role role;
+
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
+    private Cart cart;
 
 
     public User() {
