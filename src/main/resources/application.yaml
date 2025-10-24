@@ -6,7 +6,7 @@ spring:
   config:
     import: optional:file:.env[.properties]
   datasource:
-    url: jdbc:postgresql://${DB_HOST}/${DB_NAME}
+    url: ${DB_URL}
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
     driver-class-name: org.postgresql.Driver
@@ -36,9 +36,9 @@ security:
     refresh-token-expiration: ${JWT_REFRESH_TOKEN_EXPIRATION}   # hours
 
 minio:
-  url: http://localhost:9000
-  username: username
-  password: password
+  url: ${MINIO_URL}
+  username: ${MINIO_USERNAME}
+  password: ${MINIO_PASSWORD}
 
 logging:
   level:

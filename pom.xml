@@ -24,6 +24,8 @@
 		<jjwt.version>0.13.0</jjwt.version>
 		<mapstruct.version>1.6.3</mapstruct.version>
 		<minio.version>8.5.17</minio.version>
+		<testcontainers.minio.version>2.0.1</testcontainers.minio.version>
+		<testcontainers.postgres.version>2.0.1</testcontainers.postgres.version>
 	</properties>
 	
 	<parent>
@@ -88,6 +90,18 @@
 			<artifactId>spring-boot-starter-test</artifactId>
 			<scope>test</scope>
 		</dependency>
+		<dependency>
+			<groupId>org.testcontainers</groupId>
+			<artifactId>testcontainers-minio</artifactId>
+			<version>${testcontainers.minio.version}</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.testcontainers</groupId>
+			<artifactId>testcontainers-postgresql</artifactId>
+			<version>${testcontainers.postgres.version}</version>
+			<scope>test</scope>
+		</dependency>
 		
 		<!-- TOOLS -->
 		<dependency>
@@ -100,6 +114,11 @@
 			<groupId>org.springdoc</groupId>
 			<artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
 			<version>${springdoc-openapi.version}</version>
+		</dependency>
+		<dependency> <!-- for swagger -->
+			<groupId>org.jetbrains.kotlin</groupId>
+			<artifactId>kotlin-reflect</artifactId>
+			<version>1.9.24</version>
 		</dependency>
 		<dependency>
 			<groupId>org.mapstruct</groupId>
