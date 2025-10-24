@@ -31,7 +31,7 @@ public class FileUtility {
         Objects.requireNonNull(file, "file");
 
         String filename = file.getOriginalFilename();
-        if (filename == null) {
+        if (filename == null || filename.isBlank()) {
             throw new FileUtilityException("File supplied without original filename");
         }
 

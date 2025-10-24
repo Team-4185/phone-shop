@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Supplier;
 
@@ -27,6 +28,8 @@ public class MIMETypeServiceImpl implements MIMETypeService {
     @Transactional
     @Override
     public MIMEType createIfDoesntExist(MultipartFile file) {
+        Objects.requireNonNull(file, "file");
+
         try {
             String fileExtension = FileUtility.getFileExtension(file);
             String contentType = FileUtility.getContentType(file);
