@@ -1,6 +1,5 @@
 package com.challengeteam.shop.testContainer.container;
 
-import com.challengeteam.shop.testContainer.TestContextConfigurator;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.testcontainers.containers.MinIOContainer;
