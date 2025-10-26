@@ -26,8 +26,9 @@ public class ImageHeadersResolverImpl implements ImageHeadersResolver {
 
     @Override
     public HttpHeaders resolveHeaders(ImageDataDto responseBody) {
-        HttpHeaders headers = new HttpHeaders();
+        Objects.requireNonNull(responseBody, "responseBody");
 
+        HttpHeaders headers = new HttpHeaders();
         resolveContentType(responseBody, headers);
         resolveContentLength(responseBody, headers);
         resolveContentDisposition(responseBody, headers);
