@@ -1,4 +1,4 @@
-package com.challengeteam.shop.controller;
+package com.challengeteam.shop.web.controller;
 
 import com.challengeteam.shop.dto.user.CreateUserDto;
 import com.challengeteam.shop.dto.user.UpdateProfileDto;

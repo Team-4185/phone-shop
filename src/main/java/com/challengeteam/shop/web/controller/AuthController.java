@@ -1,4 +1,4 @@
-package com.challengeteam.shop.controller;
+package com.challengeteam.shop.web.controller;
 
 import com.challengeteam.shop.dto.jwt.JwtRefreshRequestDto;
 import com.challengeteam.shop.dto.user.UserLoginRequestDto;

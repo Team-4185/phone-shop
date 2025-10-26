@@ -167,4 +167,14 @@ public class GlobalExceptionHandler {
                 .body(body);
     }
 
+    @ExceptionHandler(UnsupportedImageContentTypeException.class)
+    public ResponseEntity<ErrorResponse> handleUnsupportedImageContentTypeException(UnsupportedImageContentTypeException e) {
+        log.warn("Unsupported: Unsupported Content-Type {}", e.getContentType());
+
+        var body = ErrorResponse.create(e, HttpStatus.BAD_REQUEST, "Unsupported Content-Type: " + e.getContentType());
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(body);
+    }
+
 }
