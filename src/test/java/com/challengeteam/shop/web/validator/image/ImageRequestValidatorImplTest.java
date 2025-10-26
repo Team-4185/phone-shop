@@ -14,7 +14,7 @@ class ImageRequestValidatorImplTest {
     private final ImageRequestValidatorImpl imageRequestValidator = new ImageRequestValidatorImpl();
 
     @Nested
-    class ValidateClass {
+    class ValidateClassTest {
 
         @Test
         void whenGivenValidMultipartFile_thenDoNothing() {
