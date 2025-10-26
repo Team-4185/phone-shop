@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.Objects;
 import java.util.Set;
 
 @Slf4j
@@ -22,8 +23,9 @@ public class ImageRequestValidatorImpl implements ImageRequestValidator {
 
     @Override
     public void validate(MultipartFile image) {
-        String contentType = image.getContentType();
+        Objects.requireNonNull(image, "image");
 
+        String contentType = image.getContentType();
         log.debug("Start to validate request image content type: {} ", contentType);
         for (String allowed : allowedContentTypes) {
             if (allowed.equals(contentType)) {
