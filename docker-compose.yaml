@@ -1,0 +1,61 @@
+services:
+
+  shop:
+    container_name: gadget-room
+    build: .
+    depends_on:
+      - db
+      - image-storage
+    ports:
+      - "${PORT}:8080"
+    environment:
+      DB_URL: jdbc:postgresql://db:5432/${DB_NAME}
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+      JWT_ACCESS_TOKEN_EXPIRATION: ${JWT_ACCESS_TOKEN_EXPIRATION}
+      JWT_REFRESH_TOKEN_EXPIRATION: ${JWT_REFRESH_TOKEN_EXPIRATION}
+      JWT_PRIVATE_KEY: ${JWT_PRIVATE_KEY}
+      JWT_PUBLIC_KEY: ${JWT_PUBLIC_KEY}
+      PORT: 8080
+      MINIO_URL: http://image-storage:9000
+      MINIO_USERNAME: ${MINIO_USERNAME}
+      MINIO_PASSWORD: ${MINIO_PASSWORD}
+    networks:
+      - gadget-room-network
+
+  db:
+    container_name: gadget-room-postgres
+    image: postgres:14
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - "${DB_PORT}:5432"
+    volumes:
+      - gadget-room-postgres-volume:/var/lib/postgresql/data
+    networks:
+      - gadget-room-network
+
+  image-storage:
+    container_name: gadget-room-minio
+    image: minio/minio
+    ports:
+      - "${MINIO_STORAGE_PORT}:9000"
+      - "${MINIO_STORAGE_WEB_PORT}:9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_USERNAME}
+      MINIO_ROOT_PASSWORD: ${MINIO_PASSWORD}
+    command: server /data --console-address ":9001"
+    volumes:
+      - gadget-room-minio-volume:/data
+    networks:
+      - gadget-room-network
+
+volumes:
+  gadget-room-postgres-volume:
+  gadget-room-minio-volume:
+
+networks:
+  gadget-room-network:
+    driver: bridge
