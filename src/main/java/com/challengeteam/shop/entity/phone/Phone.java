@@ -4,6 +4,8 @@ import com.challengeteam.shop.entity.BaseEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -11,6 +13,8 @@ import java.math.BigDecimal;
 
 @Getter
 @Setter
+@Builder
+@AllArgsConstructor
 @Entity
 @Table(name = "phones")
 public class Phone extends BaseEntity {
@@ -29,6 +33,8 @@ public class Phone extends BaseEntity {
 
     @Column(nullable = false)
     private Integer releaseYear;
+
+    public Phone() { super(); }
 
     @Override
     public String toString() {

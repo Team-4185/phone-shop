@@ -1,4 +1,4 @@
-package com.challengeteam.shop.testData;
+package com.challengeteam.shop.testData.user;
 
 import com.challengeteam.shop.entity.user.User;
 
