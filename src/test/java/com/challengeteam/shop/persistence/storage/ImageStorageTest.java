@@ -5,14 +5,11 @@ import com.challengeteam.shop.testContainer.ContainerExtension;
 import com.challengeteam.shop.testContainer.TestContextConfigurator;
 import io.minio.GetObjectArgs;
 import io.minio.ListObjectsArgs;
-import io.minio.MakeBucketArgs;
 import io.minio.MinioClient;
 import io.minio.PutObjectArgs;
-import io.minio.RemoveBucketArgs;
 import io.minio.RemoveObjectArgs;
 import io.minio.Result;
 import io.minio.messages.Item;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
@@ -54,18 +51,12 @@ class ImageStorageTest {
     public void setUpStorage() throws Exception {
         if (minioClient == null) {
             buildMinio(minioProperties);
-            createBucket();
         }
     }
 
     @AfterEach
     public void cleanUpStorage() throws Exception {
         cleanStorage();
-    }
-
-    @AfterAll
-    public static void removeStorage() throws Exception {
-        removeBucket();
     }
 
     @Nested
@@ -262,24 +253,6 @@ class ImageStorageTest {
             }
         }
 
-        static void createBucket() throws Exception {
-            var args = MakeBucketArgs.builder()
-                    .bucket(IMAGE_BUCKET_NAME)
-                    .build();
-
-            minioClient.makeBucket(args);
-        }
-
-        static void removeBucket() throws Exception {
-            if (minioClient == null) return;
-
-            var args = RemoveBucketArgs.builder()
-                    .bucket(IMAGE_BUCKET_NAME)
-                    .build();
-
-            minioClient.removeBucket(args);
-        }
-
         static void buildMinio(MinioProperties minioProperties) {
             String url = minioProperties.getUrl();
             String username = minioProperties.getUsername();
@@ -313,12 +286,12 @@ class ImageStorageTest {
 
     private enum TestFile {
         FILE_1(
-                "persistence/storage/mageStorage/image_1.jpg",
+                "persistence/storage/imageStorage/image_1.jpg",
                 "image_1.jpg",
                 MediaType.IMAGE_JPEG.toString()
         ),
         FILE_2(
-                "persistence/storage/mageStorage/image_2.jpeg",
+                "persistence/storage/imageStorage/image_2.jpeg",
                 "image_2.jpeg",
                 MediaType.IMAGE_JPEG.toString()
         );
