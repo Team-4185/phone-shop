@@ -33,6 +33,7 @@ public class ImageController {
     private final ImageService imageService;
     private final ImageMapper imageMapper;
 
+    // todo: assign for documentation, that endpoint is secure with Bearer Token
     @GetMapping("/{id}")
     public ResponseEntity<Resource> getImageById(@PathVariable Long id) {
         ImageDataDto imageDataDto = imageService
@@ -47,6 +48,7 @@ public class ImageController {
                 .body(body);
     }
 
+    // todo: assign for documentation, that endpoint is secure with Bearer Token
     @GetMapping("/{id}/metadata")
     public ResponseEntity<ImageMetadataResponseDto> getImageMetadataById(@PathVariable Long id) {
         Image image = imageService
@@ -60,6 +62,7 @@ public class ImageController {
     // Temporal endpoint for testing
     // Image is going to be a part of a phone.
     // Creating images will be with creating a phone. So this controller is only for getting images.
+    // todo: assign for documentation, that endpoint is secure with Bearer Token
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Void> uploadImageTemporalEndpoint(@RequestPart("image") MultipartFile image) {
         imageRequestValidator.validate(image);
