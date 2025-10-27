@@ -9,6 +9,7 @@ import com.challengeteam.shop.service.ImageService;
 import com.challengeteam.shop.web.resolver.headerResolver.HeadersResolver;
 import com.challengeteam.shop.web.resolver.headerResolver.imageHeaderResolver.ImageHeadersResolver;
 import com.challengeteam.shop.web.validator.image.ImageRequestValidator;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.Resource;
@@ -19,6 +20,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
@@ -26,14 +28,12 @@ import org.springframework.web.multipart.MultipartFile;
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("/api/v1/images")
-@Tag(name = "Images")
 public class ImageController {
     private final ImageHeadersResolver imageHeadersResolver;
     private final ImageRequestValidator imageRequestValidator;
     private final ImageService imageService;
     private final ImageMapper imageMapper;
 
-    // todo: assign for documentation, that endpoint is secure with Bearer Token
     @GetMapping("/{id}")
     public ResponseEntity<Resource> getImageById(@PathVariable Long id) {
         ImageDataDto imageDataDto = imageService
@@ -48,7 +48,6 @@ public class ImageController {
                 .body(body);
     }
 
-    // todo: assign for documentation, that endpoint is secure with Bearer Token
     @GetMapping("/{id}/metadata")
     public ResponseEntity<ImageMetadataResponseDto> getImageMetadataById(@PathVariable Long id) {
         Image image = imageService
@@ -62,9 +61,8 @@ public class ImageController {
     // Temporal endpoint for testing
     // Image is going to be a part of a phone.
     // Creating images will be with creating a phone. So this controller is only for getting images.
-    // todo: assign for documentation, that endpoint is secure with Bearer Token
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<Void> uploadImageTemporalEndpoint(@RequestPart("image") MultipartFile image) {
+    public ResponseEntity<Void> uploadImageTemporalEndpoint(@RequestParam("image") MultipartFile image) {
         imageRequestValidator.validate(image);
         imageService.uploadImage(image);
 
