@@ -4,9 +4,12 @@ import com.challengeteam.shop.dto.cart.CartItemAddRequestDto;
 import com.challengeteam.shop.dto.cart.CartItemUpdateRequestDto;
 import com.challengeteam.shop.dto.cart.CartResponseDto;
 import com.challengeteam.shop.entity.cart.Cart;
+import com.challengeteam.shop.entity.user.User;
+import com.challengeteam.shop.exceptionHandling.exception.CriticalSystemException;
 import com.challengeteam.shop.exceptionHandling.exception.ResourceNotFoundException;
 import com.challengeteam.shop.mapper.CartMapper;
 import com.challengeteam.shop.service.CartService;
+import com.challengeteam.shop.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -18,16 +21,16 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 public class CartController {
 
+    private final UserService userService;
+
     private final CartService cartService;
 
     private final CartMapper cartMapper;
 
     @GetMapping
     public ResponseEntity<CartResponseDto> getMyCart(@AuthenticationPrincipal UserDetails userDetails) {
-        Cart cart = cartService.getByUsername(userDetails.getUsername())
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
-        CartResponseDto cartResponseDto = cartMapper.toCartResponseDto(cart);
-        return ResponseEntity.ok(cartResponseDto);
+        Cart cart = userCartService.getCart(userDetails.getUser());
+        return ResponseEntity.ok(cartMapper.toCartResponseDto(cart));
     }
 
     @PostMapping("/add")

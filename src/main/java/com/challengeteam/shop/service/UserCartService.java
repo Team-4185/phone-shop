@@ -6,9 +6,9 @@ import com.challengeteam.shop.entity.cart.Cart;
 
 import java.util.Optional;
 
-public interface CartService {
+public interface UserCartService {
 
-    Optional<Cart> getCart(Long id);
+    Optional<Cart> getUserCart(Long id);
 
     void addItemToCart(Long id, CartItemAddRequestDto cartItemAddRequestDto);
 
