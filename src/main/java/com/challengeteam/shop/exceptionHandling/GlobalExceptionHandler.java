@@ -177,4 +177,14 @@ public class GlobalExceptionHandler {
                 .body(body);
     }
 
+    @ExceptionHandler(PhoneAlreadyInCartException.class)
+    public ResponseEntity<ErrorResponse> handlePhoneAlreadyInCartException(PhoneAlreadyInCartException e) {
+        log.warn("Phone already in cart: {}", e.getMessage());
+
+        var body = ErrorResponse.create(e, HttpStatus.BAD_REQUEST, e.getMessage());
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(body);
+    }
+
 }
