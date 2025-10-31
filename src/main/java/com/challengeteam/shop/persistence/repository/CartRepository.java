@@ -1,4 +1,4 @@
-package com.challengeteam.shop.repository;
+package com.challengeteam.shop.persistence.repository;
 
 import com.challengeteam.shop.entity.cart.Cart;
 import org.springframework.data.jpa.repository.JpaRepository;
