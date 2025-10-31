@@ -4,7 +4,7 @@ import com.challengeteam.shop.dto.phone.PhoneCreateRequestDto;
 import com.challengeteam.shop.dto.phone.PhoneUpdateRequestDto;
 import com.challengeteam.shop.entity.phone.Phone;
 import com.challengeteam.shop.exceptionHandling.exception.ResourceNotFoundException;
-import com.challengeteam.shop.repository.PhoneRepository;
+import com.challengeteam.shop.persistence.repository.PhoneRepository;
 import com.challengeteam.shop.service.PhoneService;
 import com.challengeteam.shop.service.impl.merger.PhoneMerger;
 import lombok.RequiredArgsConstructor;

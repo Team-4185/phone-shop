@@ -1,12 +1,14 @@
 package com.challengeteam.shop.properties;
 
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 
-@Service
+@Getter
+@Setter
+@Component
 @ConfigurationProperties(prefix = "security.jwt")
-@Data
 public class JwtProperties {
 
     private String privateKey;

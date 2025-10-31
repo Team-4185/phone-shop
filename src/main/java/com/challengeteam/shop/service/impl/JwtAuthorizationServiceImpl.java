@@ -102,7 +102,7 @@ public class JwtAuthorizationServiceImpl implements JwtAuthorizationService {
         } catch (DisabledException e) {
             throw new AccountDisabledException("Account is disabled");
         } catch (AuthenticationException e) {
-            throw new AuthenticationFailedException(e);
+            throw new AuthenticationFailedException(e.getMessage(), e);
         }
     }
 
