@@ -1,303 +1,260 @@
-//package com.challengeteam.shop.service.impl;
-//
-//import com.challengeteam.shop.dto.cart.CartItemAddRequestDto;
-//import com.challengeteam.shop.dto.cart.CartItemUpdateRequestDto;
-//import com.challengeteam.shop.entity.cart.Cart;
-//import com.challengeteam.shop.entity.cart.CartItem;
-//import com.challengeteam.shop.entity.phone.Phone;
-//import com.challengeteam.shop.entity.user.User;
-//import com.challengeteam.shop.exceptionHandling.exception.ResourceNotFoundException;
-//import com.challengeteam.shop.repository.CartRepository;
-//import com.challengeteam.shop.service.PhoneService;
-//import com.challengeteam.shop.service.UserService;
-//import org.junit.jupiter.api.BeforeEach;
-//import org.junit.jupiter.api.Nested;
-//import org.junit.jupiter.api.Test;
-//import org.junit.jupiter.api.extension.ExtendWith;
-//import org.mockito.Mock;
-//import org.mockito.Mockito;
-//import org.mockito.junit.jupiter.MockitoExtension;
-//
-//import java.math.BigDecimal;
-//import java.util.Optional;
-//
-//import static org.junit.jupiter.api.Assertions.*;
-//import static org.mockito.ArgumentMatchers.any;
-//
-//@ExtendWith(MockitoExtension.class)
-//public class CartServiceImplTest {
-//
-//    @Mock
-//    private CartRepository cartRepository;
-//
-//    @Mock
-//    private UserService userService;
-//
-//    @Mock
-//    private PhoneService phoneService;
-//
-//    private CartServiceImpl cartService;
-//
-//    @BeforeEach
-//    void setUp() {
-//        cartService = new CartServiceImpl(cartRepository, userService, phoneService);
-//    }
-//
-//    @Nested
-//    class GetByUsernameTest {
-//
-//        @Test
-//        void whenUserAndCartExist_thenReturnCart() {
-//            // given
-//            User user = buildUser();
-//            Cart cart = buildCart(user);
-//
-//            // mockito
-//            Mockito.when(userService.getByEmail("test@example.com")).thenReturn(Optional.of(user));
-//            Mockito.when(cartRepository.findByUserId(user.getId())).thenReturn(Optional.of(cart));
-//
-//            // when
-//            Cart result = cartService.getByUsername("test@example.com").orElse(null);
-//
-//            // then
-//            assertNotNull(result);
-//            assertEquals(cart, result);
-//        }
-//
-//        @Test
-//        void whenUserDoesNotExist_thenThrowException() {
-//            //given
-//            // ...
-//
-//            // mockito
-//            Mockito.when(userService.getByEmail("test@example.com")).thenReturn(Optional.empty());
-//
-//            // when + then
-//            assertThrows(ResourceNotFoundException.class,
-//                    () -> cartService.getByUsername("test@example.com"));
-//        }
-//
-//        @Test
-//        void whenCartDoesNotExist_thenThrowException() {
-//            // given
-//            User user = buildUser();
-//
-//            // mockito
-//            Mockito.when(userService.getByEmail("test@example.com")).thenReturn(Optional.of(user));
-//            Mockito.when(cartRepository.findByUserId(user.getId())).thenReturn(Optional.empty());
-//
-//            // when + then
-//            assertThrows(ResourceNotFoundException.class,
-//                    () -> cartService.getByUsername("test@example.com"));
-//        }
-//    }
-//
-//    @Nested
-//    class AddItemToCartTest {
-//
-//        @Test
-//        void whenPhoneNotInCart_thenAddNewItemAndUpdateTotalPrice() {
-//            // given
-//            User user = buildUser();
-//            Cart cart = buildCart(user);
-//            Phone phone = buildPhone(BigDecimal.valueOf(500));
-//            CartItemAddRequestDto dto = new CartItemAddRequestDto(10L, 2);
-//
-//            Mockito.when(userService.getByEmail("test@example.com")).thenReturn(Optional.of(user));
-//            Mockito.when(cartRepository.findByUserId(user.getId())).thenReturn(Optional.of(cart));
-//            Mockito.when(phoneService.getById(10L)).thenReturn(Optional.of(phone));
-//            Mockito.when(cartRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
-//
-//            // when
-//            cartService.addItemToCart("test@example.com", dto);
-//
-//            // then
-//            assertEquals(1, cart.getCartItems().size());
-//            CartItem item = cart.getCartItems().get(0);
-//            assertEquals(2, item.getAmount());
-//            assertEquals(BigDecimal.valueOf(1000), cart.getTotalPrice());
-//        }
-//
-//        @Test
-//        void whenPhoneAlreadyInCart_thenIncreaseAmountAndUpdateTotalPrice() {
-//            // given
-//            User user = buildUser();
-//            Cart cart = buildCart(user);
-//            Phone phone = buildPhone(BigDecimal.valueOf(500));
-//
-//            CartItem existingItem = new CartItem();
-//            existingItem.setPhone(phone);
-//            existingItem.setAmount(3);
-//            cart.getCartItems().add(existingItem);
-//
-//            CartItemAddRequestDto dto = new CartItemAddRequestDto(10L, 2);
-//
-//            Mockito.when(userService.getByEmail("test@example.com")).thenReturn(Optional.of(user));
-//            Mockito.when(cartRepository.findByUserId(user.getId())).thenReturn(Optional.of(cart));
-//            Mockito.when(phoneService.getById(10L)).thenReturn(Optional.of(phone));
-//            Mockito.when(cartRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
-//
-//            // when
-//            cartService.addItemToCart("test@example.com", dto);
-//
-//            // then
-//            assertEquals(1, cart.getCartItems().size());
-//            assertEquals(5, existingItem.getAmount()); // 3 + 2
-//            assertEquals(BigDecimal.valueOf(2500), cart.getTotalPrice());
-//        }
-//
-//        @Test
-//        void whenPhoneDoesNotExist_thenThrowException() {
-//            // given
-//            User user = buildUser();
-//            Cart cart = buildCart(user);
-//            CartItemAddRequestDto dto = new CartItemAddRequestDto(10L, 2);
-//
-//            Mockito.when(userService.getByEmail("test@example.com")).thenReturn(Optional.of(user));
-//            Mockito.when(cartRepository.findByUserId(user.getId())).thenReturn(Optional.of(cart));
-//            Mockito.when(phoneService.getById(10L)).thenReturn(Optional.empty());
-//
-//            // when + then
-//            assertThrows(ResourceNotFoundException.class,
-//                    () -> cartService.addItemToCart("test@example.com", dto));
-//        }
-//    }
-//
-//
-//    @Nested
-//    class UpdateItemTest {
-//
-//        @Test
-//        void whenItemExists_thenUpdateAmountAndTotalPrice() {
-//            // given
-//            User user = buildUser();
-//            Cart cart = buildCart(user);
-//            Phone phone = buildPhone(BigDecimal.valueOf(100));
-//            CartItem item = new CartItem();
-//            item.setPhone(phone);
-//            item.setAmount(1);
-//            cart.getCartItems().add(item);
-//
-//            CartItemUpdateRequestDto dto = new CartItemUpdateRequestDto(10L, 3);
-//
-//            // mockito
-//            Mockito.when(userService.getByEmail("test@example.com")).thenReturn(Optional.of(user));
-//            Mockito.when(cartRepository.findByUserId(user.getId())).thenReturn(Optional.of(cart));
-//            Mockito.when(cartRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
-//
-//            // when
-//            cartService.updateItem("test@example.com", dto);
-//
-//            // then
-//            assertEquals(3, item.getAmount());
-//            assertEquals(BigDecimal.valueOf(300), cart.getTotalPrice());
-//        }
-//
-//        @Test
-//        void whenItemDoesNotExist_thenThrowException() {
-//            // given
-//            User user = buildUser();
-//            Cart cart = buildCart(user);
-//            CartItemUpdateRequestDto dto = new CartItemUpdateRequestDto(10L, 3);
-//
-//            // mockito
-//            Mockito.when(userService.getByEmail("test@example.com")).thenReturn(Optional.of(user));
-//            Mockito.when(cartRepository.findByUserId(user.getId())).thenReturn(Optional.of(cart));
-//
-//            // when + then
-//            assertThrows(ResourceNotFoundException.class,
-//                    () -> cartService.updateItem("test@example.com", dto));
-//        }
-//    }
-//
-//    @Nested
-//    class RemoveItemTest {
-//
-//        @Test
-//        void whenItemExists_thenRemoveItemAndUpdateTotalPrice() {
-//            // given
-//            User user = buildUser();
-//            Cart cart = buildCart(user);
-//            Phone phone = buildPhone(BigDecimal.valueOf(200));
-//            CartItem item = new CartItem();
-//            item.setPhone(phone);
-//            item.setAmount(2);
-//            cart.getCartItems().add(item);
-//
-//            // mockito
-//            Mockito.when(userService.getByEmail("test@example.com")).thenReturn(Optional.of(user));
-//            Mockito.when(cartRepository.findByUserId(user.getId())).thenReturn(Optional.of(cart));
-//            Mockito.when(cartRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
-//
-//            // when
-//            cartService.removeItem("test@example.com", 10L);
-//
-//            // then
-//            assertTrue(cart.getCartItems().isEmpty());
-//            assertEquals(BigDecimal.ZERO, cart.getTotalPrice());
-//        }
-//
-//        @Test
-//        void whenItemDoesNotExist_thenThrowException() {
-//            // given
-//            User user = buildUser();
-//            Cart cart = buildCart(user);
-//
-//            // mockito
-//            Mockito.when(userService.getByEmail("test@example.com")).thenReturn(Optional.of(user));
-//            Mockito.when(cartRepository.findByUserId(user.getId())).thenReturn(Optional.of(cart));
-//
-//            // when + then
-//            assertThrows(ResourceNotFoundException.class,
-//                    () -> cartService.removeItem("test@example.com", 10L));
-//        }
-//    }
-//
-//    @Nested
-//    class ClearCartTest {
-//
-//        @Test
-//        void whenCalled_thenClearItemsAndSetTotalPriceZero() {
-//            // given
-//            User user = buildUser();
-//            Cart cart = buildCart(user);
-//            cart.getCartItems().add(new CartItem());
-//            cart.setTotalPrice(BigDecimal.valueOf(500));
-//
-//            // mockito
-//            Mockito.when(userService.getByEmail("test@example.com")).thenReturn(Optional.of(user));
-//            Mockito.when(cartRepository.findByUserId(user.getId())).thenReturn(Optional.of(cart));
-//            Mockito.when(cartRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
-//
-//            // when
-//            cartService.clearCart("test@example.com");
-//
-//            // then
-//            assertTrue(cart.getCartItems().isEmpty());
-//            assertEquals(BigDecimal.ZERO, cart.getTotalPrice());
-//        }
-//    }
-//
-//    private User buildUser() {
-//        User user = new User();
-//        user.setId(1L);
-//        user.setEmail("test@example.com");
-//        return user;
-//    }
-//
-//    private Cart buildCart(User user) {
-//        Cart cart = new Cart();
-//        cart.setId(1L);
-//        cart.setUser(user);
-//        cart.setCartItems(new java.util.ArrayList<>());
-//        cart.setTotalPrice(BigDecimal.ZERO);
-//        return cart;
-//    }
-//
-//    private Phone buildPhone(BigDecimal price) {
-//        Phone phone = new Phone();
-//        phone.setId(10L);
-//        phone.setPrice(price);
-//        return phone;
-//    }
-//}
+package com.challengeteam.shop.service.impl;
+
+import com.challengeteam.shop.dto.cart.CartItemAddRequestDto;
+import com.challengeteam.shop.dto.cart.CartItemUpdateRequestDto;
+import com.challengeteam.shop.entity.cart.Cart;
+import com.challengeteam.shop.entity.cart.CartItem;
+import com.challengeteam.shop.entity.phone.Phone;
+import com.challengeteam.shop.exceptionHandling.exception.PhoneAlreadyInCartException;
+import com.challengeteam.shop.exceptionHandling.exception.ResourceNotFoundException;
+import com.challengeteam.shop.persistence.repository.CartItemRepository;
+import com.challengeteam.shop.persistence.repository.CartRepository;
+import com.challengeteam.shop.service.PhoneService;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+import java.math.BigDecimal;
+import java.util.Optional;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+@ExtendWith(MockitoExtension.class)
+class CartServiceImplTest {
+
+    @Mock private CartRepository cartRepository;
+    @Mock private CartItemRepository cartItemRepository;
+    @Mock private PhoneService phoneService;
+    @InjectMocks private CartServiceImpl cartService;
+
+    @Nested
+    class GetCartTest {
+
+        @Test
+        void whenCartExists_thenReturnOptionalWithCart() {
+            // mockito
+            when(cartRepository.findById(TestResources.CART_ID))
+                    .thenReturn(Optional.of(TestResources.buildCart()));
+
+            // when
+            Optional<Cart> result = cartService.getCart(TestResources.CART_ID);
+
+            // then
+            assertThat(result).isPresent();
+            assertThat(result.get()).isEqualTo(TestResources.buildCart());
+        }
+
+        @Test
+        void whenCartDoesNotExist_thenReturnEmptyOptional() {
+            // mockito
+            when(cartRepository.findById(TestResources.CART_ID))
+                    .thenReturn(Optional.empty());
+
+            // when
+            Optional<Cart> result = cartService.getCart(TestResources.CART_ID);
+
+            // then
+            assertThat(result).isNotPresent();
+        }
+
+        @Test
+        void whenIdIsNull_thenThrowException() {
+            // when + then
+            assertThatThrownBy(() -> cartService.getCart(null))
+                    .isInstanceOf(NullPointerException.class);
+        }
+    }
+
+    @Nested
+    class AddItemToCartTest {
+
+        @Test
+        void whenItemNotInCart_thenAddSuccessfully() {
+            // mockito
+            when(cartItemRepository.existsByCartIdAndPhoneId(TestResources.CART_ID, TestResources.PHONE_ID))
+                    .thenReturn(false);
+            when(cartRepository.findById(TestResources.CART_ID))
+                    .thenReturn(Optional.of(TestResources.buildCart()));
+            when(phoneService.getById(TestResources.PHONE_ID))
+                    .thenReturn(Optional.of(TestResources.buildPhone()));
+            when(cartItemRepository.save(any(CartItem.class)))
+                    .thenReturn(TestResources.buildCartItem());
+
+            // when
+            cartService.addItemToCart(TestResources.CART_ID, TestResources.buildCartItemAddRequestDto());
+
+            // then
+            verify(cartItemRepository).save(any(CartItem.class));
+            verify(cartRepository).save(any(Cart.class));
+        }
+
+        @Test
+        void whenItemAlreadyInCart_thenThrowException() {
+            // mockito
+            when(cartItemRepository.existsByCartIdAndPhoneId(TestResources.CART_ID, TestResources.PHONE_ID))
+                    .thenReturn(true);
+
+            // when + then
+            assertThatThrownBy(() -> cartService.addItemToCart(TestResources.CART_ID, TestResources.buildCartItemAddRequestDto()))
+                    .isInstanceOf(PhoneAlreadyInCartException.class);
+        }
+    }
+
+    @Nested
+    class UpdateAmountCartItemTest {
+
+        @Test
+        void whenCartItemExists_thenUpdateAmount() {
+            // mockito
+            when(cartRepository.findById(TestResources.CART_ID))
+                    .thenReturn(Optional.of(TestResources.buildCart()));
+            when(cartItemRepository.findByCartIdAndPhoneId(TestResources.CART_ID, TestResources.PHONE_ID))
+                    .thenReturn(Optional.of(TestResources.buildCartItem()));
+
+            // when
+            cartService.updateAmountCartItem(TestResources.CART_ID, TestResources.buildCartItemUpdateRequestDto());
+
+            // then
+            verify(cartItemRepository).save(any(CartItem.class));
+            verify(cartRepository).save(any(Cart.class));
+        }
+
+        @Test
+        void whenCartItemDoesNotExist_thenThrowException() {
+            // mockito
+            when(cartRepository.findById(TestResources.CART_ID))
+                    .thenReturn(Optional.of(TestResources.buildCart()));
+            when(cartItemRepository.findByCartIdAndPhoneId(TestResources.CART_ID, TestResources.PHONE_ID))
+                    .thenReturn(Optional.empty());
+
+            // when + then
+            assertThatThrownBy(() -> cartService.updateAmountCartItem(TestResources.CART_ID, TestResources.buildCartItemUpdateRequestDto()))
+                    .isInstanceOf(ResourceNotFoundException.class);
+        }
+    }
+
+    @Nested
+    class RemoveItemFromCartTest {
+
+        @Test
+        void whenCartItemExists_thenRemoveSuccessfully() {
+            // mockito
+            when(cartRepository.findById(TestResources.CART_ID))
+                    .thenReturn(Optional.of(TestResources.buildCart()));
+            when(cartItemRepository.findByCartIdAndPhoneId(TestResources.CART_ID, TestResources.PHONE_ID))
+                    .thenReturn(Optional.of(TestResources.buildCartItem()));
+
+            // when
+            cartService.removeItemFromCart(TestResources.CART_ID, TestResources.PHONE_ID);
+
+            // then
+            verify(cartItemRepository).delete(any(CartItem.class));
+            verify(cartRepository).save(any(Cart.class));
+        }
+
+        @Test
+        void whenCartItemDoesNotExist_thenThrowException() {
+            // mockito
+            when(cartRepository.findById(TestResources.CART_ID))
+                    .thenReturn(Optional.of(TestResources.buildCart()));
+            when(cartItemRepository.findByCartIdAndPhoneId(TestResources.CART_ID, TestResources.PHONE_ID))
+                    .thenReturn(Optional.empty());
+
+            // when + then
+            assertThatThrownBy(() -> cartService.removeItemFromCart(TestResources.CART_ID, TestResources.PHONE_ID))
+                    .isInstanceOf(ResourceNotFoundException.class);
+        }
+    }
+
+    @Nested
+    class ClearCartTest {
+
+        @Test
+        void whenCartExists_thenClearSuccessfully() {
+            // mockito
+            when(cartRepository.findById(TestResources.CART_ID))
+                    .thenReturn(Optional.of(TestResources.buildCart()));
+
+            // when
+            cartService.clearCart(TestResources.CART_ID);
+
+            // then
+            verify(cartItemRepository).deleteAllByCartId(TestResources.CART_ID);
+            verify(cartRepository).save(any(Cart.class));
+        }
+    }
+
+    @Nested
+    class GetCartIdByUserIdTest {
+
+        @Test
+        void whenCartExists_thenReturnCartId() {
+            // mockito
+            when(cartRepository.findByUserId(TestResources.USER_ID))
+                    .thenReturn(Optional.of(TestResources.buildCart()));
+
+            // when
+            Long result = cartService.getCartIdByUserId(TestResources.USER_ID);
+
+            // then
+            assertThat(result).isEqualTo(TestResources.CART_ID);
+        }
+
+        @Test
+        void whenCartDoesNotExist_thenThrowException() {
+            // mockito
+            when(cartRepository.findByUserId(TestResources.USER_ID))
+                    .thenReturn(Optional.empty());
+
+            // when + then
+            assertThatThrownBy(() -> cartService.getCartIdByUserId(TestResources.USER_ID))
+                    .isInstanceOf(ResourceNotFoundException.class);
+        }
+    }
+
+
+    static class TestResources {
+        static final Long CART_ID = 1L;
+        static final Long PHONE_ID = 2L;
+        static final Long USER_ID = 3L;
+        static final BigDecimal PRICE = BigDecimal.valueOf(100);
+
+        static Cart buildCart() {
+            Cart cart = new Cart();
+            cart.setId(CART_ID);
+            cart.setTotalPrice(BigDecimal.ZERO);
+            return cart;
+        }
+
+        static Phone buildPhone() {
+            Phone phone = new Phone();
+            phone.setId(PHONE_ID);
+            phone.setPrice(PRICE);
+            return phone;
+        }
+
+        static CartItem buildCartItem() {
+            CartItem item = new CartItem();
+            item.setCart(buildCart());
+            item.setPhone(buildPhone());
+            item.setAmount(1);
+            return item;
+        }
+
+        static CartItemAddRequestDto buildCartItemAddRequestDto() {
+            return new CartItemAddRequestDto(PHONE_ID, 1);
+        }
+
+        static CartItemUpdateRequestDto buildCartItemUpdateRequestDto() {
+            return new CartItemUpdateRequestDto(PHONE_ID, 5);
+        }
+
+    }
+}
