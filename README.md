@@ -1,5 +1,9 @@
 # Gadget room
 
+## Remote URLs
+- application base-url: ```https://gadget-room.up.railway.app```
+- minio base-url(secured ui): ```https://minio-ui.up.railway.app```
+
 ## How to get api docs
 
 Application uses an auto-generated api docs.\
