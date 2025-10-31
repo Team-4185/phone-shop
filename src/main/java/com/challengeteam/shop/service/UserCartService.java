@@ -8,14 +8,14 @@ import java.util.Optional;
 
 public interface UserCartService {
 
-    Optional<Cart> getUserCart(Long id);
+    Optional<Cart> getUserCart(Long userId);
 
-    void addItemToCart(Long id, CartItemAddRequestDto cartItemAddRequestDto);
+    void addItemToUserCart(Long userId, CartItemAddRequestDto cartItemAddRequestDto);
 
-    void updateCartItem(Long id, CartItemUpdateRequestDto cartItemUpdateRequestDto);
+    void updateAmountUserCartItem(Long userId, CartItemUpdateRequestDto cartItemUpdateRequestDto);
 
-    void removeItemFromCart(Long id, Long phoneId);
+    void removeItemFromUserCart(Long userId, Long phoneId);
 
-    void clearCart(Long id);
+    void clearUserCart(Long userId);
 
 }
