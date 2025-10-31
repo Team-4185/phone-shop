@@ -43,24 +43,6 @@ public class User extends BaseEntity {
         super();
     }
 
-    public User(Long id,
-                String email,
-                String password,
-                String firstName,
-                String lastName,
-                String city,
-                String phoneNumber,
-                Role role) {
-        super(id);
-        this.email = email;
-        this.password = password;
-        this.firstName = firstName;
-        this.lastName = lastName;
-        this.city = city;
-        this.phoneNumber = phoneNumber;
-        this.role = role;
-    }
-
     @Override
     public String toString() {
         return "User{" +

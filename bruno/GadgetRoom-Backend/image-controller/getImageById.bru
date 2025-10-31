@@ -1,0 +1,19 @@
+meta {
+  name: getImageById
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/v1/images/:id
+  body: none
+  auth: bearer
+}
+
+params:path {
+  id: 7
+}
+
+auth:bearer {
+  token: eyJhbGciOiJSUzUxMiJ9.eyJzdWIiOiJib2hkYW4ueWFyb3ZveS4wMUBnbWFpbC5jb20iLCJ1c2VySWQiOjEsInJvbGUiOiJVU0VSIiwiZXhwIjoxNzYxNDI0ODczfQ.GIuLPymTlt9UUgOuxrtOGGDOCELah7RBBWxAFWeqE2vQgaf2v4QAqrJSCs2xQs72NRdRbItjh-fF8-J-nZqVg7tuyTubsY0n1lnE_CJq02wwwIV_8efQJvAsMSp_XfKNQOZBdfdFv31qvQmQeC00_YJo1Mls5VGkrxs5uSYtTelyw4Sbia_t4xEEFYIM34uw2NiVGxMKzOXGkBhnUB1PNJDqdsryk9usVdTWhR_Jpo787e1aPRaNLDzTB2kZcs3qynKsn0mr6Cflrpdqp2v2ULDv-xByTXgo5jNaitCZs2fg1V0lIqnnN6NPW4c9IdJuiJnYtp87AitRfKCJ68HVj1hG0sP481rZtlmEaQoZgun82UbElPbEs2DI_RSZPZZl953PQuibNpq_Kw-DfqqyTJ4rjWMSYwmJyjHgHCe1Pamc8rghAPH2xMCWhT4xkCdwbpXVIKLzoBDaf4q_nZDCu8iUYuj3Jw4q7Wdx-3EL8N8tShHGNJ5nTfh81c5lizVPyt0YN0xZx5sdXlVImY77VZaon90HezasCYKsO4vxlViwE5UzO0kL20FQRaoYbDEzLN7BsxvUx-kDr9UUyZFo8b2tBL1LPXMAsCqscMGj_uefeKvRZ1H0zFc3APHrjcaRL-xrfybCUriAe_vDs0kEh4kTc38gDGphy8Btoa8c1mA
+}

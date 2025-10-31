@@ -2,7 +2,10 @@ package com.challengeteam.shop.exceptionHandling;
 
 import com.challengeteam.shop.exceptionHandling.exception.*;
 import lombok.extern.slf4j.Slf4j;
+import org.flywaydb.core.api.ErrorDetails;
+import org.springdoc.api.ErrorMessage;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.ErrorResponse;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -161,6 +164,16 @@ public class GlobalExceptionHandler {
         var body = ErrorResponse.create(e, HttpStatus.FORBIDDEN, "Access denied");
         return ResponseEntity
                 .status(HttpStatus.FORBIDDEN)
+                .body(body);
+    }
+
+    @ExceptionHandler(UnsupportedImageContentTypeException.class)
+    public ResponseEntity<ErrorResponse> handleUnsupportedImageContentTypeException(UnsupportedImageContentTypeException e) {
+        log.warn("Unsupported: Unsupported Content-Type {}", e.getContentType());
+
+        var body = ErrorResponse.create(e, HttpStatus.BAD_REQUEST, "Unsupported Content-Type: " + e.getContentType());
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
                 .body(body);
     }
 

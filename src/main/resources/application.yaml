@@ -6,7 +6,7 @@ spring:
   config:
     import: optional:file:.env[.properties]
   datasource:
-    url: jdbc:postgresql://${DB_HOST}/${DB_NAME}
+    url: ${DB_URL}
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
     driver-class-name: org.postgresql.Driver
@@ -20,6 +20,10 @@ spring:
     open-in-view: false
     hibernate:
       ddl-auto: none
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 5MB
 
 springdoc:
   api-docs:
@@ -34,6 +38,11 @@ security:
     public-key: ${JWT_PUBLIC_KEY}
     access-token-expiration: ${JWT_ACCESS_TOKEN_EXPIRATION}     # minutes
     refresh-token-expiration: ${JWT_REFRESH_TOKEN_EXPIRATION}   # hours
+
+minio:
+  url: ${MINIO_URL}
+  username: ${MINIO_USERNAME}
+  password: ${MINIO_PASSWORD}
 
 logging:
   level:
