@@ -32,7 +32,7 @@ public class SimpleUserDetailsService implements UserDetailsService {
         return new SimpleUserDetails(user);
     }
 
-    static class SimpleUserDetails implements UserDetails {
+    public static class SimpleUserDetails implements UserDetails {
         public static final String SPRING_SECURITY_ROLE_PREFIX = "ROLE_";
         private final User user;
 
@@ -57,6 +57,13 @@ public class SimpleUserDetailsService implements UserDetailsService {
             return user.getEmail();
         }
 
+        public Long getUserId() {
+            return user.getId();
+        }
+
+        public User getUser() {
+            return user;
+        }
     }
 
 }

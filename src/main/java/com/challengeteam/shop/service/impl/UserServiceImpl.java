@@ -2,9 +2,11 @@ package com.challengeteam.shop.service.impl;
 
 import com.challengeteam.shop.dto.user.CreateUserDto;
 import com.challengeteam.shop.dto.user.UpdateProfileDto;
+import com.challengeteam.shop.entity.cart.Cart;
 import com.challengeteam.shop.entity.user.Role;
 import com.challengeteam.shop.entity.user.User;
 import com.challengeteam.shop.exceptionHandling.exception.ResourceNotFoundException;
+import com.challengeteam.shop.persistence.repository.CartRepository;
 import com.challengeteam.shop.persistence.repository.RoleRepository;
 import com.challengeteam.shop.persistence.repository.UserRepository;
 import com.challengeteam.shop.service.UserService;
@@ -28,6 +30,7 @@ public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
+    private final CartRepository cartRepository;
     private final PasswordEncoder passwordEncoder;
     private final UserMerger userMerger;
     private final UserValidator userValidator;
@@ -76,6 +79,13 @@ public class UserServiceImpl implements UserService {
                 .build();
         user = userRepository.save(user);
         log.debug("Created new user: {}", user);
+
+        var cart = Cart.builder()
+                .user(user)
+                .build();
+        cartRepository.save(cart);
+        log.debug("Created default cart for user: {}", user.getId());
+
         return user.getId();
     }
 
