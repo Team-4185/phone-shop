@@ -32,31 +32,4 @@ public class SimpleUserDetailsService implements UserDetailsService {
         return new SimpleUserDetails(user);
     }
 
-    static class SimpleUserDetails implements UserDetails {
-        public static final String SPRING_SECURITY_ROLE_PREFIX = "ROLE_";
-        private final User user;
-
-        public SimpleUserDetails(User user) {
-            this.user = user;
-        }
-
-        @Override
-        public Collection<? extends GrantedAuthority> getAuthorities() {
-            String roleName = SPRING_SECURITY_ROLE_PREFIX + user.getRole().getName();
-
-            return List.of(new SimpleGrantedAuthority(roleName));
-        }
-
-        @Override
-        public String getPassword() {
-            return user.getPassword();
-        }
-
-        @Override
-        public String getUsername() {
-            return user.getEmail();
-        }
-
-    }
-
 }
