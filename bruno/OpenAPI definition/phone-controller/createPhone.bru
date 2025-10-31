@@ -1,0 +1,21 @@
+meta {
+  name: createPhone
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{baseUrl}}/api/v1/phones
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "name": "",
+    "description": "",
+    "price": "",
+    "brand": "",
+    "releaseYear": 0
+  }
+}

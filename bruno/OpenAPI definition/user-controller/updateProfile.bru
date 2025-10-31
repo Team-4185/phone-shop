@@ -1,0 +1,24 @@
+meta {
+  name: updateProfile
+  type: http
+  seq: 3
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/users/:id/update-profile
+  body: json
+  auth: inherit
+}
+
+params:path {
+  id: 
+}
+
+body:json {
+  {
+    "newFirstname": "",
+    "newLastname": "",
+    "newCity": "",
+    "newPhoneNumber": ""
+  }
+}
