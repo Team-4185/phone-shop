@@ -67,7 +67,7 @@ public class CartServiceImpl implements CartService {
 
         cartItemRepository.save(cartItem);
 
-        cart.setTotalPrice(updateCartTotalPrice(cart.getId()));
+        cart.setTotalPrice(countCartTotalPrice(cart));
         cartRepository.save(cart);
 
         log.debug("Added new phone in cart: {}", cartItem);
@@ -91,7 +91,7 @@ public class CartServiceImpl implements CartService {
         cartItem.setAmount(amount);
         cartItemRepository.save(cartItem);
 
-        cart.setTotalPrice(updateCartTotalPrice(cart.getId()));
+        cart.setTotalPrice(countCartTotalPrice(cart));
         cartRepository.save(cart);
 
         log.debug("Updated phone in cart: {}", cartItem);
@@ -111,7 +111,7 @@ public class CartServiceImpl implements CartService {
 
         cartItemRepository.delete(cartItem);
 
-        cart.setTotalPrice(updateCartTotalPrice(cart.getId()));
+        cart.setTotalPrice(countCartTotalPrice(cart));
         cartRepository.save(cart);
 
         log.debug("Removed phone in cart: {}", cartItem);
@@ -128,7 +128,7 @@ public class CartServiceImpl implements CartService {
 
         cartItemRepository.deleteAllByCartId(cartId);
 
-        cart.setTotalPrice(updateCartTotalPrice(cart.getId()));
+        cart.setTotalPrice(BigDecimal.ZERO);
         cartRepository.save(cart);
 
         log.debug("Cleared cart: {}", cart);
@@ -140,14 +140,14 @@ public class CartServiceImpl implements CartService {
         Objects.requireNonNull(userId, "userId");
 
         log.debug("Get cartId by userId: {}", userId);
-        
+
         return cartRepository.findByUserId(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Cart for user with id " + userId + " not found"));
 
     }
 
-    private BigDecimal updateCartTotalPrice(Long cartId) {
-        return cartItemRepository.findByCartId(cartId).stream()
+    private BigDecimal countCartTotalPrice(Cart cart) {
+        return cart.getCartItems().stream()
                 .map(item -> item.getPhone().getPrice().multiply(BigDecimal.valueOf(item.getAmount())))
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
