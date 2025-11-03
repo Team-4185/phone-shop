@@ -6,7 +6,6 @@ import com.challengeteam.shop.entity.cart.Cart;
 import com.challengeteam.shop.entity.user.Role;
 import com.challengeteam.shop.entity.user.User;
 import com.challengeteam.shop.exceptionHandling.exception.ResourceNotFoundException;
-import com.challengeteam.shop.persistence.repository.CartRepository;
 import com.challengeteam.shop.persistence.repository.RoleRepository;
 import com.challengeteam.shop.persistence.repository.UserRepository;
 import com.challengeteam.shop.service.UserService;
@@ -18,6 +17,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -30,7 +30,6 @@ public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
-    private final CartRepository cartRepository;
     private final PasswordEncoder passwordEncoder;
     private final UserMerger userMerger;
     private final UserValidator userValidator;
@@ -72,19 +71,19 @@ public class UserServiceImpl implements UserService {
                 .findByName(DEFAULT_ROLE_NAME_FOR_CREATED_USER)
                 .orElseThrow(() -> new ResourceNotFoundException("Not found default role for new user " + createUserDto.email()));
 
+        var cart = Cart.builder()
+                .totalPrice(BigDecimal.ZERO)
+                .build();
+
         var user = User.builder()
                 .email(createUserDto.email())
                 .password(encoded)
                 .role(defaultRole)
+                .cart(cart)
                 .build();
+
         user = userRepository.save(user);
         log.debug("Created new user: {}", user);
-
-        var cart = Cart.builder()
-                .user(user)
-                .build();
-        cartRepository.save(cart);
-        log.debug("Created default cart for user: {}", user.getId());
 
         return user.getId();
     }
