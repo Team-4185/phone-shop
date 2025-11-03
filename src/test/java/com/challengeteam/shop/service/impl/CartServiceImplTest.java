@@ -201,10 +201,10 @@ class CartServiceImplTest {
                     .thenReturn(Optional.of(TestResources.buildCart()));
 
             // when
-            Long result = cartService.getCartIdByUserId(TestResources.USER_ID);
+            Cart result = cartService.getCartByUserId(TestResources.USER_ID);
 
             // then
-            assertThat(result).isEqualTo(TestResources.CART_ID);
+            assertThat(result.getId()).isEqualTo(TestResources.CART_ID);
         }
 
         @Test
@@ -214,7 +214,7 @@ class CartServiceImplTest {
                     .thenReturn(Optional.empty());
 
             // when + then
-            assertThatThrownBy(() -> cartService.getCartIdByUserId(TestResources.USER_ID))
+            assertThatThrownBy(() -> cartService.getCartByUserId(TestResources.USER_ID))
                     .isInstanceOf(ResourceNotFoundException.class);
         }
     }

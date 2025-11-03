@@ -136,14 +136,14 @@ public class CartServiceImpl implements CartService {
 
     @Transactional(readOnly = true)
     @Override
-    public Long getCartIdByUserId(Long userId) {
+    public Cart getCartByUserId(Long userId) {
         Objects.requireNonNull(userId, "userId");
 
-        Cart cart = cartRepository.findByUserId(userId)
+        log.debug("Get cartId by userId: {}", userId);
+        
+        return cartRepository.findByUserId(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Cart for user with id " + userId + " not found"));
 
-        log.debug("Get cartId by userId: {}", userId);
-        return cart.getId();
     }
 
     private BigDecimal updateCartTotalPrice(Long cartId) {

@@ -18,6 +18,6 @@ public interface CartService {
 
     void clearCart(Long cartId);
 
-    Long getCartIdByUserId(Long userId);
+    Cart getCartByUserId(Long userId);
 
 }

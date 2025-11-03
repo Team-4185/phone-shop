@@ -32,7 +32,7 @@ class UserCartServiceImplTest {
         @Test
         void whenCartExists_thenReturnCart() {
             // mockito
-            when(cartService.getCartIdByUserId(TestResources.USER_ID)).thenReturn(TestResources.CART_ID);
+            when(cartService.getCartByUserId(TestResources.USER_ID)).thenReturn(TestResources.buildCart());
             when(cartService.getCart(TestResources.CART_ID)).thenReturn(Optional.of(TestResources.buildCart()));
 
             // when
@@ -41,7 +41,7 @@ class UserCartServiceImplTest {
             // then
             assertThat(result).isPresent();
             assertThat(result.get()).isEqualTo(TestResources.buildCart());
-            verify(cartService).getCartIdByUserId(TestResources.USER_ID);
+            verify(cartService).getCartByUserId(TestResources.USER_ID);
             verify(cartService).getCart(TestResources.CART_ID);
         }
     }
@@ -52,13 +52,13 @@ class UserCartServiceImplTest {
         @Test
         void whenCalled_thenDelegateToCartService() {
             // mockito
-            when(cartService.getCartIdByUserId(TestResources.USER_ID)).thenReturn(TestResources.CART_ID);
+            when(cartService.getCartByUserId(TestResources.USER_ID)).thenReturn(TestResources.buildCart());
 
             // when
             userCartService.addItemToUserCart(TestResources.USER_ID, TestResources.buildCartItemAddRequestDto());
 
             // then
-            verify(cartService).getCartIdByUserId(TestResources.USER_ID);
+            verify(cartService).getCartByUserId(TestResources.USER_ID);
             verify(cartService).addItemToCart(TestResources.CART_ID, TestResources.buildCartItemAddRequestDto());
         }
     }
@@ -69,13 +69,13 @@ class UserCartServiceImplTest {
         @Test
         void whenCalled_thenDelegateToCartService() {
             // mockito
-            when(cartService.getCartIdByUserId(TestResources.USER_ID)).thenReturn(TestResources.CART_ID);
+            when(cartService.getCartByUserId(TestResources.USER_ID)).thenReturn(TestResources.buildCart());
 
             // when
             userCartService.updateAmountUserCartItem(TestResources.USER_ID, TestResources.buildCartItemUpdateRequestDto());
 
             // then
-            verify(cartService).getCartIdByUserId(TestResources.USER_ID);
+            verify(cartService).getCartByUserId(TestResources.USER_ID);
             verify(cartService).updateAmountCartItem(TestResources.CART_ID, TestResources.buildCartItemUpdateRequestDto());
         }
     }
@@ -86,13 +86,13 @@ class UserCartServiceImplTest {
         @Test
         void whenCalled_thenDelegateToCartService() {
             // mockito
-            when(cartService.getCartIdByUserId(TestResources.USER_ID)).thenReturn(TestResources.CART_ID);
+            when(cartService.getCartByUserId(TestResources.USER_ID)).thenReturn(TestResources.buildCart());
 
             // when
             userCartService.removeItemFromUserCart(TestResources.USER_ID, TestResources.PHONE_ID);
 
             // then
-            verify(cartService).getCartIdByUserId(TestResources.USER_ID);
+            verify(cartService).getCartByUserId(TestResources.USER_ID);
             verify(cartService).removeItemFromCart(TestResources.CART_ID, TestResources.PHONE_ID);
         }
     }
@@ -103,13 +103,13 @@ class UserCartServiceImplTest {
         @Test
         void whenCalled_thenDelegateToCartService() {
             // mockito
-            when(cartService.getCartIdByUserId(TestResources.USER_ID)).thenReturn(TestResources.CART_ID);
+            when(cartService.getCartByUserId(TestResources.USER_ID)).thenReturn(TestResources.buildCart());
 
             // when
             userCartService.clearUserCart(TestResources.USER_ID);
 
             // then
-            verify(cartService).getCartIdByUserId(TestResources.USER_ID);
+            verify(cartService).getCartByUserId(TestResources.USER_ID);
             verify(cartService).clearCart(TestResources.CART_ID);
         }
     }
