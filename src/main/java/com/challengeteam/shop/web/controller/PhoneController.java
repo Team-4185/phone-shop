@@ -36,7 +36,7 @@ public class PhoneController {
     public ResponseEntity<PhoneResponseDto> getPhoneById(@PathVariable Long id) {
         Phone phone = phoneService
                 .getById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Not found user with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Not found phone with id: " + id));
         PhoneResponseDto response = phoneMapper.toResponse(phone);
 
         return ResponseEntity.ok(response);
