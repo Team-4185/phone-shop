@@ -14,7 +14,7 @@ public class UserValidatorImpl implements UserValidator {
     public void validateEmailIsUnique(String email) {
         boolean existsByEmail = userRepository.existsByEmail(email);
         if (existsByEmail) {
-            throw new EmailAlreadyExistsException("Email already in use");
+            throw new EmailAlreadyExistsException("Email already in use: " + email);
         }
     }
 
