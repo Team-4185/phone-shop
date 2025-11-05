@@ -5,7 +5,6 @@ import com.challengeteam.shop.dto.cart.CartItemUpdateRequestDto;
 import com.challengeteam.shop.entity.cart.Cart;
 import com.challengeteam.shop.entity.cart.CartItem;
 import com.challengeteam.shop.entity.phone.Phone;
-import com.challengeteam.shop.exceptionHandling.exception.PhoneAlreadyInCartException;
 import com.challengeteam.shop.exceptionHandling.exception.ResourceNotFoundException;
 import com.challengeteam.shop.persistence.repository.CartItemRepository;
 import com.challengeteam.shop.persistence.repository.CartRepository;
@@ -48,10 +47,6 @@ public class CartServiceImpl implements CartService {
 
         Long phoneId = cartItemAddRequestDto.phoneId();
         Integer amount = cartItemAddRequestDto.amount();
-
-        if (cartItemRepository.existsByCartIdAndPhoneId(cartId, phoneId)) {
-            throw new PhoneAlreadyInCartException("Phone with id  " + phoneId + " already in cart");
-        }
 
         Cart cart = cartRepository.findById(cartId)
                 .orElseThrow(() -> new ResourceNotFoundException("Cart with id " + cartId + " not found"));
@@ -148,6 +143,16 @@ public class CartServiceImpl implements CartService {
         return cartRepository.findByUserId(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Cart for user with id " + userId + " not found"));
 
+    }
+
+    @Transactional(readOnly = true)
+    @Override
+    public Optional<CartItem> getCartItem(Long cartId, Long phoneId) {
+        Objects.requireNonNull(cartId, "cartId");
+        Objects.requireNonNull(phoneId, "phoneId");
+
+        log.debug("Get cart item by cartId: {} and phoneId: {}", cartId, phoneId);
+        return cartItemRepository.findByCartIdAndPhoneId(cartId, phoneId);
     }
 
     private BigDecimal countCartTotalPrice(Cart cart) {
