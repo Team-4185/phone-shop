@@ -2,14 +2,12 @@ package com.challengeteam.shop.exceptionHandling;
 
 import com.challengeteam.shop.exceptionHandling.exception.*;
 import lombok.extern.slf4j.Slf4j;
-import org.flywaydb.core.api.ErrorDetails;
-import org.springdoc.api.ErrorMessage;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.ErrorResponse;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
 @Slf4j
 @RestControllerAdvice
@@ -38,16 +36,19 @@ public class GlobalExceptionHandler {
      * @return ResponseEntity with HTTP 500 status and a generic error message for the client
      */
     @ExceptionHandler(CriticalSystemException.class)
-    public ResponseEntity<ErrorResponse> handleCriticalSystemException(CriticalSystemException e) {
+    public ResponseEntity<ProblemDetail> handleCriticalSystemException(CriticalSystemException e) {
         log.error("A critical error occurred that should not have occurred: {}", e.getMessage(), e);
 
         String message = """
                 Occurred an unexpected error on the server side. We are already working on it. Please, try again later.
                 """;
-        var body = ErrorResponse.create(e, HttpStatus.INTERNAL_SERVER_ERROR, message);
+        var problem = ProblemDetail.forStatus(HttpStatus.INTERNAL_SERVER_ERROR.value());
+        problem.setTitle("Unexpected Internal Server Error");
+        problem.setDetail(message);
+
         return ResponseEntity
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(body);
+                .body(problem);
     }
 
     /**
@@ -59,122 +60,166 @@ public class GlobalExceptionHandler {
      * @return ResponseEntity with HTTP 500 status and a generic error message
      */
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<ErrorResponse> handleException(Exception e) {
+    public ResponseEntity<ProblemDetail> handleException(Exception e) {
         log.error("Unhandled exception: {}", e.getMessage(), e);
 
         String message = """
-                Occurred an unexpected error on the server side. We are already working on it. Please, try again later.
+                Occurred an error on the server side. We are already working on it. Please, try again later.
                 """;
-        var body = ErrorResponse.create(e, HttpStatus.INTERNAL_SERVER_ERROR, message);
+        var problem = ProblemDetail.forStatus(HttpStatus.INTERNAL_SERVER_ERROR.value());
+        problem.setTitle("Internal Server Error");
+        problem.setDetail(message);
+
         return ResponseEntity
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(body);
+                .body(problem);
     }
 
     // ======================= Logic Exception 4xx =======================
 
     @ExceptionHandler(ResourceNotFoundException.class)
-    public ResponseEntity<ErrorResponse> handleResourceNotFoundException(ResourceNotFoundException e) {
+    public ResponseEntity<ProblemDetail> handleResourceNotFoundException(ResourceNotFoundException e) {
         log.warn("Not found resource: {}", e.getMessage());
 
-        var body = ErrorResponse.create(e, HttpStatus.NOT_FOUND, e.getMessage());
+        var problem = ProblemDetail.forStatus(HttpStatus.NOT_FOUND.value());
+        problem.setTitle("Not Found Resource");
+        problem.setDetail(e.getMessage());
+
         return ResponseEntity
                 .status(HttpStatus.NOT_FOUND)
-                .body(body);
+                .body(problem);
     }
 
     @ExceptionHandler(InvalidTokenException.class)
-    public ResponseEntity<ErrorResponse> handleInvalidTokenException(InvalidTokenException e) {
+    public ResponseEntity<ProblemDetail> handleInvalidTokenException(InvalidTokenException e) {
         log.warn("Invalid jwt: {}", e.getMessage());
 
-        var body = ErrorResponse.create(e, HttpStatus.UNAUTHORIZED, e.getMessage());
+        var problem = ProblemDetail.forStatus(HttpStatus.UNAUTHORIZED.value());
+        problem.setTitle("Invalid Token");
+        problem.setDetail(e.getMessage());
+
         return ResponseEntity
                 .status(HttpStatus.UNAUTHORIZED)
-                .body(body);
+                .body(problem);
     }
 
-
     @ExceptionHandler(InvalidAPIRequestException.class)
-    public ResponseEntity<ErrorResponse> handleInvalidAPIRequestException(InvalidAPIRequestException e) {
+    public ResponseEntity<ProblemDetail> handleInvalidAPIRequestException(InvalidAPIRequestException e) {
         log.warn("Invalid API request: {}", e.getMessage());
 
-        var body = ErrorResponse.create(e, HttpStatus.BAD_REQUEST, e.getMessage());
+        var problem = ProblemDetail.forStatus(HttpStatus.BAD_REQUEST.value());
+        problem.setTitle("Bad Request");
+        problem.setDetail(e.getMessage());
+
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
-                .body(body);
+                .body(problem);
     }
 
     @ExceptionHandler(EmailOrPasswordWrongException.class)
-    public ResponseEntity<ErrorResponse> handleEmailOrPasswordWrongException(EmailOrPasswordWrongException e) {
+    public ResponseEntity<ProblemDetail> handleEmailOrPasswordWrongException(EmailOrPasswordWrongException e) {
         log.warn("Email or password are wrong: {}", e.getMessage());
 
-        var body = ErrorResponse.create(e, HttpStatus.UNAUTHORIZED, e.getMessage());
+        var problem = ProblemDetail.forStatus(HttpStatus.UNAUTHORIZED.value());
+        problem.setTitle("Bad Credentials");
+        problem.setDetail(e.getMessage());
+
         return ResponseEntity
                 .status(HttpStatus.UNAUTHORIZED)
-                .body(body);
+                .body(problem);
     }
 
     @ExceptionHandler(EmailAlreadyExistsException.class)
-    public ResponseEntity<ErrorResponse> handleEmailAlreadyExistsException(EmailAlreadyExistsException e) {
+    public ResponseEntity<ProblemDetail> handleEmailAlreadyExistsException(EmailAlreadyExistsException e) {
         log.warn("Email already exists: {}", e.getMessage());
 
-        var body = ErrorResponse.create(e, HttpStatus.BAD_REQUEST, e.getMessage());
+        var problem = ProblemDetail.forStatus(HttpStatus.BAD_REQUEST.value());
+        problem.setTitle("Email Already Taken");
+        problem.setDetail(e.getMessage());
+
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
-                .body(body);
+                .body(problem);
     }
 
     @ExceptionHandler(AuthenticationFailedException.class)
-    public ResponseEntity<ErrorResponse> handleAuthenticationFailedException(AuthenticationFailedException e) {
+    public ResponseEntity<ProblemDetail> handleAuthenticationFailedException(AuthenticationFailedException e) {
         log.warn("Authentication failed: {}", e.getMessage());
 
-        String message = "Authentication failed. You can ask 'Support service' about authentication status";
-        var body = ErrorResponse.create(e, HttpStatus.UNAUTHORIZED, message);
+        String message = "Authentication failed";
+        var problem = ProblemDetail.forStatus(HttpStatus.UNAUTHORIZED.value());
+        problem.setTitle("Authentication Failed");
+        problem.setDetail(message);
+
         return ResponseEntity
                 .status(HttpStatus.UNAUTHORIZED)
-                .body(body);
+                .body(problem);
     }
 
     @ExceptionHandler(AccountLockedException.class)
-    public ResponseEntity<ErrorResponse> handleAccountLockedException(AccountLockedException e) {
+    public ResponseEntity<ProblemDetail> handleAccountLockedException(AccountLockedException e) {
         log.warn("Account locked: {}", e.getMessage());
 
-        String message = "Account is locked. You can ask 'Support service' about account status";
-        var body = ErrorResponse.create(e, HttpStatus.FORBIDDEN, message);
+        String message = "Account is locked";
+        var problem = ProblemDetail.forStatus(HttpStatus.FORBIDDEN.value());
+        problem.setTitle("Account Locked");
+        problem.setDetail(message);
+
         return ResponseEntity
                 .status(HttpStatus.FORBIDDEN)
-                .body(body);
+                .body(problem);
     }
 
     @ExceptionHandler(AccountDisabledException.class)
-    public ResponseEntity<ErrorResponse> handleAccountDisabledException(AccountDisabledException e) {
+    public ResponseEntity<ProblemDetail> handleAccountDisabledException(AccountDisabledException e) {
         log.warn("Account disabled: {}", e.getMessage());
 
         String message = "Account is disabled. You can ask 'Support service' about account status";
-        var body = ErrorResponse.create(e, HttpStatus.FORBIDDEN, message);
+        var problem = ProblemDetail.forStatus(HttpStatus.FORBIDDEN.value());
+        problem.setTitle("Account Disabled");
+        problem.setDetail(message);
+
         return ResponseEntity
                 .status(HttpStatus.FORBIDDEN)
-                .body(body);
+                .body(problem);
     }
 
     @ExceptionHandler(AccessDeniedException.class)
-    public ResponseEntity<ErrorResponse> handleAccessDeniedException(AccessDeniedException e) {
+    public ResponseEntity<ProblemDetail> handleAccessDeniedException(AccessDeniedException e) {
         log.warn("Access denied: {}", e.getMessage());
 
-        var body = ErrorResponse.create(e, HttpStatus.FORBIDDEN, "Access denied");
+        var problem = ProblemDetail.forStatus(HttpStatus.FORBIDDEN.value());
+        problem.setTitle("Access Denied");
+        problem.setDetail(e.getMessage());
+
         return ResponseEntity
                 .status(HttpStatus.FORBIDDEN)
-                .body(body);
+                .body(problem);
     }
 
     @ExceptionHandler(UnsupportedImageContentTypeException.class)
-    public ResponseEntity<ErrorResponse> handleUnsupportedImageContentTypeException(UnsupportedImageContentTypeException e) {
+    public ResponseEntity<ProblemDetail> handleUnsupportedImageContentTypeException(UnsupportedImageContentTypeException e) {
         log.warn("Unsupported: Unsupported Content-Type {}", e.getContentType());
 
-        var body = ErrorResponse.create(e, HttpStatus.BAD_REQUEST, "Unsupported Content-Type: " + e.getContentType());
+        var problem = ProblemDetail.forStatus(HttpStatus.BAD_REQUEST.value());
+        problem.setTitle("Unsupported Image Content Type");
+        problem.setDetail("Unsupported Content-Type = " + e.getContentType());
+
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
-                .body(body);
+                .body(problem);
+    }
+
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    public ResponseEntity<ProblemDetail> handleMaxUploadSizeExceededException(MaxUploadSizeExceededException e) {
+        log.warn("Payload too large: {}", e.getMessage());
+
+        var problem = e.getBody();
+        problem.setTitle("Payload Too Large");
+
+        return ResponseEntity
+                .status(HttpStatus.PAYLOAD_TOO_LARGE)
+                .body(problem);
     }
 
     @ExceptionHandler(PhoneAlreadyInCartException.class)

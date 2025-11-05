@@ -1,6 +1,6 @@
 {
   "version": "1",
-  "name": "fs",
+  "name": "GadgetRoom-Backend",
   "type": "collection",
   "ignore": [
     "node_modules",

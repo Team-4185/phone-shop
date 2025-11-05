@@ -27,7 +27,7 @@ public class SimpleUserDetailsService implements UserDetailsService {
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         User user = userService
                 .getByEmail(username)
-                .orElseThrow(() -> new ResourceNotFoundException("Not found user with email: " + username));
+                .orElseThrow(() -> new UsernameNotFoundException("Not found user with email: " + username));
 
         return new SimpleUserDetails(user);
     }

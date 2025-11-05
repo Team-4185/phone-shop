@@ -1,0 +1,25 @@
+meta {
+  name: updatePhone
+  type: http
+  seq: 2
+}
+
+put {
+  url: {{baseUrl}}/api/v1/phones/:id
+  body: json
+  auth: inherit
+}
+
+params:path {
+  id: 
+}
+
+body:json {
+  {
+    "newName": "",
+    "newDescription": "",
+    "newPrice": "",
+    "newBrand": "",
+    "newReleaseYear": 0
+  }
+}
