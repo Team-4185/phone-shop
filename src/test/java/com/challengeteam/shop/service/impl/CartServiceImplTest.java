@@ -5,7 +5,6 @@ import com.challengeteam.shop.dto.cart.CartItemUpdateRequestDto;
 import com.challengeteam.shop.entity.cart.Cart;
 import com.challengeteam.shop.entity.cart.CartItem;
 import com.challengeteam.shop.entity.phone.Phone;
-import com.challengeteam.shop.exceptionHandling.exception.PhoneAlreadyInCartException;
 import com.challengeteam.shop.exceptionHandling.exception.ResourceNotFoundException;
 import com.challengeteam.shop.persistence.repository.CartItemRepository;
 import com.challengeteam.shop.persistence.repository.CartRepository;
@@ -78,8 +77,6 @@ class CartServiceImplTest {
         @Test
         void whenItemNotInCart_thenAddSuccessfully() {
             // mockito
-            when(cartItemRepository.existsByCartIdAndPhoneId(TestResources.CART_ID, TestResources.PHONE_ID))
-                    .thenReturn(false);
             when(cartRepository.findById(TestResources.CART_ID))
                     .thenReturn(Optional.of(TestResources.buildCart()));
             when(phoneService.getById(TestResources.PHONE_ID))
@@ -96,14 +93,27 @@ class CartServiceImplTest {
         }
 
         @Test
-        void whenItemAlreadyInCart_thenThrowException() {
+        void whenCartDoesNotExist_thenThrowException() {
             // mockito
-            when(cartItemRepository.existsByCartIdAndPhoneId(TestResources.CART_ID, TestResources.PHONE_ID))
-                    .thenReturn(true);
+            when(cartRepository.findById(TestResources.CART_ID))
+                    .thenReturn(Optional.empty());
 
             // when + then
             assertThatThrownBy(() -> cartService.addItemToCart(TestResources.CART_ID, TestResources.buildCartItemAddRequestDto()))
-                    .isInstanceOf(PhoneAlreadyInCartException.class);
+                    .isInstanceOf(ResourceNotFoundException.class);
+        }
+
+        @Test
+        void whenPhoneDoesNotExist_thenThrowException() {
+            // mockito
+            when(cartRepository.findById(TestResources.CART_ID))
+                    .thenReturn(Optional.of(TestResources.buildCart()));
+            when(phoneService.getById(TestResources.PHONE_ID))
+                    .thenReturn(Optional.empty());
+
+            // when + then
+            assertThatThrownBy(() -> cartService.addItemToCart(TestResources.CART_ID, TestResources.buildCartItemAddRequestDto()))
+                    .isInstanceOf(ResourceNotFoundException.class);
         }
     }
 
@@ -132,6 +142,17 @@ class CartServiceImplTest {
             when(cartRepository.findById(TestResources.CART_ID))
                     .thenReturn(Optional.of(TestResources.buildCart()));
             when(cartItemRepository.findByCartIdAndPhoneId(TestResources.CART_ID, TestResources.PHONE_ID))
+                    .thenReturn(Optional.empty());
+
+            // when + then
+            assertThatThrownBy(() -> cartService.updateAmountCartItem(TestResources.CART_ID, TestResources.buildCartItemUpdateRequestDto()))
+                    .isInstanceOf(ResourceNotFoundException.class);
+        }
+
+        @Test
+        void whenCartDoesNotExist_thenThrowException() {
+            // mockito
+            when(cartRepository.findById(TestResources.CART_ID))
                     .thenReturn(Optional.empty());
 
             // when + then
@@ -171,6 +192,17 @@ class CartServiceImplTest {
             assertThatThrownBy(() -> cartService.removeItemFromCart(TestResources.CART_ID, TestResources.PHONE_ID))
                     .isInstanceOf(ResourceNotFoundException.class);
         }
+
+        @Test
+        void whenCartDoesNotExist_thenThrowException() {
+            // mockito
+            when(cartRepository.findById(TestResources.CART_ID))
+                    .thenReturn(Optional.empty());
+
+            // when + then
+            assertThatThrownBy(() -> cartService.removeItemFromCart(TestResources.CART_ID, TestResources.PHONE_ID))
+                    .isInstanceOf(ResourceNotFoundException.class);
+        }
     }
 
     @Nested
@@ -188,6 +220,17 @@ class CartServiceImplTest {
             // then
             verify(cartItemRepository).deleteAllByCartId(TestResources.CART_ID);
             verify(cartRepository).save(any(Cart.class));
+        }
+
+        @Test
+        void whenCartDoesNotExist_thenThrowException() {
+            // mockito
+            when(cartRepository.findById(TestResources.CART_ID))
+                    .thenReturn(Optional.empty());
+
+            // when + then
+            assertThatThrownBy(() -> cartService.clearCart(TestResources.CART_ID))
+                    .isInstanceOf(ResourceNotFoundException.class);
         }
     }
 
@@ -219,6 +262,38 @@ class CartServiceImplTest {
         }
     }
 
+    @Nested
+    class GetCartItemTest {
+
+        @Test
+        void whenCartItemExists_thenReturnOptionalWithCartItem() {
+            // mockito
+            CartItem cartItem = TestResources.buildCartItem();
+            when(cartItemRepository.findByCartIdAndPhoneId(TestResources.CART_ID, TestResources.PHONE_ID))
+                    .thenReturn(Optional.of(cartItem));
+
+            // when
+            Optional<CartItem> result = cartService.getCartItem(TestResources.CART_ID, TestResources.PHONE_ID);
+
+            // then
+            assertThat(result).isPresent();
+            assertThat(result.get()).isEqualTo(cartItem);
+        }
+
+        @Test
+        void whenCartItemDoesNotExist_thenReturnEmptyOptional() {
+            // mockito
+            when(cartItemRepository.findByCartIdAndPhoneId(TestResources.CART_ID, TestResources.PHONE_ID))
+                    .thenReturn(Optional.empty());
+
+            // when
+            Optional<CartItem> result = cartService.getCartItem(TestResources.CART_ID, TestResources.PHONE_ID);
+
+            // then
+            assertThat(result).isNotPresent();
+        }
+    }
+
 
     static class TestResources {
         static final Long CART_ID = 1L;
@@ -230,6 +305,7 @@ class CartServiceImplTest {
             Cart cart = new Cart();
             cart.setId(CART_ID);
             cart.setTotalPrice(BigDecimal.ZERO);
+            cart.setCartItems(new java.util.ArrayList<>());
             return cart;
         }
 
