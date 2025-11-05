@@ -25,30 +25,30 @@ public class UserCartServiceImpl implements UserCartService {
 
     @Transactional
     @Override
-    public void addItemToUserCart(Long userId, CartItemAddRequestDto cartItemAddRequestDto) {
+    public Optional<Cart> addItemToUserCart(Long userId, CartItemAddRequestDto cartItemAddRequestDto) {
         Cart cart = cartService.getCartByUserId(userId);
-        cartService.addItemToCart(cart.getId(), cartItemAddRequestDto);
+        return cartService.addItemToCart(cart.getId(), cartItemAddRequestDto);
     }
 
     @Transactional
     @Override
-    public void updateAmountUserCartItem(Long userId, CartItemUpdateRequestDto cartItemUpdateRequestDto) {
+    public Optional<Cart> updateAmountUserCartItem(Long userId, CartItemUpdateRequestDto cartItemUpdateRequestDto) {
         Cart cart = cartService.getCartByUserId(userId);
-        cartService.updateAmountCartItem(cart.getId(), cartItemUpdateRequestDto);
+        return cartService.updateAmountCartItem(cart.getId(), cartItemUpdateRequestDto);
     }
 
     @Transactional
     @Override
-    public void removeItemFromUserCart(Long userId, Long phoneId) {
+    public Optional<Cart> removeItemFromUserCart(Long userId, Long phoneId) {
         Cart cart = cartService.getCartByUserId(userId);
-        cartService.removeItemFromCart(cart.getId(), phoneId);
+        return cartService.removeItemFromCart(cart.getId(), phoneId);
     }
 
     @Transactional
     @Override
-    public void clearUserCart(Long userId) {
+    public Optional<Cart> clearUserCart(Long userId) {
         Cart cart = cartService.getCartByUserId(userId);
-        cartService.clearCart(cart.getId());
+        return cartService.clearCart(cart.getId());
     }
 
 }

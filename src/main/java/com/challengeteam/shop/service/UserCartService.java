@@ -10,12 +10,12 @@ public interface UserCartService {
 
     Optional<Cart> getUserCart(Long userId);
 
-    void addItemToUserCart(Long userId, CartItemAddRequestDto cartItemAddRequestDto);
+    Optional<Cart> addItemToUserCart(Long userId, CartItemAddRequestDto cartItemAddRequestDto);
 
-    void updateAmountUserCartItem(Long userId, CartItemUpdateRequestDto cartItemUpdateRequestDto);
+    Optional<Cart> updateAmountUserCartItem(Long userId, CartItemUpdateRequestDto cartItemUpdateRequestDto);
 
-    void removeItemFromUserCart(Long userId, Long phoneId);
+    Optional<Cart> removeItemFromUserCart(Long userId, Long phoneId);
 
-    void clearUserCart(Long userId);
+    Optional<Cart> clearUserCart(Long userId);
 
 }

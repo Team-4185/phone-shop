@@ -42,7 +42,7 @@ public class CartServiceImpl implements CartService {
 
     @Transactional
     @Override
-    public void addItemToCart(Long cartId, CartItemAddRequestDto cartItemAddRequestDto) {
+    public Optional<Cart> addItemToCart(Long cartId, CartItemAddRequestDto cartItemAddRequestDto) {
         Objects.requireNonNull(cartId, "cartId");
         Objects.requireNonNull(cartItemAddRequestDto, "cartItemAddRequestDto");
 
@@ -71,11 +71,12 @@ public class CartServiceImpl implements CartService {
         cartRepository.save(cart);
 
         log.debug("Added new phone in cart: {}", cartItem);
+        return Optional.of(cart);
     }
 
     @Transactional
     @Override
-    public void updateAmountCartItem(Long cartId, CartItemUpdateRequestDto cartItemUpdateRequestDto) {
+    public Optional<Cart> updateAmountCartItem(Long cartId, CartItemUpdateRequestDto cartItemUpdateRequestDto) {
         Objects.requireNonNull(cartId, "cartId");
         Objects.requireNonNull(cartItemUpdateRequestDto, "cartItemUpdateRequestDto");
 
@@ -95,11 +96,12 @@ public class CartServiceImpl implements CartService {
         cartRepository.save(cart);
 
         log.debug("Updated phone in cart: {}", cartItem);
+        return Optional.of(cart);
     }
 
     @Transactional
     @Override
-    public void removeItemFromCart(Long cartId, Long phoneId) {
+    public Optional<Cart> removeItemFromCart(Long cartId, Long phoneId) {
         Objects.requireNonNull(cartId, "cartId");
         Objects.requireNonNull(phoneId, "phoneId");
 
@@ -115,11 +117,12 @@ public class CartServiceImpl implements CartService {
         cartRepository.save(cart);
 
         log.debug("Removed phone in cart: {}", cartItem);
+        return Optional.of(cart);
     }
 
     @Transactional
     @Override
-    public void clearCart(Long cartId) {
+    public Optional<Cart> clearCart(Long cartId) {
         Objects.requireNonNull(cartId, "cartId");
 
         Cart cart = cartRepository.findById(cartId)
@@ -132,6 +135,7 @@ public class CartServiceImpl implements CartService {
         cartRepository.save(cart);
 
         log.debug("Cleared cart: {}", cart);
+        return Optional.of(cart);
     }
 
     @Transactional(readOnly = true)

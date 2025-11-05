@@ -10,13 +10,13 @@ public interface CartService {
 
     Optional<Cart> getCart(Long cartId);
 
-    void addItemToCart(Long cartId, CartItemAddRequestDto cartItemAddRequestDto);
+    Optional<Cart> addItemToCart(Long cartId, CartItemAddRequestDto cartItemAddRequestDto);
 
-    void updateAmountCartItem(Long cartId, CartItemUpdateRequestDto cartItemUpdateRequestDto);
+    Optional<Cart> updateAmountCartItem(Long cartId, CartItemUpdateRequestDto cartItemUpdateRequestDto);
 
-    void removeItemFromCart(Long cartId, Long phoneId);
+    Optional<Cart> removeItemFromCart(Long cartId, Long phoneId);
 
-    void clearCart(Long cartId);
+    Optional<Cart> clearCart(Long cartId);
 
     Cart getCartByUserId(Long userId);
 
