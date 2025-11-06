@@ -11,8 +11,8 @@ COPY src ./src
 RUN mvn clean package -DskipTests
 
 # Stage 2: Execute
-# Використовуємо офіційний образ OpenJDK
-FROM openjdk:21
+# Використовуємо офіційний образ amazoncorretto
+FROM amazoncorretto:21
 
 WORKDIR /app
 
