@@ -1,6 +1,5 @@
 package com.challengeteam.shop.config.swagger;
 
-import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.security.SecurityScheme;
 import org.springdoc.core.customizers.OpenApiCustomizer;
 import org.springframework.context.annotation.Bean;
@@ -17,9 +16,8 @@ public class SwaggerDocsConfiguration {
                     .scheme("bearer")
                     .bearerFormat("JWT")
                     .description("Authorization approach with JWT");
-            var components = new Components().addSecuritySchemes("bearer-jwt", securityScheme);
 
-            openApi.components(components);
+            openApi.getComponents().addSecuritySchemes("bearer-jwt", securityScheme);
         };
     }
 
