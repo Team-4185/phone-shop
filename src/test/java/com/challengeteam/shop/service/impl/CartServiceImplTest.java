@@ -5,115 +5,166 @@ import com.challengeteam.shop.dto.cart.CartItemUpdateRequestDto;
 import com.challengeteam.shop.entity.cart.Cart;
 import com.challengeteam.shop.entity.cart.CartItem;
 import com.challengeteam.shop.entity.phone.Phone;
+import com.challengeteam.shop.exceptionHandling.exception.PhoneAlreadyInCartException;
 import com.challengeteam.shop.exceptionHandling.exception.ResourceNotFoundException;
 import com.challengeteam.shop.persistence.repository.CartItemRepository;
 import com.challengeteam.shop.persistence.repository.CartRepository;
 import com.challengeteam.shop.service.PhoneService;
+import com.challengeteam.shop.utility.CartUtility;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.MockedStatic;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.Optional;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.mockStatic;
 
 @ExtendWith(MockitoExtension.class)
-class CartServiceImplTest {
+public class CartServiceImplTest {
 
-    @Mock private CartRepository cartRepository;
-    @Mock private CartItemRepository cartItemRepository;
-    @Mock private PhoneService phoneService;
-    @InjectMocks private CartServiceImpl cartService;
+    @Mock
+    private CartRepository cartRepository;
+
+    @Mock
+    private CartItemRepository cartItemRepository;
+
+    @Mock
+    private PhoneService phoneService;
+
+    @InjectMocks
+    private CartServiceImpl cartService;
 
     @Nested
-    class GetCartTest {
+    class GetCartByIdTest {
 
         @Test
         void whenCartExists_thenReturnOptionalWithCart() {
+            // given
+            Cart cart = TestData.buildCart();
+            Cart expected = TestData.buildCart();
+
             // mockito
-            when(cartRepository.findById(TestResources.CART_ID))
-                    .thenReturn(Optional.of(TestResources.buildCart()));
+            Mockito.when(cartRepository.findById(TestData.CART_ID))
+                    .thenReturn(Optional.of(cart));
 
             // when
-            Optional<Cart> result = cartService.getCart(TestResources.CART_ID);
+            Optional<Cart> result = cartService.getCart(TestData.CART_ID);
 
             // then
-            assertThat(result).isPresent();
-            assertThat(result.get()).isEqualTo(TestResources.buildCart());
+            assertNotNull(result);
+            assertTrue(result.isPresent());
+            assertEquals(expected.getId(), result.get().getId());
+            Mockito.verify(cartRepository).findById(TestData.CART_ID);
         }
 
         @Test
         void whenCartDoesNotExist_thenReturnEmptyOptional() {
+            // given
+            // ...
+
             // mockito
-            when(cartRepository.findById(TestResources.CART_ID))
+            Mockito.when(cartRepository.findById(TestData.CART_ID))
                     .thenReturn(Optional.empty());
 
             // when
-            Optional<Cart> result = cartService.getCart(TestResources.CART_ID);
+            Optional<Cart> result = cartService.getCart(TestData.CART_ID);
 
             // then
-            assertThat(result).isNotPresent();
+            assertNotNull(result);
+            assertFalse(result.isPresent());
+            Mockito.verify(cartRepository).findById(TestData.CART_ID);
         }
 
         @Test
         void whenIdIsNull_thenThrowException() {
+            // given
+            Long id = null;
+
+            // mockito
+            // ...
+
             // when + then
-            assertThatThrownBy(() -> cartService.getCart(null))
-                    .isInstanceOf(NullPointerException.class);
+            assertThrows(NullPointerException.class, () -> cartService.getCart(id));
         }
     }
 
     @Nested
-    class AddItemToCartTest {
+    class PutItemToCartTest {
 
         @Test
         void whenItemNotInCart_thenAddSuccessfully() {
+            // given
+            Cart cart = TestData.buildCart();
+            CartItemAddRequestDto dto = TestData.buildAddDto();
+            Phone phone = TestData.buildPhone();
+
             // mockito
-            when(cartRepository.findById(TestResources.CART_ID))
-                    .thenReturn(Optional.of(TestResources.buildCart()));
-            when(phoneService.getById(TestResources.PHONE_ID))
-                    .thenReturn(Optional.of(TestResources.buildPhone()));
-            when(cartItemRepository.save(any(CartItem.class)))
-                    .thenReturn(TestResources.buildCartItem());
+            Mockito.when(phoneService.getById(TestData.PHONE_ID))
+                    .thenReturn(Optional.of(phone));
+            Mockito.when(cartItemRepository.save(any(CartItem.class)))
+                    .thenReturn(TestData.buildCartItem());
+            Mockito.when(cartRepository.save(cart))
+                    .thenReturn(cart);
 
             // when
-            cartService.addItemToCart(TestResources.CART_ID, TestResources.buildCartItemAddRequestDto());
+            try (MockedStatic<CartUtility> util = mockStatic(CartUtility.class)) {
+                util.when(() -> CartUtility.isCartHasPhone(cart, TestData.PHONE_ID))
+                        .thenReturn(false);
+                util.when(() -> CartUtility.countCartTotalPrice(cart))
+                        .thenReturn(BigDecimal.valueOf(100));
 
-            // then
-            verify(cartItemRepository).save(any(CartItem.class));
-            verify(cartRepository).save(any(Cart.class));
+                Cart result = cartService.putItemToCart(cart, dto);
+
+                // then
+                assertNotNull(result);
+                assertEquals(BigDecimal.valueOf(100), result.getTotalPrice());
+                Mockito.verify(cartItemRepository).save(any(CartItem.class));
+                Mockito.verify(cartRepository).save(cart);
+            }
         }
 
         @Test
-        void whenCartDoesNotExist_thenThrowException() {
+        void whenPhoneAlreadyInCart_thenThrowException() {
+            // given
+            Cart cart = TestData.buildCart();
+            CartItemAddRequestDto dto = TestData.buildAddDto();
+
             // mockito
-            when(cartRepository.findById(TestResources.CART_ID))
-                    .thenReturn(Optional.empty());
+            Mockito.when(phoneService.getById(TestData.PHONE_ID))
+                    .thenReturn(Optional.of(TestData.buildPhone()));
 
             // when + then
-            assertThatThrownBy(() -> cartService.addItemToCart(TestResources.CART_ID, TestResources.buildCartItemAddRequestDto()))
-                    .isInstanceOf(ResourceNotFoundException.class);
+            try (MockedStatic<CartUtility> util = mockStatic(CartUtility.class)) {
+                util.when(() -> CartUtility.isCartHasPhone(cart, TestData.PHONE_ID))
+                        .thenReturn(true);
+
+                assertThrows(PhoneAlreadyInCartException.class,
+                        () -> cartService.putItemToCart(cart, dto));
+            }
         }
 
         @Test
-        void whenPhoneDoesNotExist_thenThrowException() {
+        void whenPhoneNotFound_thenThrowException() {
+            // given
+            Cart cart = TestData.buildCart();
+            CartItemAddRequestDto dto = TestData.buildAddDto();
+
             // mockito
-            when(cartRepository.findById(TestResources.CART_ID))
-                    .thenReturn(Optional.of(TestResources.buildCart()));
-            when(phoneService.getById(TestResources.PHONE_ID))
+            Mockito.when(phoneService.getById(TestData.PHONE_ID))
                     .thenReturn(Optional.empty());
 
             // when + then
-            assertThatThrownBy(() -> cartService.addItemToCart(TestResources.CART_ID, TestResources.buildCartItemAddRequestDto()))
-                    .isInstanceOf(ResourceNotFoundException.class);
+            assertThrows(ResourceNotFoundException.class,
+                    () -> cartService.putItemToCart(cart, dto));
         }
     }
 
@@ -121,43 +172,46 @@ class CartServiceImplTest {
     class UpdateAmountCartItemTest {
 
         @Test
-        void whenCartItemExists_thenUpdateAmount() {
+        void whenCartItemExists_thenUpdateSuccessfully() {
+            // given
+            Cart cart = TestData.buildCart();
+            CartItemUpdateRequestDto dto = TestData.buildUpdateDto();
+            CartItem item = TestData.buildCartItem();
+
             // mockito
-            when(cartRepository.findById(TestResources.CART_ID))
-                    .thenReturn(Optional.of(TestResources.buildCart()));
-            when(cartItemRepository.findByCartIdAndPhoneId(TestResources.CART_ID, TestResources.PHONE_ID))
-                    .thenReturn(Optional.of(TestResources.buildCartItem()));
+            Mockito.when(cartItemRepository.findByCartIdAndPhoneId(cart.getId(), TestData.PHONE_ID))
+                    .thenReturn(Optional.of(item));
+            Mockito.when(cartRepository.save(cart))
+                    .thenReturn(cart);
 
             // when
-            cartService.updateAmountCartItem(TestResources.CART_ID, TestResources.buildCartItemUpdateRequestDto());
+            try (MockedStatic<CartUtility> util = mockStatic(CartUtility.class)) {
+                util.when(() -> CartUtility.countCartTotalPrice(cart))
+                        .thenReturn(BigDecimal.valueOf(300));
 
-            // then
-            verify(cartItemRepository).save(any(CartItem.class));
-            verify(cartRepository).save(any(Cart.class));
+                Cart result = cartService.updateAmountCartItem(cart, dto);
+
+                // then
+                assertNotNull(result);
+                assertEquals(BigDecimal.valueOf(300), result.getTotalPrice());
+                Mockito.verify(cartItemRepository).save(item);
+                Mockito.verify(cartRepository).save(cart);
+            }
         }
 
         @Test
-        void whenCartItemDoesNotExist_thenThrowException() {
+        void whenCartItemNotFound_thenThrowException() {
+            // given
+            Cart cart = TestData.buildCart();
+            CartItemUpdateRequestDto dto = TestData.buildUpdateDto();
+
             // mockito
-            when(cartRepository.findById(TestResources.CART_ID))
-                    .thenReturn(Optional.of(TestResources.buildCart()));
-            when(cartItemRepository.findByCartIdAndPhoneId(TestResources.CART_ID, TestResources.PHONE_ID))
+            Mockito.when(cartItemRepository.findByCartIdAndPhoneId(cart.getId(), TestData.PHONE_ID))
                     .thenReturn(Optional.empty());
 
             // when + then
-            assertThatThrownBy(() -> cartService.updateAmountCartItem(TestResources.CART_ID, TestResources.buildCartItemUpdateRequestDto()))
-                    .isInstanceOf(ResourceNotFoundException.class);
-        }
-
-        @Test
-        void whenCartDoesNotExist_thenThrowException() {
-            // mockito
-            when(cartRepository.findById(TestResources.CART_ID))
-                    .thenReturn(Optional.empty());
-
-            // when + then
-            assertThatThrownBy(() -> cartService.updateAmountCartItem(TestResources.CART_ID, TestResources.buildCartItemUpdateRequestDto()))
-                    .isInstanceOf(ResourceNotFoundException.class);
+            assertThrows(ResourceNotFoundException.class,
+                    () -> cartService.updateAmountCartItem(cart, dto));
         }
     }
 
@@ -165,43 +219,44 @@ class CartServiceImplTest {
     class RemoveItemFromCartTest {
 
         @Test
-        void whenCartItemExists_thenRemoveSuccessfully() {
+        void whenItemExists_thenRemoveSuccessfully() {
+            // given
+            Cart cart = TestData.buildCart();
+            CartItem item = TestData.buildCartItem();
+
             // mockito
-            when(cartRepository.findById(TestResources.CART_ID))
-                    .thenReturn(Optional.of(TestResources.buildCart()));
-            when(cartItemRepository.findByCartIdAndPhoneId(TestResources.CART_ID, TestResources.PHONE_ID))
-                    .thenReturn(Optional.of(TestResources.buildCartItem()));
+            Mockito.when(cartItemRepository.findByCartIdAndPhoneId(cart.getId(), TestData.PHONE_ID))
+                    .thenReturn(Optional.of(item));
+            Mockito.when(cartRepository.save(cart))
+                    .thenReturn(cart);
 
             // when
-            cartService.removeItemFromCart(TestResources.CART_ID, TestResources.PHONE_ID);
+            try (MockedStatic<CartUtility> util = mockStatic(CartUtility.class)) {
+                util.when(() -> CartUtility.countCartTotalPrice(cart))
+                        .thenReturn(BigDecimal.ZERO);
 
-            // then
-            verify(cartItemRepository).delete(any(CartItem.class));
-            verify(cartRepository).save(any(Cart.class));
+                Cart result = cartService.removeItemFromCart(cart, TestData.PHONE_ID);
+
+                // then
+                assertNotNull(result);
+                assertEquals(BigDecimal.ZERO, result.getTotalPrice());
+                Mockito.verify(cartItemRepository).delete(item);
+                Mockito.verify(cartRepository).save(cart);
+            }
         }
 
         @Test
-        void whenCartItemDoesNotExist_thenThrowException() {
+        void whenItemNotFound_thenThrowException() {
+            // given
+            Cart cart = TestData.buildCart();
+
             // mockito
-            when(cartRepository.findById(TestResources.CART_ID))
-                    .thenReturn(Optional.of(TestResources.buildCart()));
-            when(cartItemRepository.findByCartIdAndPhoneId(TestResources.CART_ID, TestResources.PHONE_ID))
+            Mockito.when(cartItemRepository.findByCartIdAndPhoneId(cart.getId(), TestData.PHONE_ID))
                     .thenReturn(Optional.empty());
 
             // when + then
-            assertThatThrownBy(() -> cartService.removeItemFromCart(TestResources.CART_ID, TestResources.PHONE_ID))
-                    .isInstanceOf(ResourceNotFoundException.class);
-        }
-
-        @Test
-        void whenCartDoesNotExist_thenThrowException() {
-            // mockito
-            when(cartRepository.findById(TestResources.CART_ID))
-                    .thenReturn(Optional.empty());
-
-            // when + then
-            assertThatThrownBy(() -> cartService.removeItemFromCart(TestResources.CART_ID, TestResources.PHONE_ID))
-                    .isInstanceOf(ResourceNotFoundException.class);
+            assertThrows(ResourceNotFoundException.class,
+                    () -> cartService.removeItemFromCart(cart, TestData.PHONE_ID));
         }
     }
 
@@ -209,111 +264,69 @@ class CartServiceImplTest {
     class ClearCartTest {
 
         @Test
-        void whenCartExists_thenClearSuccessfully() {
+        void whenCalled_thenDeleteAllItemsAndResetPrice() {
+            // given
+            Cart cart = TestData.buildCart();
+            cart.getCartItems().add(TestData.buildCartItem());
+
             // mockito
-            when(cartRepository.findById(TestResources.CART_ID))
-                    .thenReturn(Optional.of(TestResources.buildCart()));
+            Mockito.when(cartRepository.save(cart))
+                    .thenReturn(cart);
 
             // when
-            cartService.clearCart(TestResources.CART_ID);
+            Cart result = cartService.clearCart(cart);
 
             // then
-            verify(cartItemRepository).deleteAllByCartId(TestResources.CART_ID);
-            verify(cartRepository).save(any(Cart.class));
-        }
-
-        @Test
-        void whenCartDoesNotExist_thenThrowException() {
-            // mockito
-            when(cartRepository.findById(TestResources.CART_ID))
-                    .thenReturn(Optional.empty());
-
-            // when + then
-            assertThatThrownBy(() -> cartService.clearCart(TestResources.CART_ID))
-                    .isInstanceOf(ResourceNotFoundException.class);
+            assertNotNull(result);
+            assertTrue(result.getCartItems().isEmpty());
+            assertEquals(BigDecimal.ZERO, result.getTotalPrice());
+            Mockito.verify(cartItemRepository).deleteAllByCartId(cart.getId());
+            Mockito.verify(cartRepository).save(cart);
         }
     }
 
     @Nested
-    class GetCartIdByUserIdTest {
+    class GetCartByUserIdTest {
 
         @Test
-        void whenCartExists_thenReturnCartId() {
+        void whenCartExists_thenReturnOptionalWithCart() {
+            // given
+            Cart cart = TestData.buildCart();
+
             // mockito
-            when(cartRepository.findByUserId(TestResources.USER_ID))
-                    .thenReturn(Optional.of(TestResources.buildCart()));
+            Mockito.when(cartRepository.findByUserId(TestData.USER_ID))
+                    .thenReturn(Optional.of(cart));
 
             // when
-            Cart result = cartService.getCartByUserId(TestResources.USER_ID);
+            Optional<Cart> result = cartService.getCartByUserId(TestData.USER_ID);
 
             // then
-            assertThat(result.getId()).isEqualTo(TestResources.CART_ID);
+            assertNotNull(result);
+            assertTrue(result.isPresent());
+            assertEquals(cart, result.get());
+            Mockito.verify(cartRepository).findByUserId(TestData.USER_ID);
         }
 
-        @Test
-        void whenCartDoesNotExist_thenThrowException() {
-            // mockito
-            when(cartRepository.findByUserId(TestResources.USER_ID))
-                    .thenReturn(Optional.empty());
-
-            // when + then
-            assertThatThrownBy(() -> cartService.getCartByUserId(TestResources.USER_ID))
-                    .isInstanceOf(ResourceNotFoundException.class);
-        }
     }
 
-    @Nested
-    class GetCartItemTest {
-
-        @Test
-        void whenCartItemExists_thenReturnOptionalWithCartItem() {
-            // mockito
-            CartItem cartItem = TestResources.buildCartItem();
-            when(cartItemRepository.findByCartIdAndPhoneId(TestResources.CART_ID, TestResources.PHONE_ID))
-                    .thenReturn(Optional.of(cartItem));
-
-            // when
-            Optional<CartItem> result = cartService.getCartItem(TestResources.CART_ID, TestResources.PHONE_ID);
-
-            // then
-            assertThat(result).isPresent();
-            assertThat(result.get()).isEqualTo(cartItem);
-        }
-
-        @Test
-        void whenCartItemDoesNotExist_thenReturnEmptyOptional() {
-            // mockito
-            when(cartItemRepository.findByCartIdAndPhoneId(TestResources.CART_ID, TestResources.PHONE_ID))
-                    .thenReturn(Optional.empty());
-
-            // when
-            Optional<CartItem> result = cartService.getCartItem(TestResources.CART_ID, TestResources.PHONE_ID);
-
-            // then
-            assertThat(result).isNotPresent();
-        }
-    }
-
-
-    static class TestResources {
+    static class TestData {
         static final Long CART_ID = 1L;
         static final Long PHONE_ID = 2L;
         static final Long USER_ID = 3L;
-        static final BigDecimal PRICE = BigDecimal.valueOf(100);
 
         static Cart buildCart() {
-            Cart cart = new Cart();
-            cart.setId(CART_ID);
-            cart.setTotalPrice(BigDecimal.ZERO);
-            cart.setCartItems(new java.util.ArrayList<>());
-            return cart;
+            Cart c = new Cart();
+            c.setId(CART_ID);
+            c.setCartItems(new ArrayList<>());
+            c.setTotalPrice(BigDecimal.ZERO);
+            return c;
         }
 
         static Phone buildPhone() {
-            Phone phone = new Phone();
-            phone.setId(PHONE_ID);
-            phone.setPrice(PRICE);
-            return phone;
+            Phone p = new Phone();
+            p.setId(PHONE_ID);
+            p.setPrice(BigDecimal.valueOf(100));
+            return p;
         }
 
         static CartItem buildCartItem() {
@@ -324,13 +337,12 @@ class CartServiceImplTest {
             return item;
         }
 
-        static CartItemAddRequestDto buildCartItemAddRequestDto() {
+        static CartItemAddRequestDto buildAddDto() {
             return new CartItemAddRequestDto(PHONE_ID, 1);
         }
 
-        static CartItemUpdateRequestDto buildCartItemUpdateRequestDto() {
-            return new CartItemUpdateRequestDto(PHONE_ID, 5);
+        static CartItemUpdateRequestDto buildUpdateDto() {
+            return new CartItemUpdateRequestDto(PHONE_ID, 3);
         }
-
     }
 }
