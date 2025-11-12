@@ -4,6 +4,8 @@ import com.challengeteam.shop.testContainer.container.MinioContainer;
 import com.challengeteam.shop.testContainer.container.PostgresContainer;
 import org.springframework.test.context.DynamicPropertyRegistry;
 
+import java.util.TimeZone;
+
 public class TestContextConfigurator {
     public final static String DEFAULT_PORT = "8080";
     public final static String DEFAULT_DB_URL = "no-url";
@@ -47,8 +49,14 @@ public class TestContextConfigurator {
         propertyRegistry.add("security.cors.allow-credentials", () -> DEFAULT_CORS_ALLOWED_CREDENTIALS);
     }
 
+    private static void configureSystem() {
+        // set a time-zone for independence of execution location
+        TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
+    }
+
     public synchronized static void initRequiredProperties(DynamicPropertyRegistry propertyRegistry) {
         configureDefaultContext(propertyRegistry);
+        configureSystem();
         PostgresContainer.setPostgresProperties(propertyRegistry);
         MinioContainer.setMinioProperties(propertyRegistry);
     }
