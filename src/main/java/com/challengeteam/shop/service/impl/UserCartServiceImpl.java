@@ -1,12 +1,13 @@
 package com.challengeteam.shop.service.impl;
 
 import com.challengeteam.shop.dto.cart.CartItemAddRequestDto;
+import com.challengeteam.shop.dto.cart.CartItemRemoveRequestDto;
 import com.challengeteam.shop.dto.cart.CartItemUpdateRequestDto;
 import com.challengeteam.shop.entity.cart.Cart;
-import com.challengeteam.shop.entity.cart.CartItem;
 import com.challengeteam.shop.exceptionHandling.exception.ResourceNotFoundException;
 import com.challengeteam.shop.service.CartService;
 import com.challengeteam.shop.service.UserCartService;
+import com.challengeteam.shop.utility.CartUtility;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -24,67 +25,61 @@ public class UserCartServiceImpl implements UserCartService {
     @Transactional(readOnly = true)
     @Override
     public Optional<Cart> getUserCart(Long userId) {
-        return Optional.of(cartService.getCartByUserId(userId));
+        return cartService.getCartByUserId(userId);
     }
 
     @Transactional
     @Override
-    public Optional<Cart> addItemToUserCart(Long userId, CartItemAddRequestDto cartItemAddRequestDto) {
-        Cart cart = cartService.getCartByUserId(userId);
+    public Cart putItemToUserCart(Long userId, CartItemAddRequestDto cartItemAddRequestDto) {
+        Cart cart = cartService.getCartByUserId(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("Cart for user with id " + userId + " not found"));
 
         Long phoneId = cartItemAddRequestDto.phoneId();
         Integer amountToAdd = cartItemAddRequestDto.amount();
 
-        Optional<CartItem> existingItem = cartService.getCartItem(cart.getId(), phoneId);
+        boolean isCartHasPhone = CartUtility.isCartHasPhone(cart, phoneId);
 
-        if (existingItem.isPresent()) {
-            CartItem cartItem = existingItem.get();
-            Integer newAmount = cartItem.getAmount() + amountToAdd;
-
-            log.debug("Phone {} already in cart. Increasing amount from {} to {}", phoneId, cartItem.getAmount(), newAmount);
-
+        if (isCartHasPhone) {
+            log.debug("Phone {} already in cart.", phoneId);
+            Integer currentAmount = CartUtility.getCartItemAmount(cart, phoneId);
+            Integer newAmount = currentAmount + amountToAdd;
             CartItemUpdateRequestDto updateDto = new CartItemUpdateRequestDto(phoneId, newAmount);
-            return cartService.updateAmountCartItem(cart.getId(), updateDto);
+            return cartService.updateAmountCartItem(cart, updateDto);
         } else {
             log.debug("Adding new phone {} to cart with amount {}", phoneId, amountToAdd);
-            return cartService.addItemToCart(cart.getId(), cartItemAddRequestDto);
+            return cartService.putItemToCart(cart, cartItemAddRequestDto);
         }
     }
 
     @Transactional
     @Override
-    public Optional<Cart> updateAmountUserCartItem(Long userId, CartItemUpdateRequestDto cartItemUpdateRequestDto) {
-        Cart cart = cartService.getCartByUserId(userId);
-        return cartService.updateAmountCartItem(cart.getId(), cartItemUpdateRequestDto);
-    }
+    public Cart removeItemFromUserCart(Long userId, CartItemRemoveRequestDto cartItemRemoveRequestDto) {
+        Cart cart = cartService.getCartByUserId(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("Cart for user with id " + userId + " not found"));
 
-    @Transactional
-    @Override
-    public Optional<Cart> removeItemFromUserCart(Long userId, Long phoneId) {
-        Cart cart = cartService.getCartByUserId(userId);
+        Long phoneId = cartItemRemoveRequestDto.phoneId();
+        Integer amountToRemove = cartItemRemoveRequestDto.amount();
 
-        CartItem cartItem = cartService.getCartItem(cart.getId(), phoneId)
-                .orElseThrow(() -> new ResourceNotFoundException("Phone with id " + phoneId + " not found in user cart"));
+        Integer currentAmount = CartUtility.getCartItemAmount(cart, phoneId);
 
-        Integer currentAmount = cartItem.getAmount();
-
-        if (currentAmount > 1) {
-            Integer newAmount = currentAmount - 1;
+        if (currentAmount > amountToRemove) {
+            Integer newAmount = currentAmount - amountToRemove;
             log.debug("Decreasing amount of phone {} from {} to {}", phoneId, currentAmount, newAmount);
 
             CartItemUpdateRequestDto updateDto = new CartItemUpdateRequestDto(phoneId, newAmount);
-            return cartService.updateAmountCartItem(cart.getId(), updateDto);
+            return cartService.updateAmountCartItem(cart, updateDto);
         } else {
             log.debug("Removing phone {} from cart completely", phoneId);
-            return cartService.removeItemFromCart(cart.getId(), phoneId);
+            return cartService.removeItemFromCart(cart, phoneId);
         }
     }
 
     @Transactional
     @Override
-    public Optional<Cart> clearUserCart(Long userId) {
-        Cart cart = cartService.getCartByUserId(userId);
-        return cartService.clearCart(cart.getId());
+    public Cart clearUserCart(Long userId) {
+        Cart cart = cartService.getCartByUserId(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("Cart for user with id " + userId + " not found"));
+        return cartService.clearCart(cart);
     }
 
 }
