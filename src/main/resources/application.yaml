@@ -33,6 +33,12 @@ springdoc:
 
 
 security:
+  cors:
+    allowed-origins: ['*']
+    allowed-methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE']
+    allowed-headers: ['*']
+    max-cache-age: 3600           # seconds
+    allow-credentials: true
   jwt:
     private-key: ${JWT_PRIVATE_KEY}
     public-key: ${JWT_PUBLIC_KEY}
