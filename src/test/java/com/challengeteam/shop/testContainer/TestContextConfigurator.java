@@ -16,6 +16,11 @@ public class TestContextConfigurator {
     public final static String DEFAULT_MINIO_URL = "no-url";
     public final static String DEFAULT_MINIO_USERNAME = "username";
     public final static String DEFAULT_MINIO_PASSWORD = "password";
+    public final static String DEFAULT_CORS_ALLOWED_ORIGINS = "['*']";
+    public final static String DEFAULT_CORS_ALLOWED_METHODS = "['GET', 'POST', 'PUT', 'PATCH', 'DELETE']";
+    public final static String DEFAULT_CORS_ALLOWED_HEADERS = "['*']";
+    public final static String DEFAULT_CORS_MAX_CACHE_AGE = "3600";
+    public final static String DEFAULT_CORS_ALLOWED_CREDENTIALS = "true";
 
     /**
      * Configuring an application context for successfully up the context.
@@ -35,6 +40,11 @@ public class TestContextConfigurator {
         propertyRegistry.add("minio.url", () -> DEFAULT_MINIO_URL);
         propertyRegistry.add("minio.username", () -> DEFAULT_MINIO_USERNAME);
         propertyRegistry.add("minio.password", () -> DEFAULT_MINIO_PASSWORD);
+        propertyRegistry.add("security.cors.allowed-origins", () -> DEFAULT_CORS_ALLOWED_ORIGINS);
+        propertyRegistry.add("security.cors.allowed-methods", () -> DEFAULT_CORS_ALLOWED_METHODS);
+        propertyRegistry.add("security.cors.allowed-headers", () -> DEFAULT_CORS_ALLOWED_HEADERS);
+        propertyRegistry.add("security.cors.max-cache-age", () -> DEFAULT_CORS_MAX_CACHE_AGE);
+        propertyRegistry.add("security.cors.allow-credentials", () -> DEFAULT_CORS_ALLOWED_CREDENTIALS);
     }
 
     public synchronized static void initRequiredProperties(DynamicPropertyRegistry propertyRegistry) {
