@@ -1,7 +1,7 @@
 package com.challengeteam.shop.web.controller;
 
 import com.challengeteam.shop.dto.cart.CartItemAddRequestDto;
-import com.challengeteam.shop.dto.cart.CartItemUpdateRequestDto;
+import com.challengeteam.shop.dto.cart.CartItemRemoveRequestDto;
 import com.challengeteam.shop.dto.cart.CartResponseDto;
 import com.challengeteam.shop.entity.cart.Cart;
 import com.challengeteam.shop.exceptionHandling.exception.ResourceNotFoundException;
@@ -31,41 +31,28 @@ public class UserCartController {
         return ResponseEntity.ok(cartResponseDto);
     }
 
-    @PostMapping("/add")
-    public ResponseEntity<CartResponseDto> addItemToUserCart(@AuthenticationPrincipal SimpleUserDetails simpleUserDetails,
+    @PostMapping("/put")
+    public ResponseEntity<CartResponseDto> putItemToUserCart(@AuthenticationPrincipal SimpleUserDetails simpleUserDetails,
                                         @RequestBody CartItemAddRequestDto cartItemAddRequestDto) {
         Long userId = simpleUserDetails.getUserId();
-        Cart cart = userCartService.addItemToUserCart(userId, cartItemAddRequestDto)
-                .orElseThrow(() -> new ResourceNotFoundException("Cart for user with id " + userId + " not found"));
+        Cart cart = userCartService.putItemToUserCart(userId, cartItemAddRequestDto);
         CartResponseDto cartResponseDto = cartMapper.toCartResponseDto(cart);
         return ResponseEntity.ok(cartResponseDto);
     }
 
-    @PutMapping("/update")
-    public ResponseEntity<CartResponseDto> updateAmountUserCartItem(@AuthenticationPrincipal SimpleUserDetails simpleUserDetails,
-                                           @RequestBody CartItemUpdateRequestDto cartItemUpdateRequestDto) {
-        Long userId = simpleUserDetails.getUserId();
-        Cart cart = userCartService.updateAmountUserCartItem(userId, cartItemUpdateRequestDto)
-                .orElseThrow(() -> new ResourceNotFoundException("Cart for user with id " + userId + " not found"));
-        CartResponseDto cartResponseDto = cartMapper.toCartResponseDto(cart);
-        return ResponseEntity.ok(cartResponseDto);
-    }
-
-    @DeleteMapping("/remove/{phoneId}")
+    @PostMapping("/remove")
     public ResponseEntity<CartResponseDto> removeItem(@AuthenticationPrincipal SimpleUserDetails simpleUserDetails,
-                                           @PathVariable Long phoneId) {
+                                           @RequestBody CartItemRemoveRequestDto cartItemRemoveRequestDto) {
         Long userId = simpleUserDetails.getUserId();
-        Cart cart = userCartService.removeItemFromUserCart(userId, phoneId)
-                .orElseThrow(() -> new ResourceNotFoundException("Cart for user with id " + userId + " not found"));
+        Cart cart = userCartService.removeItemFromUserCart(userId, cartItemRemoveRequestDto);
         CartResponseDto cartResponseDto = cartMapper.toCartResponseDto(cart);
         return ResponseEntity.ok(cartResponseDto);
     }
 
-    @DeleteMapping("/clear")
+    @PostMapping("/clear")
     public ResponseEntity<CartResponseDto> clearCart(@AuthenticationPrincipal SimpleUserDetails simpleUserDetails) {
         Long userId = simpleUserDetails.getUserId();
-        Cart cart = userCartService.clearUserCart(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("Cart for user with id " + userId + " not found"));
+        Cart cart = userCartService.clearUserCart(userId);
         CartResponseDto cartResponseDto = cartMapper.toCartResponseDto(cart);
         return ResponseEntity.ok(cartResponseDto);
     }
