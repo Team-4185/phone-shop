@@ -12,5 +12,6 @@ CREATE TABLE carts_items
     CONSTRAINT FK_carts_items_fk_phone_id
         FOREIGN KEY (fk_phone_id)
             REFERENCES phones (id)
-            ON DELETE CASCADE
+            ON DELETE CASCADE,
+    CONSTRAINT UQ_carts_items_cart_phone UNIQUE (fk_cart_id, fk_phone_id)
 );
