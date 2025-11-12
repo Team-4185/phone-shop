@@ -82,6 +82,8 @@ public class UserServiceImpl implements UserService {
                 .cart(cart)
                 .build();
 
+        cart.setUser(user);
+
         user = userRepository.save(user);
         log.debug("Created new user: {}", user);
 
