@@ -3,7 +3,6 @@ package com.challengeteam.shop.service;
 import com.challengeteam.shop.dto.cart.CartItemAddRequestDto;
 import com.challengeteam.shop.dto.cart.CartItemUpdateRequestDto;
 import com.challengeteam.shop.entity.cart.Cart;
-import com.challengeteam.shop.entity.cart.CartItem;
 
 import java.util.Optional;
 
@@ -11,16 +10,14 @@ public interface CartService {
 
     Optional<Cart> getCart(Long cartId);
 
-    Optional<Cart> addItemToCart(Long cartId, CartItemAddRequestDto cartItemAddRequestDto);
+    Cart putItemToCart(Cart cart, CartItemAddRequestDto cartItemAddRequestDto);
 
-    Optional<Cart> updateAmountCartItem(Long cartId, CartItemUpdateRequestDto cartItemUpdateRequestDto);
+    Cart updateAmountCartItem(Cart cart, CartItemUpdateRequestDto cartItemUpdateRequestDto);
 
-    Optional<Cart> removeItemFromCart(Long cartId, Long phoneId);
+    Cart removeItemFromCart(Cart cart, Long phoneId);
 
-    Optional<Cart> clearCart(Long cartId);
+    Cart clearCart(Cart cart);
 
-    Cart getCartByUserId(Long userId);
-
-    Optional<CartItem> getCartItem(Long cartId, Long phoneId);
+    Optional<Cart> getCartByUserId(Long userId);
 
 }
