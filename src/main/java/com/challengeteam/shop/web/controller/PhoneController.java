@@ -7,6 +7,7 @@ import com.challengeteam.shop.entity.phone.Phone;
 import com.challengeteam.shop.exceptionHandling.exception.ResourceNotFoundException;
 import com.challengeteam.shop.mapper.PhoneMapper;
 import com.challengeteam.shop.service.PhoneService;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -18,6 +19,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/v1/phones")
 @RequiredArgsConstructor
+@SecurityRequirement(name = "bearer-jwt")
 public class PhoneController {
 
     private final PhoneService phoneService;
