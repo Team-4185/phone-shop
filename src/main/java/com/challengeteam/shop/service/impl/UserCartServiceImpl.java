@@ -12,6 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Objects;
 import java.util.Optional;
 
 @Slf4j
@@ -24,12 +25,17 @@ public class UserCartServiceImpl implements UserCartService {
     @Transactional(readOnly = true)
     @Override
     public Optional<Cart> getUserCart(Long userId) {
+        Objects.requireNonNull(userId, "userId");
+
         return cartService.getCartByUserId(userId);
     }
 
     @Transactional
     @Override
     public Cart putItemToUserCart(Long userId, CartItemAddRequestDto cartItemAddRequestDto) {
+        Objects.requireNonNull(userId, "userId");
+        Objects.requireNonNull(cartItemAddRequestDto, "cartItemAddRequestDto");
+
         Cart cart = cartService.getCartByUserId(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Cart for user with id " + userId + " not found"));
 
@@ -52,6 +58,9 @@ public class UserCartServiceImpl implements UserCartService {
     @Transactional
     @Override
     public Cart removeItemFromUserCart(Long userId, CartItemRemoveRequestDto cartItemRemoveRequestDto) {
+        Objects.requireNonNull(userId, "userId");
+        Objects.requireNonNull(cartItemRemoveRequestDto, "cartItemRemoveRequestDto");
+
         Cart cart = cartService.getCartByUserId(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Cart for user with id " + userId + " not found"));
 
@@ -78,6 +87,8 @@ public class UserCartServiceImpl implements UserCartService {
     @Transactional
     @Override
     public Cart clearUserCart(Long userId) {
+        Objects.requireNonNull(userId, "userId");
+
         Cart cart = cartService.getCartByUserId(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Cart for user with id " + userId + " not found"));
         return cartService.clearCart(cart);
