@@ -2,15 +2,14 @@ package com.challengeteam.shop.entity.image;
 
 import com.challengeteam.shop.entity.BaseEntity;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
+import lombok.experimental.SuperBuilder;
 
 @Getter
 @Setter
 @AllArgsConstructor
-@Builder
+@NoArgsConstructor
+@SuperBuilder
 @Entity
 @Table(name = "images")
 public class Image extends BaseEntity {
@@ -26,11 +25,6 @@ public class Image extends BaseEntity {
     @ManyToOne
     @JoinColumn(name = "fk_mime_type_id", nullable = false)
     private MIMEType mimeType;
-
-
-    public Image() {
-        super();
-    }
 
     @Override
     public String toString() {

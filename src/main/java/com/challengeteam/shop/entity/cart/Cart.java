@@ -3,10 +3,7 @@ package com.challengeteam.shop.entity.cart;
 import com.challengeteam.shop.entity.BaseEntity;
 import com.challengeteam.shop.entity.user.User;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 import lombok.experimental.SuperBuilder;
 
 import java.math.BigDecimal;
@@ -14,8 +11,9 @@ import java.util.List;
 
 @Getter
 @Setter
-@SuperBuilder
 @AllArgsConstructor
+@NoArgsConstructor
+@SuperBuilder
 @Entity
 @Table(name = "carts")
 public class Cart extends BaseEntity {
@@ -28,10 +26,6 @@ public class Cart extends BaseEntity {
 
     @OneToMany(mappedBy = "cart", cascade = CascadeType.ALL, orphanRemoval = true)
     List<CartItem> cartItems;
-
-    public Cart() {
-        super();
-    }
 
     @Override
     public String toString() {
