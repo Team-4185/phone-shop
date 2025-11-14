@@ -2,7 +2,6 @@ package com.challengeteam.shop.service.impl;
 
 import com.challengeteam.shop.dto.cart.CartItemAddRequestDto;
 import com.challengeteam.shop.dto.cart.CartItemRemoveRequestDto;
-import com.challengeteam.shop.dto.cart.CartItemUpdateRequestDto;
 import com.challengeteam.shop.entity.cart.Cart;
 import com.challengeteam.shop.exceptionHandling.exception.ResourceNotFoundException;
 import com.challengeteam.shop.service.CartService;
@@ -43,8 +42,7 @@ public class UserCartServiceImpl implements UserCartService {
             log.debug("Phone {} already in cart.", phoneId);
             Integer currentAmount = CartUtility.getCartItemAmount(cart, phoneId);
             Integer newAmount = currentAmount + amountToAdd;
-            CartItemUpdateRequestDto updateDto = new CartItemUpdateRequestDto(phoneId, newAmount);
-            return cartService.updateAmountCartItem(cart, updateDto);
+            return cartService.updateAmountCartItem(cart, phoneId, newAmount);
         } else {
             log.debug("Adding new phone {} to cart with amount {}", phoneId, amountToAdd);
             return cartService.putItemToCart(cart, cartItemAddRequestDto);
@@ -70,8 +68,7 @@ public class UserCartServiceImpl implements UserCartService {
             Integer newAmount = currentAmount - amountToRemove;
             log.debug("Decreasing amount of phone {} from {} to {}", phoneId, currentAmount, newAmount);
 
-            CartItemUpdateRequestDto updateDto = new CartItemUpdateRequestDto(phoneId, newAmount);
-            return cartService.updateAmountCartItem(cart, updateDto);
+            return cartService.updateAmountCartItem(cart, phoneId, newAmount);
         } else {
             log.debug("Removing phone {} from cart completely", phoneId);
             return cartService.removeItemFromCart(cart, phoneId);

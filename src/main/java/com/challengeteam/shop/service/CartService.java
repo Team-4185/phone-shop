@@ -1,7 +1,6 @@
 package com.challengeteam.shop.service;
 
 import com.challengeteam.shop.dto.cart.CartItemAddRequestDto;
-import com.challengeteam.shop.dto.cart.CartItemUpdateRequestDto;
 import com.challengeteam.shop.entity.cart.Cart;
 
 import java.util.Optional;
@@ -12,7 +11,7 @@ public interface CartService {
 
     Cart putItemToCart(Cart cart, CartItemAddRequestDto cartItemAddRequestDto);
 
-    Cart updateAmountCartItem(Cart cart, CartItemUpdateRequestDto cartItemUpdateRequestDto);
+    Cart updateAmountCartItem(Cart cart, Long phoneId, Integer amount);
 
     Cart removeItemFromCart(Cart cart, Long phoneId);
 

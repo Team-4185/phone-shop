@@ -1,7 +1,6 @@
 package com.challengeteam.shop.service.impl;
 
 import com.challengeteam.shop.dto.cart.CartItemAddRequestDto;
-import com.challengeteam.shop.dto.cart.CartItemUpdateRequestDto;
 import com.challengeteam.shop.entity.cart.Cart;
 import com.challengeteam.shop.entity.cart.CartItem;
 import com.challengeteam.shop.entity.phone.Phone;
@@ -76,12 +75,10 @@ public class CartServiceImpl implements CartService {
 
     @Transactional
     @Override
-    public Cart updateAmountCartItem(Cart cart, CartItemUpdateRequestDto cartItemUpdateRequestDto) {
+    public Cart updateAmountCartItem(Cart cart, Long phoneId, Integer amount) {
         Objects.requireNonNull(cart, "cart");
-        Objects.requireNonNull(cartItemUpdateRequestDto, "cartItemUpdateRequestDto");
-
-        Long phoneId = cartItemUpdateRequestDto.phoneId();
-        Integer amount = cartItemUpdateRequestDto.newAmount();
+        Objects.requireNonNull(phoneId, "phoneId");
+        Objects.requireNonNull(amount, "amount");
 
         CartItem cartItem = cartItemRepository.findByCartIdAndPhoneId(cart.getId(), phoneId)
                         .orElseThrow(() -> new ResourceNotFoundException("Phone with id " + phoneId + " not found in cart"));

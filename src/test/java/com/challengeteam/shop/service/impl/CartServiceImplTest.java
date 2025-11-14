@@ -1,7 +1,6 @@
 package com.challengeteam.shop.service.impl;
 
 import com.challengeteam.shop.dto.cart.CartItemAddRequestDto;
-import com.challengeteam.shop.dto.cart.CartItemUpdateRequestDto;
 import com.challengeteam.shop.entity.cart.Cart;
 import com.challengeteam.shop.entity.cart.CartItem;
 import com.challengeteam.shop.entity.phone.Phone;
