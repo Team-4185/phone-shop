@@ -7,6 +7,7 @@ import lombok.SneakyThrows;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -40,7 +41,7 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource(CorsProperties corsProperties) {
         // create common cors configuration
         CorsConfiguration commonCorsConfig = new CorsConfiguration();
-        commonCorsConfig.setAllowedOrigins(corsProperties.getAllowedOrigins());
+        commonCorsConfig.setAllowedOriginPatterns(corsProperties.getAllowedOrigins());
         commonCorsConfig.setAllowedMethods(corsProperties.getAllowedMethods());
         commonCorsConfig.setAllowedHeaders(corsProperties.getAllowedHeaders());
         commonCorsConfig.setAllowCredentials(corsProperties.isAllowCredentials());
@@ -62,6 +63,7 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .cors(corsConfigurer -> corsConfigurer.configurationSource(corsConfig))
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()             // critical for CORS
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/docs/**", "/swagger-ui/**").permitAll()
                         .anyRequest().authenticated()

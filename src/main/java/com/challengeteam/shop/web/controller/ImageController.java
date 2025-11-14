@@ -9,6 +9,7 @@ import com.challengeteam.shop.service.ImageService;
 import com.challengeteam.shop.web.resolver.headerResolver.HeadersResolver;
 import com.challengeteam.shop.web.resolver.headerResolver.imageHeaderResolver.ImageHeadersResolver;
 import com.challengeteam.shop.web.validator.image.ImageRequestValidator;
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -28,12 +29,17 @@ import org.springframework.web.multipart.MultipartFile;
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("/api/v1/images")
+@SecurityRequirement(name = "bearer-jwt")
 public class ImageController {
     private final ImageHeadersResolver imageHeadersResolver;
     private final ImageRequestValidator imageRequestValidator;
     private final ImageService imageService;
     private final ImageMapper imageMapper;
 
+    @Operation(
+            summary = "Endpoint for retrieving in-line image",
+            description = "Returns an image as a byte array by id. No additional information is returned."
+    )
     @GetMapping("/{id}")
     public ResponseEntity<Resource> getImageById(@PathVariable Long id) {
         ImageDataDto imageDataDto = imageService
@@ -48,6 +54,11 @@ public class ImageController {
                 .body(body);
     }
 
+    @Operation(
+            summary = "Endpoint for retrieving image's metadata",
+            description = "Returns data with common fields about image by id." +
+                          " Also returns an URL for retrieving image in-line."
+    )
     @GetMapping("/{id}/metadata")
     public ResponseEntity<ImageMetadataResponseDto> getImageMetadataById(@PathVariable Long id) {
         Image image = imageService
@@ -61,6 +72,12 @@ public class ImageController {
     // Temporal endpoint for testing
     // Image is going to be a part of a phone.
     // Creating images will be with creating a phone. So this controller is only for getting images.
+    @Operation(
+            deprecated = true,
+            summary = "temporal: Endpoint for adding an image",
+            description = "Usable for adding a test image in database. Currently it is only one way for adding an image," +
+                          " later it will be removed. Feel free to use for testing. DON'T USE IN PRODUCTION CODE"
+    )
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Void> uploadImageTemporalEndpoint(@RequestParam("image") MultipartFile image) {
         imageRequestValidator.validate(image);

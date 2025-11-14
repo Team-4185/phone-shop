@@ -19,7 +19,7 @@ public class TestContextConfigurator {
     public final static String DEFAULT_MINIO_USERNAME = "username";
     public final static String DEFAULT_MINIO_PASSWORD = "password";
     public final static String DEFAULT_CORS_ALLOWED_ORIGINS = "['*']";
-    public final static String DEFAULT_CORS_ALLOWED_METHODS = "['GET', 'POST', 'PUT', 'PATCH', 'DELETE']";
+    public final static String DEFAULT_CORS_ALLOWED_METHODS = "['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS']";
     public final static String DEFAULT_CORS_ALLOWED_HEADERS = "['*']";
     public final static String DEFAULT_CORS_MAX_CACHE_AGE = "3600";
     public final static String DEFAULT_CORS_ALLOWED_CREDENTIALS = "true";
