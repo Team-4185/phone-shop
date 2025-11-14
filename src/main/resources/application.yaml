@@ -34,7 +34,7 @@ springdoc:
 
 security:
   cors:
-    allowed-origins: ${CORS_ALLOWED_ORIGINS}
+    allowed-origins: ${CORS_ALLOWED_ORIGINS}                    # domains or patterns
     allowed-methods: ${CORS_ALLOWED_METHODS}
     allowed-headers: ${CORS_ALLOWED_HEADERS}
     max-cache-age: ${CORS_MAX_CACHE_AGE}                        # seconds
