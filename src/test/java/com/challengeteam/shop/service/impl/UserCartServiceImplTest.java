@@ -137,7 +137,7 @@ class UserCartServiceImplTest {
             // given
             Cart cart = buildCartWithItemAmount(5);
             CartItemRemoveRequestDto removeRequest = buildRemoveDto();
-            int expectedNewAmount = 4; // 5 (current) - 1 (to remove)
+            Integer expectedNewAmount = 4;
 
             // mockito
             Mockito.when(cartService.getCartByUserId(USER_ID))
@@ -147,10 +147,12 @@ class UserCartServiceImplTest {
 
             // when
             Cart result = userCartService.removeItemFromUserCart(USER_ID, removeRequest);
+            CartItem item = result.getCartItems().get(0);
 
             // then
             assertThat(result).isNotNull();
             assertThat(result.getId()).isEqualTo(CART_ID);
+            assertThat(item.getAmount()).isEqualTo(expectedNewAmount);
             Mockito.verify(cartService).getCartByUserId(USER_ID);
             Mockito.verify(cartService).updateAmountCartItem(cart, PHONE_ID, expectedNewAmount);
             Mockito.verify(cartService, Mockito.never()).removeItemFromCart(cart, PHONE_ID);
@@ -266,7 +268,7 @@ class UserCartServiceImplTest {
         }
 
         static Cart buildCartWithItem() {
-            return buildCartWithItemAmount(1);
+            return buildCartWithItemAmount(5);
         }
 
         static Cart buildCartWithItemAmount(int amount) {
