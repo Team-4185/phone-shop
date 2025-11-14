@@ -5,7 +5,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.ErrorResponse;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
@@ -225,7 +224,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(PhoneAlreadyInCartException.class)
     public ResponseEntity<ProblemDetail> handlePhoneAlreadyInCartException(PhoneAlreadyInCartException e) {
-        log.warn("Phone already in cart: {}", e.getMessage());
+        log.warn("Cart exception: {}", e.getMessage());
 
         var problem = ProblemDetail.forStatus(HttpStatus.BAD_REQUEST.value());
         problem.setTitle("Phone Already In Cart");
