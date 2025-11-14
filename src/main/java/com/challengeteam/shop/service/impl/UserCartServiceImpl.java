@@ -60,6 +60,10 @@ public class UserCartServiceImpl implements UserCartService {
         Long phoneId = cartItemRemoveRequestDto.phoneId();
         Integer amountToRemove = cartItemRemoveRequestDto.amount();
 
+        if (!CartUtility.isCartHasPhone(cart, phoneId)) {
+            throw new ResourceNotFoundException("Phone with id " + phoneId + " not found in user's cart");
+        }
+
         Integer currentAmount = CartUtility.getCartItemAmount(cart, phoneId);
 
         if (currentAmount > amountToRemove) {
