@@ -138,12 +138,13 @@ class UserCartServiceImplTest {
             Cart cart = buildCartWithItemAmount(5);
             CartItemRemoveRequestDto removeRequest = buildRemoveDto();
             Integer expectedNewAmount = 4;
+            Cart updatedCart = buildCartWithItemAmount(expectedNewAmount);
 
             // mockito
             Mockito.when(cartService.getCartByUserId(USER_ID))
                     .thenReturn(Optional.of(cart));
             Mockito.when(cartService.updateAmountCartItem(cart, PHONE_ID, expectedNewAmount))
-                    .thenReturn(cart);
+                    .thenReturn(updatedCart);
 
             // when
             Cart result = userCartService.removeItemFromUserCart(USER_ID, removeRequest);
@@ -271,7 +272,7 @@ class UserCartServiceImplTest {
             return buildCartWithItemAmount(5);
         }
 
-        static Cart buildCartWithItemAmount(int amount) {
+        static Cart buildCartWithItemAmount(Integer amount) {
             Cart cart = buildCart();
             cart.getCartItems().add(
                     CartItem.builder()
