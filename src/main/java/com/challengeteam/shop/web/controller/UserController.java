@@ -7,6 +7,7 @@ import com.challengeteam.shop.entity.user.User;
 import com.challengeteam.shop.exceptionHandling.exception.ResourceNotFoundException;
 import com.challengeteam.shop.mapper.UserMapper;
 import com.challengeteam.shop.service.UserService;
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -24,6 +25,12 @@ public class UserController {
     private final UserService userService;
     private final UserMapper userMapper;
 
+    @Operation(
+            deprecated = true,
+            summary = "temporary: Get all users",
+            description = "Returns a list of all users. Later there will be a lot of users," +
+                          " so for efficient work user retrieving should be pageable."
+    )
     @GetMapping
     public ResponseEntity<List<UserResponseDto>> getAllUsers() {
         List<User> users = userService.getAll();
@@ -32,6 +39,10 @@ public class UserController {
         return ResponseEntity.ok(responses);
     }
 
+    @Operation(
+            summary = "Get user by id",
+            description = "Returns user by id"
+    )
     @GetMapping("/{id}")
     public ResponseEntity<UserResponseDto> getUserById(@PathVariable Long id) {
         User user = userService
@@ -42,6 +53,11 @@ public class UserController {
         return ResponseEntity.ok(response);
     }
 
+    @Operation(
+            summary = "Create new user",
+            description = "Creates new user based on input data. Email must be unique." +
+                          " Password and password confirmation must be equal. The user will have role: USER."
+    )
     @PostMapping
     public ResponseEntity<Void> createDefaultUser(@RequestBody CreateUserDto createUserDto) {
         Long id = userService.createDefaultUser(createUserDto);
@@ -54,6 +70,11 @@ public class UserController {
         return ResponseEntity.created(newUserLocation).build();
     }
 
+    @Operation(
+            summary = "Update user by id",
+            description = "Updates user by id based on input data." +
+                          " If field empty in request, the field won't be changed."
+    )
     @PatchMapping("/{id}/update-profile")
     public ResponseEntity<Void> updateProfile(@PathVariable Long id,
                                               @RequestBody UpdateProfileDto updateProfileDto) {
@@ -62,6 +83,10 @@ public class UserController {
         return ResponseEntity.noContent().build();
     }
 
+    @Operation(
+            summary = "Delete user by id",
+            description = "Deletes user by id"
+    )
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteById(@PathVariable Long id) {
         userService.delete(id);
