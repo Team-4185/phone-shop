@@ -2,6 +2,7 @@ package com.challengeteam.shop.service.impl;
 
 import com.challengeteam.shop.dto.user.CreateUserDto;
 import com.challengeteam.shop.dto.user.UpdateProfileDto;
+import com.challengeteam.shop.entity.cart.Cart;
 import com.challengeteam.shop.entity.user.Role;
 import com.challengeteam.shop.entity.user.User;
 import com.challengeteam.shop.exceptionHandling.exception.ResourceNotFoundException;
@@ -16,6 +17,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -69,13 +71,22 @@ public class UserServiceImpl implements UserService {
                 .findByName(DEFAULT_ROLE_NAME_FOR_CREATED_USER)
                 .orElseThrow(() -> new ResourceNotFoundException("Not found default role for new user " + createUserDto.email()));
 
+        var cart = Cart.builder()
+                .totalPrice(BigDecimal.ZERO)
+                .build();
+
         var user = User.builder()
                 .email(createUserDto.email())
                 .password(encoded)
                 .role(defaultRole)
+                .cart(cart)
                 .build();
+
+        cart.setUser(user);
+
         user = userRepository.save(user);
         log.debug("Created new user: {}", user);
+
         return user.getId();
     }
 

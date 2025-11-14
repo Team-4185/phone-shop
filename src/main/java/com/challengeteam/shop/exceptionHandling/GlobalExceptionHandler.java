@@ -222,4 +222,17 @@ public class GlobalExceptionHandler {
                 .body(problem);
     }
 
+    @ExceptionHandler(PhoneAlreadyInCartException.class)
+    public ResponseEntity<ProblemDetail> handlePhoneAlreadyInCartException(PhoneAlreadyInCartException e) {
+        log.warn("Cart exception: {}", e.getMessage());
+
+        var problem = ProblemDetail.forStatus(HttpStatus.BAD_REQUEST.value());
+        problem.setTitle("Phone Already In Cart");
+        problem.setDetail(e.getMessage());
+
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(problem);
+    }
+
 }
