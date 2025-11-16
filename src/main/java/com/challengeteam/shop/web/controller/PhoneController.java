@@ -10,12 +10,12 @@ import com.challengeteam.shop.service.PhoneService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.net.URI;
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/phones")
@@ -28,15 +28,17 @@ public class PhoneController {
     private final PhoneMapper phoneMapper;
 
     @Operation(
-            deprecated = true,
-            summary = "temporal: Get all phones",
-            description = "Retrieve a list of phones. In the future there will be a lot of phones," +
-                          " so retrieving a phones should be pageable"
+            summary = "Get paginated list of phones",
+            description = "Returns a paginated list of phones. " +
+                    "Use 'page' and 'size' query parameters to control pagination."
     )
     @GetMapping
-    public ResponseEntity<List<PhoneResponseDto>> getAllPhones() {
-        List<Phone> phones = phoneService.getAll();
-        List<PhoneResponseDto> responses = phoneMapper.toResponses(phones);
+    public ResponseEntity<Page<PhoneResponseDto>> getAllPhones(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
+    ) {
+        Page<Phone> phones = phoneService.getAllPhones(page, size);
+        Page<PhoneResponseDto> responses = phones.map(phoneMapper::toResponse);
 
         return ResponseEntity.ok(responses);
     }
