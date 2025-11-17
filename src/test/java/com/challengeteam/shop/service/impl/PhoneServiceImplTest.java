@@ -57,7 +57,7 @@ class PhoneServiceImplTest {
             Mockito.when(phoneRepository.findAll(pageable)).thenReturn(expected);
 
             // when
-            Page<Phone> result = phoneService.getAllPhones(page, size);
+            Page<Phone> result = phoneService.getPhones(page, size);
 
             // then
             assertThat(result).isNotNull();
@@ -75,14 +75,13 @@ class PhoneServiceImplTest {
             int page = 0;
             int size = 10;
             Pageable pageable = PageRequest.of(page, size);
-            List<Phone> phones = List.of();
-            Page<Phone> expected = new PageImpl<>(phones, pageable, 0);
+            Page<Phone> expected = new PageImpl<>(List.of(), pageable, 0);
 
             // mockito
             Mockito.when(phoneRepository.findAll(pageable)).thenReturn(expected);
 
             // when
-            Page<Phone> result = phoneService.getAllPhones(page, size);
+            Page<Phone> result = phoneService.getPhones(page, size);
 
             // then
             assertThat(result).isNotNull();
@@ -106,7 +105,7 @@ class PhoneServiceImplTest {
             Mockito.when(phoneRepository.findAll(pageable)).thenReturn(expected);
 
             // when
-            Page<Phone> result = phoneService.getAllPhones(page, size);
+            Page<Phone> result = phoneService.getPhones(page, size);
 
             // then
             assertThat(result).isNotNull();
@@ -129,7 +128,7 @@ class PhoneServiceImplTest {
             Mockito.when(phoneRepository.findAll(pageable)).thenReturn(expected);
 
             // when
-            Page<Phone> result = phoneService.getAllPhones(page, size);
+            Page<Phone> result = phoneService.getPhones(page, size);
 
             // then
             assertThat(result).isNotNull();
@@ -152,7 +151,7 @@ class PhoneServiceImplTest {
             Mockito.when(phoneRepository.findAll(any(Pageable.class))).thenReturn(expected);
 
             // when
-            phoneService.getAllPhones(page, size);
+            phoneService.getPhones(page, size);
 
             // then
             ArgumentCaptor<Pageable> captor = ArgumentCaptor.forClass(Pageable.class);
@@ -170,32 +169,36 @@ class PhoneServiceImplTest {
         @Test
         void whenPhoneExists_thenReturnOptionalWithPhone() {
             // given
-            Phone phone = buildPhone(10L);
+            Long phoneId = 10L;
+            Phone phone = buildPhone(phoneId);
 
             // mockito
-            Mockito.when(phoneRepository.findById(10L))
+            Mockito.when(phoneRepository.findById(phoneId))
                     .thenReturn(Optional.of(phone));
 
             // when
-            Optional<Phone> result = phoneService.getById(10L);
+            Optional<Phone> result = phoneService.getById(phoneId);
 
             // then
             assertThat(result).isPresent();
             assertThat(result.get()).isEqualTo(phone);
-            Mockito.verify(phoneRepository).findById(10L);
+            Mockito.verify(phoneRepository).findById(phoneId);
         }
 
         @Test
         void whenPhoneDoesNotExist_thenReturnEmptyOptional() {
+            // given
+            Long phoneId = 10L;
+
             // mockito
-            Mockito.when(phoneRepository.findById(10L)).thenReturn(Optional.empty());
+            Mockito.when(phoneRepository.findById(phoneId)).thenReturn(Optional.empty());
 
             // when
-            Optional<Phone> result = phoneService.getById(10L);
+            Optional<Phone> result = phoneService.getById(phoneId);
 
             // then
             assertThat(result).isNotPresent();
-            Mockito.verify(phoneRepository).findById(10L);
+            Mockito.verify(phoneRepository).findById(phoneId);
         }
 
         @Test
@@ -213,9 +216,10 @@ class PhoneServiceImplTest {
         void whenDataIsValid_thenCreatePhoneAndReturnId() {
             // given
             PhoneCreateRequestDto dto = buildPhoneCreateRequestDto();
+            Phone savedPhone = buildPhone(100L);
 
             // mockito
-            Mockito.when(phoneRepository.save(any())).thenReturn(buildPhone(100L));
+            Mockito.when(phoneRepository.save(any())).thenReturn(savedPhone);
 
             // when
             Long result = phoneService.create(dto);
