@@ -66,6 +66,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()             // critical for CORS
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/docs/**", "/swagger-ui/**").permitAll()
+                        .requestMatchers("/api/v1/test-data").permitAll()
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtTokenFilter, UsernamePasswordAuthenticationFilter.class)
