@@ -38,7 +38,7 @@ public class PhoneServiceImpl implements PhoneService {
 
     @Transactional(readOnly = true)
     @Override
-    public Page<Phone> getAllPhones(int page, int size) {
+    public Page<Phone> getPhones(int page, int size) {
         log.debug("Get phones page={}, size={}", page, size);
         Pageable pageable = PageRequest.of(page, size);
         return phoneRepository.findAll(pageable);

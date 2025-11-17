@@ -12,7 +12,7 @@ public interface PhoneService {
 
     Optional<Phone> getById(Long id);
 
-    Page<Phone> getAllPhones(int page, int size);
+    Page<Phone> getPhones(int page, int size);
 
     Long create(PhoneCreateRequestDto phoneCreateRequestDto);
 

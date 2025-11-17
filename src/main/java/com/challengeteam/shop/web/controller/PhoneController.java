@@ -37,10 +37,10 @@ public class PhoneController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size
     ) {
-        Page<Phone> phones = phoneService.getAllPhones(page, size);
-        Page<PhoneResponseDto> responses = phones.map(phoneMapper::toResponse);
+        Page<Phone> phones = phoneService.getPhones(page, size);
+        Page<PhoneResponseDto> response = phones.map(phoneMapper::toResponse);
 
-        return ResponseEntity.ok(responses);
+        return ResponseEntity.ok(response);
     }
 
     @Operation(
