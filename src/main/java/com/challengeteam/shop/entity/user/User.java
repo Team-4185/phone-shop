@@ -3,18 +3,16 @@ package com.challengeteam.shop.entity.user;
 import com.challengeteam.shop.entity.BaseEntity;
 import com.challengeteam.shop.entity.cart.Cart;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 import lombok.experimental.SuperBuilder;
 
 import java.time.Instant;
 
 @Getter
 @Setter
-@SuperBuilder
+@NoArgsConstructor
 @AllArgsConstructor
+@SuperBuilder
 @Entity
 @Table(name = "users")
 public class User extends BaseEntity {
@@ -42,11 +40,6 @@ public class User extends BaseEntity {
 
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
     private Cart cart;
-
-
-    public User() {
-        super();
-    }
 
     @Override
     public String toString() {

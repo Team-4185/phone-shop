@@ -2,15 +2,13 @@ package com.challengeteam.shop.entity.cart;
 
 import com.challengeteam.shop.entity.phone.Phone;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 @Getter
 @Setter
 @Builder
 @AllArgsConstructor
+@NoArgsConstructor
 @Entity
 @Table(name = "carts_items")
 public class CartItem {
@@ -30,7 +28,4 @@ public class CartItem {
     @Column(nullable = false)
     private Integer amount;
 
-    public CartItem() {
-
-    }
 }
