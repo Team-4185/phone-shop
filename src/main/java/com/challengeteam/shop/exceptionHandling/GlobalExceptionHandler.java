@@ -235,4 +235,17 @@ public class GlobalExceptionHandler {
                 .body(problem);
     }
 
+    @ExceptionHandler(TestDataGeneratorOutOfLimitException.class)
+    public ResponseEntity<ProblemDetail> handleTestDataGeneratorOutOfLimitException(TestDataGeneratorOutOfLimitException e) {
+        log.warn("Test Data Generator exception: {}", e.getMessage());
+
+        var problem = ProblemDetail.forStatus(HttpStatus.BAD_REQUEST.value());
+        problem.setTitle("Amount Out Of Limit");
+        problem.setDetail(e.getMessage());
+
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(problem);
+    }
+
 }
