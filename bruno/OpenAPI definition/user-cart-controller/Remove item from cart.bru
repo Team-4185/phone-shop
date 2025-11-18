@@ -1,0 +1,22 @@
+meta {
+  name: Remove item from cart
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/api/v1/me/cart/remove
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+body:json {
+  {
+    "phoneId": 0,
+    "amount": 0
+  }
+}

@@ -1,0 +1,15 @@
+meta {
+  name: createUsers
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/api/v1/test-data/generate-users/:amount
+  body: none
+  auth: inherit
+}
+
+params:path {
+  amount: 5001
+}
