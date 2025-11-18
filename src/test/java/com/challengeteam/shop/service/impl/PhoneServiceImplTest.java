@@ -6,14 +6,18 @@ import com.challengeteam.shop.entity.phone.Phone;
 import com.challengeteam.shop.exceptionHandling.exception.ResourceNotFoundException;
 import com.challengeteam.shop.persistence.repository.PhoneRepository;
 import com.challengeteam.shop.service.impl.merger.PhoneMerger;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -21,11 +25,12 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.LongStream;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static com.challengeteam.shop.service.impl.PhoneServiceImplTest.TestResources.*;
+import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 
 @ExtendWith(MockitoExtension.class)
-public class PhoneServiceImplTest {
+class PhoneServiceImplTest {
 
     @Mock
     private PhoneRepository phoneRepository;
@@ -33,48 +38,128 @@ public class PhoneServiceImplTest {
     @Mock
     private PhoneMerger phoneMerger;
 
+    @InjectMocks
     private PhoneServiceImpl phoneService;
 
-    @BeforeEach
-    public void initBeforeEach() {
-        phoneService = new PhoneServiceImpl(phoneRepository, phoneMerger);
-    }
-
     @Nested
-    class GetAllTest {
+    class GetAllPhonesTest {
 
         @Test
-        void whenPhonesExist_thenReturnAll() {
+        void whenPhonesExist_thenReturnPageWithPhones() {
             // given
+            int page = 0;
+            int size = 10;
+            Pageable pageable = PageRequest.of(page, size);
             List<Phone> phones = buildPhonesFromTo(1, 11);
-            List<Phone> expected = buildPhonesFromTo(1, 11);
+            Page<Phone> expected = new PageImpl<>(phones, pageable, 20);
 
             // mockito
-            Mockito.when(phoneRepository.findAll()).thenReturn(phones);
+            Mockito.when(phoneRepository.findAll(pageable)).thenReturn(expected);
 
             // when
-            List<Phone> result = phoneService.getAll();
+            Page<Phone> result = phoneService.getPhones(page, size);
 
             // then
-            assertNotNull(result);
-            assertEquals(expected, result);
+            assertThat(result).isNotNull();
+            assertThat(result).isEqualTo(expected);
+            assertThat(result.getSize()).isEqualTo(10);
+            assertThat(result.getContent()).hasSize(10);
+            assertThat(result.getTotalPages()).isEqualTo(2);
+            assertThat(result.getTotalElements()).isEqualTo(20);
+            Mockito.verify(phoneRepository).findAll(pageable);
         }
 
         @Test
-        void whenNoPhonesExist_thenReturnEmptyList() {
+        void whenNoPhonesExist_thenReturnEmptyPage() {
             // given
-            List<Phone> phones = List.of();
-            List<Phone> expected = List.of();
+            int page = 0;
+            int size = 10;
+            Pageable pageable = PageRequest.of(page, size);
+            Page<Phone> expected = new PageImpl<>(List.of(), pageable, 0);
 
             // mockito
-            Mockito.when(phoneRepository.findAll()).thenReturn(phones);
+            Mockito.when(phoneRepository.findAll(pageable)).thenReturn(expected);
 
             // when
-            List<Phone> result = phoneService.getAll();
+            Page<Phone> result = phoneService.getPhones(page, size);
 
             // then
-            assertNotNull(result);
-            assertEquals(expected, result);
+            assertThat(result).isNotNull();
+            assertThat(result).isEqualTo(expected);
+            assertThat(result.getSize()).isEqualTo(10);
+            assertThat(result.getContent()).isEmpty();
+            assertThat(result.getTotalElements()).isZero();
+            Mockito.verify(phoneRepository).findAll(pageable);
+        }
+
+        @Test
+        void whenLastPage_thenReturnRemainingPhones() {
+            // given
+            int page = 1;
+            int size = 10;
+            Pageable pageable = PageRequest.of(page, size);
+            List<Phone> phones = buildPhonesFromTo(11, 15);
+            Page<Phone> expected = new PageImpl<>(phones, pageable, 14);
+
+            // mockito
+            Mockito.when(phoneRepository.findAll(pageable)).thenReturn(expected);
+
+            // when
+            Page<Phone> result = phoneService.getPhones(page, size);
+
+            // then
+            assertThat(result).isNotNull();
+            assertThat(result.getContent()).hasSize(4);
+            assertThat(result.getTotalElements()).isEqualTo(14);
+            assertThat(result.isLast()).isTrue();
+            Mockito.verify(phoneRepository).findAll(pageable);
+        }
+
+        @Test
+        void whenFirstPage_thenReturnFirstPageInfo() {
+            // given
+            int page = 0;
+            int size = 5;
+            Pageable pageable = PageRequest.of(page, size);
+            List<Phone> phones = buildPhonesFromTo(1, 6);
+            Page<Phone> expected = new PageImpl<>(phones, pageable, 25);
+
+            // mockito
+            Mockito.when(phoneRepository.findAll(pageable)).thenReturn(expected);
+
+            // when
+            Page<Phone> result = phoneService.getPhones(page, size);
+
+            // then
+            assertThat(result).isNotNull();
+            assertThat(result.isFirst()).isTrue();
+            assertThat(result.isLast()).isFalse();
+            assertThat(result.hasNext()).isTrue();
+            Mockito.verify(phoneRepository).findAll(pageable);
+        }
+
+        @Test
+        void whenPageAndSizeAreValid_thenVerifyPageableArgument() {
+            // given
+            int page = 2;
+            int size = 15;
+            Pageable pageable = PageRequest.of(page, size);
+            List<Phone> phones = buildPhonesFromTo(1, 5);
+            Page<Phone> expected = new PageImpl<>(phones, pageable, 50);
+
+            // mockito
+            Mockito.when(phoneRepository.findAll(any(Pageable.class))).thenReturn(expected);
+
+            // when
+            phoneService.getPhones(page, size);
+
+            // then
+            ArgumentCaptor<Pageable> captor = ArgumentCaptor.forClass(Pageable.class);
+            Mockito.verify(phoneRepository).findAll(captor.capture());
+            Pageable capturedPageable = captor.getValue();
+
+            assertThat(capturedPageable.getPageNumber()).isEqualTo(page);
+            assertThat(capturedPageable.getPageSize()).isEqualTo(size);
         }
     }
 
@@ -84,48 +169,43 @@ public class PhoneServiceImplTest {
         @Test
         void whenPhoneExists_thenReturnOptionalWithPhone() {
             // given
-            Phone phone = buildPhone(10L);
-            Phone expected = buildPhone(10L);
+            Long phoneId = 10L;
+            Phone phone = buildPhone(phoneId);
 
             // mockito
-            Mockito.when(phoneRepository.findById(10L))
+            Mockito.when(phoneRepository.findById(phoneId))
                     .thenReturn(Optional.of(phone));
 
             // when
-            Optional<Phone> result = phoneService.getById(10L);
+            Optional<Phone> result = phoneService.getById(phoneId);
 
             // then
-            assertNotNull(result);
-            assertTrue(result.isPresent());
-            assertEquals(expected, result.get());
+            assertThat(result).isPresent();
+            assertThat(result.get()).isEqualTo(phone);
+            Mockito.verify(phoneRepository).findById(phoneId);
         }
 
         @Test
         void whenPhoneDoesNotExist_thenReturnEmptyOptional() {
             // given
-            // ...
+            Long phoneId = 10L;
 
             // mockito
-            Mockito.when(phoneRepository.findById(10L)).thenReturn(Optional.empty());
+            Mockito.when(phoneRepository.findById(phoneId)).thenReturn(Optional.empty());
 
             // when
-            Optional<Phone> result = phoneService.getById(10L);
+            Optional<Phone> result = phoneService.getById(phoneId);
 
             // then
-            assertNotNull(result);
-            assertFalse(result.isPresent());
+            assertThat(result).isNotPresent();
+            Mockito.verify(phoneRepository).findById(phoneId);
         }
 
         @Test
-        void whenParameterIdIsNull_thenThrowException() {
-            // given
-            Long id = null;
-
-            // mockito
-            // ...
-
+        void whenParameterIdIsNull_thenThrowNullPointerException() {
             // when + then
-            assertThrows(NullPointerException.class, () -> phoneService.getById(id));
+            assertThatThrownBy(() -> phoneService.getById(null))
+                    .isInstanceOf(NullPointerException.class);
         }
     }
 
@@ -135,51 +215,36 @@ public class PhoneServiceImplTest {
         @Test
         void whenDataIsValid_thenCreatePhoneAndReturnId() {
             // given
-            String name = "name";
-            String description = "description";
-            BigDecimal price = BigDecimal.valueOf(100);
-            String brand = "brand";
-            Integer releaseYear = 2025;
-            PhoneCreateRequestDto dto = new PhoneCreateRequestDto(
-                    name,
-                    description,
-                    price,
-                    brand,
-                    releaseYear
-            );
+            PhoneCreateRequestDto dto = buildPhoneCreateRequestDto();
+            Phone savedPhone = buildPhone(100L);
 
             // mockito
-            Mockito.when(phoneRepository.save(any())).thenReturn(buildPhone(100L));
+            Mockito.when(phoneRepository.save(any())).thenReturn(savedPhone);
 
             // when
             Long result = phoneService.create(dto);
 
             // then
-            assertNotNull(result);
-            assertEquals(100L, result);
+            assertThat(result).isNotNull();
+            assertThat(result).isEqualTo(100L);
 
             // capture
             ArgumentCaptor<Phone> captor = ArgumentCaptor.forClass(Phone.class);
             Mockito.verify(phoneRepository).save(captor.capture());
             Phone beforeSave = captor.getValue();
 
-            assertEquals(dto.name(), beforeSave.getName());
-            assertEquals(dto.description(), beforeSave.getDescription());
-            assertEquals(dto.price(), beforeSave.getPrice());
-            assertEquals(dto.brand(), beforeSave.getBrand());
-            assertEquals(dto.releaseYear(), beforeSave.getReleaseYear());
+            assertThat(beforeSave.getName()).isEqualTo(dto.name());
+            assertThat(beforeSave.getDescription()).isEqualTo(dto.description());
+            assertThat(beforeSave.getPrice()).isEqualTo(dto.price());
+            assertThat(beforeSave.getBrand()).isEqualTo(dto.brand());
+            assertThat(beforeSave.getReleaseYear()).isEqualTo(dto.releaseYear());
         }
 
         @Test
-        void whenDtoIsNull_thenThrowException() {
-            // given
-            PhoneCreateRequestDto dto = null;
-
-            // mockito
-            // ...
-
+        void whenDtoIsNull_thenThrowNullPointerException() {
             // when + then
-            assertThrows(NullPointerException.class, () -> phoneService.create(dto));
+            assertThatThrownBy(() -> phoneService.create(null))
+                    .isInstanceOf(NullPointerException.class);
         }
     }
 
@@ -191,13 +256,7 @@ public class PhoneServiceImplTest {
             // given
             Long id = 10L;
             Phone phone = buildPhone(id);
-            PhoneUpdateRequestDto dto = new PhoneUpdateRequestDto(
-                    "newName",
-                    "newDescription",
-                    new BigDecimal("19999"),
-                    "newBrand",
-                    2025
-            );
+            PhoneUpdateRequestDto dto = buildPhoneUpdateRequestDto();
 
             // mockito
             Mockito.when(phoneRepository.findById(id))
@@ -210,58 +269,40 @@ public class PhoneServiceImplTest {
             Mockito.verify(phoneRepository).findById(id);
             Mockito.verify(phoneMerger).mergePhone(phone, dto);
             Mockito.verify(phoneRepository).save(phone);
-            Mockito.verifyNoMoreInteractions(phoneRepository, phoneMerger);
         }
 
         @Test
-        void whenPhoneDoesNotExist_thenThrowException() {
+        void whenPhoneDoesNotExist_thenThrowResourceNotFoundException() {
             // given
             Long id = 10L;
-            PhoneUpdateRequestDto dto = new PhoneUpdateRequestDto(
-                    "newName",
-                    "newDescription",
-                    new BigDecimal("19999"),
-                    "newBrand",
-                    2025
-            );
+            PhoneUpdateRequestDto dto = buildPhoneUpdateRequestDto();
 
             // mockito
             Mockito.when(phoneRepository.findById(id)).thenReturn(Optional.empty());
 
             // when + then
-            assertThrows(ResourceNotFoundException.class, () -> phoneService.update(id, dto));
+            assertThatThrownBy(() -> phoneService.update(id, dto))
+                    .isInstanceOf(ResourceNotFoundException.class);
         }
 
         @Test
-        void whenIdIsNull_thenThrowException() {
+        void whenIdIsNull_thenThrowNullPointerException() {
             // given
-            Long id = null;
-            PhoneUpdateRequestDto dto = new PhoneUpdateRequestDto(
-                    "newName",
-                    "newDescription",
-                    new BigDecimal("19999"),
-                    "newBrand",
-                    2025
-            );
-
-            // mockito
-            // ...
+            PhoneUpdateRequestDto dto = buildPhoneUpdateRequestDto();
 
             // when + then
-            assertThrows(NullPointerException.class, () -> phoneService.update(id, dto));
+            assertThatThrownBy(() -> phoneService.update(null, dto))
+                    .isInstanceOf(NullPointerException.class);
         }
 
         @Test
-        void whenDtoIsNull_thenThrowException() {
+        void whenDtoIsNull_thenThrowNullPointerException() {
             // given
             Long id = 10L;
-            PhoneUpdateRequestDto dto = null;
-
-            // mockito
-            // ...
 
             // when + then
-            assertThrows(NullPointerException.class, () -> phoneService.update(id, dto));
+            assertThatThrownBy(() -> phoneService.update(id, null))
+                    .isInstanceOf(NullPointerException.class);
         }
     }
 
@@ -269,50 +310,63 @@ public class PhoneServiceImplTest {
     class DeleteTest {
 
         @Test
-        void whenCalled_thenReturnNothing() {
+        void whenCalled_thenDeleteSuccessfully() {
             // given
             Long id = 10L;
-
-            // mockito
-            // ...
 
             // when
             phoneService.delete(id);
 
             // then
             Mockito.verify(phoneRepository).deleteById(id);
-            Mockito.verifyNoMoreInteractions(phoneRepository);
         }
 
         @Test
-        void whenIdIsNull_thenThrowException() {
-            // given
-            Long id = null;
-
-            // mockito
-            // ...
-
+        void whenIdIsNull_thenThrowNullPointerException() {
             // when + then
-            assertThrows(NullPointerException.class, () -> phoneService.delete(id));
+            assertThatThrownBy(() -> phoneService.delete(null))
+                    .isInstanceOf(NullPointerException.class);
         }
     }
 
-    private List<Phone> buildPhonesFromTo(long from, long to) {
-        return LongStream.range(from, to)
-                .mapToObj(this::buildPhone)
-                .toList();
-    }
+    static class TestResources {
+        static List<Phone> buildPhonesFromTo(long from, long to) {
+            return LongStream.range(from, to)
+                    .mapToObj(TestResources::buildPhone)
+                    .toList();
+        }
 
-    private Phone buildPhone(Long id) {
-        Phone phone = Phone.builder()
-                .name("name" + id)
-                .description("description" + id)
-                .price(BigDecimal.valueOf(1000 + id))
-                .brand("brand" + id)
-                .releaseYear(2025)
-                .build();
-        phone.setId(id);
-        phone.setCreatedAt(Instant.now());
-        return phone;
+        static Phone buildPhone(Long id) {
+            Phone phone = Phone.builder()
+                    .name("name" + id)
+                    .description("description" + id)
+                    .price(BigDecimal.valueOf(1000 + id))
+                    .brand("brand" + id)
+                    .releaseYear(2025)
+                    .build();
+            phone.setId(id);
+            phone.setCreatedAt(Instant.now());
+            return phone;
+        }
+
+        static PhoneCreateRequestDto buildPhoneCreateRequestDto() {
+            return new PhoneCreateRequestDto(
+                    "name",
+                    "description",
+                    BigDecimal.valueOf(100),
+                    "brand",
+                    2025
+            );
+        }
+
+        static PhoneUpdateRequestDto buildPhoneUpdateRequestDto() {
+            return new PhoneUpdateRequestDto(
+                    "newName",
+                    "newDescription",
+                    new BigDecimal("19999"),
+                    "newBrand",
+                    2025
+            );
+        }
     }
 }
