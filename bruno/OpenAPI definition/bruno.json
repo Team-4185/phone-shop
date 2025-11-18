@@ -1,6 +1,6 @@
 {
   "version": "1",
-  "name": "GadgetRoom-Backend",
+  "name": "OpenAPI definition",
   "type": "collection",
   "ignore": [
     "node_modules",

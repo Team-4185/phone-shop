@@ -1,0 +1,29 @@
+meta {
+  name: Update phone by id
+  type: http
+  seq: 2
+}
+
+put {
+  url: {{baseUrl}}/api/v1/phones/:id
+  body: json
+  auth: bearer
+}
+
+params:path {
+  id: 
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+body:json {
+  {
+    "newName": "",
+    "newDescription": "",
+    "newPrice": "",
+    "newBrand": "",
+    "newReleaseYear": 0
+  }
+}

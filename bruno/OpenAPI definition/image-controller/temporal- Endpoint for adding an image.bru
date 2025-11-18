@@ -1,0 +1,19 @@
+meta {
+  name: temporal: Endpoint for adding an image
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/api/v1/images
+  body: multipartForm
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+body:multipart-form {
+  image: 
+}

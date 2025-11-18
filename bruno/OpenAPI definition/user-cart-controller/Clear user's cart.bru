@@ -1,0 +1,15 @@
+meta {
+  name: Clear user's cart
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/api/v1/me/cart/clear
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}

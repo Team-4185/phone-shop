@@ -1,0 +1,19 @@
+meta {
+  name: Endpoint for retrieving in-line image
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/v1/images/:id
+  body: none
+  auth: bearer
+}
+
+params:path {
+  id: 
+}
+
+auth:bearer {
+  token: {{token}}
+}
