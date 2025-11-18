@@ -5,6 +5,7 @@ import com.challengeteam.shop.dto.user.CreateUserDto;
 import com.challengeteam.shop.dto.user.UpdateProfileDto;
 import com.challengeteam.shop.entity.user.User;
 import com.challengeteam.shop.exceptionHandling.exception.CriticalSystemException;
+import com.challengeteam.shop.exceptionHandling.exception.InvalidAPIRequestException;
 import com.challengeteam.shop.exceptionHandling.exception.TestDataGeneratorOutOfLimitException;
 import com.challengeteam.shop.service.PhoneService;
 import com.challengeteam.shop.service.TestDataService;
@@ -27,17 +28,28 @@ import java.util.Random;
 @RequiredArgsConstructor
 @Service
 public class TestDataServiceImpl implements TestDataService {
+    public static final int USER_GENERATION_LIMIT = 1_000;
+    public static final int PHONE_GENERATION_LIMIT = 10_000;
+
     private final UserService userService;
     private final PhoneService phoneService;
     private final UserGenerator userGenerator = new UserGenerator();
     private final PhoneGenerator phoneGenerator = new PhoneGenerator();
 
+
     @Override
     public int generateUsers(int amount) {
-        List<CreateUserDto> createdUsers = new ArrayList<>(amount);
+        // validate
+        if (amount < 0) {
+            throw new InvalidAPIRequestException("Incorrect value. Amount must be positive");
+        }
+        if (amount > USER_GENERATION_LIMIT) {
+            throw new TestDataGeneratorOutOfLimitException("User", USER_GENERATION_LIMIT);
+        }
 
         // generate users
         List<User> fakeUsers = userGenerator.generateFakeUsers(amount);
+        List<CreateUserDto> createdUsers = new ArrayList<>(amount);
         for (User fakeUser : fakeUsers) {
             try {
                 var user = new CreateUserDto(
@@ -68,10 +80,17 @@ public class TestDataServiceImpl implements TestDataService {
 
     @Override
     public int generatePhones(int amount) {
-        List<Long> createdPhones = new ArrayList<>(amount);
+        // validate
+        if (amount < 0) {
+            throw new InvalidAPIRequestException("Incorrect value. Amount must be positive");
+        }
+        if (amount > PHONE_GENERATION_LIMIT) {
+            throw new TestDataGeneratorOutOfLimitException("Phone", PHONE_GENERATION_LIMIT);
+        }
 
         // generate phones
         List<PhoneCreateRequestDto> phones = phoneGenerator.generatePhones(amount);
+        List<Long> createdPhones = new ArrayList<>(amount);
         for (PhoneCreateRequestDto phone : phones) {
             try {
                 Long id = phoneService.create(phone);
@@ -102,8 +121,8 @@ public class TestDataServiceImpl implements TestDataService {
 
     private static class UserGenerator {
         public final static String GENERATOR_URL = "https://randomuser.me";
-        public final static int GENERATOR_API_LIMIT = 1000;
         public final static String DEFAULT_PASSWORD = "pass1234";
+        public final static int API_RESTRICTION = 5_000;
         private final RestClient client;
         private final ObjectMapper objectMapper;
 
@@ -116,8 +135,8 @@ public class TestDataServiceImpl implements TestDataService {
         }
 
         public List<User> generateFakeUsers(int amount) {
-            if (amount > GENERATOR_API_LIMIT) {
-                throw new TestDataGeneratorOutOfLimitException("User", GENERATOR_API_LIMIT);
+            if (amount > API_RESTRICTION) {
+                throw new CriticalSystemException("User generation is not possible due to ignoring API restrictions, 'amount' too large");
             }
 
             List<User> result = new ArrayList<>(amount);
@@ -149,7 +168,6 @@ public class TestDataServiceImpl implements TestDataService {
     }
 
     private static class PhoneGenerator {
-        public final static int GENERATOR_LIMIT = 10_000;
         public final static String DEFAULT_DESCRIPTION = "is a modern phone designed to make your life better.";
         public final static int PRICE_MIN = 3_000;
         public final static int PRICE_MAX = 500_000;
@@ -160,11 +178,8 @@ public class TestDataServiceImpl implements TestDataService {
 
 
         public List<PhoneCreateRequestDto> generatePhones(int amount) {
-            if (amount > GENERATOR_LIMIT) {
-                throw new TestDataGeneratorOutOfLimitException("Phone", GENERATOR_LIMIT);
-            }
-
             List<PhoneCreateRequestDto> result = new ArrayList<>(amount);
+
             for (int i = 0; i < amount; i++) {
                 PhoneBrand brand = getRandomBrand();
                 String name = getRandomName(brand);
