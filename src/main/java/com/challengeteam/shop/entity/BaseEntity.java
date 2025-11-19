@@ -37,7 +37,7 @@ public abstract class BaseEntity {
         createdAt = Instant.now();
     }
 
-    @PostUpdate
+    @PreUpdate
     protected void onUpdate() {
         updatedAt = Instant.now();
     }
