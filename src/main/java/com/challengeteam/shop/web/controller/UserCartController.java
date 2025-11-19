@@ -22,14 +22,12 @@ import org.springframework.web.bind.annotation.*;
 public class UserCartController {
 
     private final UserCartService userCartService;
-
     private final CartMapper cartMapper;
 
     @Operation(
             summary = "Get current user's cart",
             description = "Returns the authenticated user's shopping cart."
     )
-
     @GetMapping
     public ResponseEntity<CartResponseDto> getUserCart(@AuthenticationPrincipal SimpleUserDetails simpleUserDetails) {
         Long userId = simpleUserDetails.getUserId();
@@ -44,7 +42,6 @@ public class UserCartController {
             description = "Adds a product to the authenticated user's cart. "
                     + "If the product is already in the cart, its quantity is increased by the specified amount."
     )
-
     @PostMapping("/put")
     public ResponseEntity<CartResponseDto> putItemToUserCart(@AuthenticationPrincipal SimpleUserDetails simpleUserDetails,
                                         @RequestBody CartItemAddRequestDto cartItemAddRequestDto) {
@@ -60,7 +57,6 @@ public class UserCartController {
                     + "If the amount to remove is greater than or equal to the current quantity, "
                     + "the product is completely removed from the cart."
     )
-
     @PostMapping("/remove")
     public ResponseEntity<CartResponseDto> removeItemFromUserCart(@AuthenticationPrincipal SimpleUserDetails simpleUserDetails,
                                            @RequestBody CartItemRemoveRequestDto cartItemRemoveRequestDto) {
@@ -74,7 +70,6 @@ public class UserCartController {
             summary = "Clear user's cart",
             description = "Deletes all items from the authenticated user's cart."
     )
-
     @PostMapping("/clear")
     public ResponseEntity<CartResponseDto> clearCart(@AuthenticationPrincipal SimpleUserDetails simpleUserDetails) {
         Long userId = simpleUserDetails.getUserId();
