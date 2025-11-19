@@ -19,6 +19,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -184,13 +185,13 @@ public class TestDataServiceImpl implements TestDataService {
                 PhoneBrand brand = getRandomBrand();
                 String name = getRandomName(brand);
                 String description = getRandomDescription(name);
-                double price = getRandomPrice();
+                BigDecimal price = getRandomPrice();
                 int releaseYear = getRandomReleaseYear();
 
                 var phone = new PhoneCreateRequestDto(
                         name,
                         description,
-                        new BigDecimal(price),
+                        price,
                         brand.name(),
                         releaseYear
                 );
@@ -204,8 +205,11 @@ public class TestDataServiceImpl implements TestDataService {
             return RELEASE_YEAR_FLOOR + random.nextInt(RELEASE_YEAR_TOP - RELEASE_YEAR_FLOOR);
         }
 
-        private double getRandomPrice() {
-            return PRICE_MIN + random.nextInt(PRICE_MAX - PRICE_MIN);
+        private BigDecimal getRandomPrice() {
+            double randomPrice = PRICE_MIN + random.nextDouble(PRICE_MAX - PRICE_MIN);
+            var result = new BigDecimal(randomPrice);
+
+            return result.setScale(2, RoundingMode.HALF_EVEN);
         }
 
         private String getRandomDescription(String name) {
