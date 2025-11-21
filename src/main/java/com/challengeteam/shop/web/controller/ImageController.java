@@ -6,23 +6,21 @@ import com.challengeteam.shop.entity.image.Image;
 import com.challengeteam.shop.exceptionHandling.exception.ResourceNotFoundException;
 import com.challengeteam.shop.mapper.ImageMapper;
 import com.challengeteam.shop.service.ImageService;
-import com.challengeteam.shop.web.resolver.headerResolver.HeadersResolver;
 import com.challengeteam.shop.web.resolver.headerResolver.imageHeaderResolver.ImageHeadersResolver;
-import com.challengeteam.shop.web.validator.image.ImageRequestValidator;
+import com.challengeteam.shop.service.impl.validator.ImageValidator;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
-import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -32,7 +30,6 @@ import org.springframework.web.multipart.MultipartFile;
 @SecurityRequirement(name = "bearer-jwt")
 public class ImageController {
     private final ImageHeadersResolver imageHeadersResolver;
-    private final ImageRequestValidator imageRequestValidator;
     private final ImageService imageService;
     private final ImageMapper imageMapper;
 
@@ -72,6 +69,7 @@ public class ImageController {
     // Temporal endpoint for testing
     // Image is going to be a part of a phone.
     // Creating images will be with creating a phone. So this controller is only for getting images.
+    @Deprecated
     @Operation(
             deprecated = true,
             summary = "temporal: Endpoint for adding an image",
@@ -80,8 +78,15 @@ public class ImageController {
     )
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Void> uploadImageTemporalEndpoint(@RequestParam("image") MultipartFile image) {
-        imageRequestValidator.validate(image);
         imageService.uploadImage(image);
+
+        return ResponseEntity.noContent().build();
+    }
+
+    // todo: describe docs
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteImage(@PathVariable Long id) {
+        imageService.deleteImage(id);
 
         return ResponseEntity.noContent().build();
     }

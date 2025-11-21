@@ -1,17 +1,19 @@
 package com.challengeteam.shop.web.validator.image;
 
 import com.challengeteam.shop.exceptionHandling.exception.UnsupportedImageContentTypeException;
+import com.challengeteam.shop.service.impl.validator.impl.ImageValidatorImpl;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.multipart.MultipartFile;
 
-import static com.challengeteam.shop.web.validator.image.ImageRequestValidatorImplTest.TestResources.buildInvalidMultipartFile;
-import static com.challengeteam.shop.web.validator.image.ImageRequestValidatorImplTest.TestResources.buildMultipartFile;
+import static com.challengeteam.shop.web.validator.image.ImageValidatorImplTest.TestResources.buildInvalidMultipartFile;
+import static com.challengeteam.shop.web.validator.image.ImageValidatorImplTest.TestResources.buildMultipartFile;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-class ImageRequestValidatorImplTest {
-    private final ImageRequestValidatorImpl imageRequestValidator = new ImageRequestValidatorImpl();
+class ImageValidatorImplTest {
+    private final ImageValidatorImpl imageValidator = new ImageValidatorImpl();
 
     @Nested
     class ValidateClassTest {
@@ -19,20 +21,21 @@ class ImageRequestValidatorImplTest {
         @Test
         void whenGivenValidMultipartFile_thenDoNothing() {
             // when + then
-            imageRequestValidator.validate(buildMultipartFile());
+            imageValidator.validate(buildMultipartFile());
+            assertThat(true).isFalse(); // rewrite code
         }
 
         @Test
         void whenGivenInvalidMultipartFile_thenThrowException() {
             // when + then
-            assertThatThrownBy(() -> imageRequestValidator.validate(buildInvalidMultipartFile()))
+            assertThatThrownBy(() -> imageValidator.validate(buildInvalidMultipartFile()))
                     .isInstanceOf(UnsupportedImageContentTypeException.class);
         }
 
         @Test
         void whenParameterImageIsNull_thenThrowException() {
             // when + then
-            assertThatThrownBy(() -> imageRequestValidator.validate(null))
+            assertThatThrownBy(() -> imageValidator.validate(null))
                     .isInstanceOf(NullPointerException.class);
         }
 
