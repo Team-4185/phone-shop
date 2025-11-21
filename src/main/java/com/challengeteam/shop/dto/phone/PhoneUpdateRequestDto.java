@@ -22,7 +22,7 @@ public record PhoneUpdateRequestDto(
         String newBrand,
 
         @NotNull(message = "Release year must not be null")
-        @Min(value = 2000, message = "Release year must be no earlier than 2000")
+        @Min(value = 1970, message = "Release year must be no earlier than 1970")
         @Max(value = 2026, message = "Release year must not be in the future")
         Integer newReleaseYear
 ) {
