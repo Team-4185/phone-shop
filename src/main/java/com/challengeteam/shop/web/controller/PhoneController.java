@@ -70,7 +70,6 @@ public class PhoneController {
         return ResponseEntity.ok(response);
     }
 
-    // todo: Change to ability to add a list of images when create a new phone
     @Operation(
             summary = "Create new phone",
             description = "Creates a new phone based on input data."
@@ -78,7 +77,7 @@ public class PhoneController {
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Void> createPhone(@RequestPart("phone") PhoneCreateRequestDto phoneCreateRequestDto,
                                             @RequestPart("images") List<MultipartFile> images) {
-        Long id = phoneService.create(phoneCreateRequestDto);
+        Long id = phoneService.create(phoneCreateRequestDto, images);
         URI newPhoneLocation = ServletUriComponentsBuilder
                 .fromCurrentContextPath()
                 .path("/api/v1/phones/{id}")

@@ -55,7 +55,9 @@ public class PhoneServiceImpl implements PhoneService {
     @Override
     public Long create(PhoneCreateRequestDto phoneCreateRequestDto, List<MultipartFile> images) {
         Objects.requireNonNull(phoneCreateRequestDto, "phoneCreateRequestDto");
+        Objects.requireNonNull(images, "images");
 
+        // create phone
         var phone = Phone.builder()
                 .name(phoneCreateRequestDto.name())
                 .description(phoneCreateRequestDto.description())
@@ -65,7 +67,18 @@ public class PhoneServiceImpl implements PhoneService {
                 .build();
 
         phone = phoneRepository.save(phone);
-        log.debug("Created new phone: {}", phone);
+
+        // add images
+        for (MultipartFile file : images) {
+            Long imageId = imageService.uploadImage(file);
+            Image image = imageService
+                    .getImageById(imageId)
+                    .orElseThrow(() -> new CriticalSystemException("Not found image after creation, id: " + imageId));
+            image.setPhone(phone);
+            imageRepository.save(image);
+        }
+
+        log.debug("Created new phone with id: {} with images: {}", phone, images.size());
         return phone.getId();
     }
 

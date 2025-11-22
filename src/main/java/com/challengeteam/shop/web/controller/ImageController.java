@@ -33,12 +33,13 @@ public class ImageController {
     private final ImageService imageService;
     private final ImageMapper imageMapper;
 
+
     @Operation(
             summary = "Endpoint for retrieving in-line image",
             description = "Returns an image as a byte array by id. No additional information is returned."
     )
     @GetMapping("/{id}")
-    public ResponseEntity<Resource> getImageById(@PathVariable Long id) {
+    public ResponseEntity<Resource> getImage(@PathVariable Long id) {
         ImageDataDto imageDataDto = imageService
                 .downloadImageById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Not found image with id: " + id));
@@ -57,30 +58,13 @@ public class ImageController {
                           " Also returns an URL for retrieving image in-line."
     )
     @GetMapping("/{id}/metadata")
-    public ResponseEntity<ImageMetadataResponseDto> getImageMetadataById(@PathVariable Long id) {
+    public ResponseEntity<ImageMetadataResponseDto> getImageMetadata(@PathVariable Long id) {
         Image image = imageService
                 .getImageById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Not found image with id: " + id));
 
         ImageMetadataResponseDto body = imageMapper.toMetadata(image);
         return ResponseEntity.ok(body);
-    }
-
-    // Temporal endpoint for testing
-    // Image is going to be a part of a phone.
-    // Creating images will be with creating a phone. So this controller is only for getting images.
-    @Deprecated
-    @Operation(
-            deprecated = true,
-            summary = "temporal: Endpoint for adding an image",
-            description = "Usable for adding a test image in database. Currently it is only one way for adding an image," +
-                          " later it will be removed. Feel free to use for testing. DON'T USE IN PRODUCTION CODE"
-    )
-    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<Void> uploadImageTemporalEndpoint(@RequestParam("image") MultipartFile image) {
-        imageService.uploadImage(image);
-
-        return ResponseEntity.noContent().build();
     }
 
     // todo: describe docs
