@@ -4,9 +4,13 @@ import com.challengeteam.shop.dto.image.ImageDataDto;
 import com.challengeteam.shop.entity.image.Image;
 import com.challengeteam.shop.entity.image.MIMEType;
 import com.challengeteam.shop.exceptionHandling.exception.CriticalSystemException;
+import com.challengeteam.shop.exceptionHandling.exception.ImageStorageException;
+import com.challengeteam.shop.exceptionHandling.exception.ResourceNotFoundException;
+import com.challengeteam.shop.exceptionHandling.exception.UnsupportedImageContentTypeException;
 import com.challengeteam.shop.persistence.repository.ImageRepository;
 import com.challengeteam.shop.persistence.storage.ImageStorage;
 import com.challengeteam.shop.service.MIMETypeService;
+import com.challengeteam.shop.service.impl.validator.ImageValidator;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -23,13 +27,20 @@ import java.util.Optional;
 import static com.challengeteam.shop.service.impl.ImageServiceImplTest.TestResources.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
 
 @ExtendWith(MockitoExtension.class)
 class ImageServiceImplTest {
-    @Mock private ImageStorage imageStorage;
-    @Mock private ImageRepository imageRepository;
-    @Mock private MIMETypeService mimeTypeService;
-    @InjectMocks private ImageServiceImpl imageService;
+    @Mock
+    private ImageStorage imageStorage;
+    @Mock
+    private ImageRepository imageRepository;
+    @Mock
+    private MIMETypeService mimeTypeService;
+    @Mock
+    private ImageValidator imageValidator;
+    @InjectMocks
+    private ImageServiceImpl imageService;
 
     @Nested
     class DownloadImageByIdTest {
@@ -143,9 +154,56 @@ class ImageServiceImplTest {
         }
 
         @Test
+        void whenImageIsNotValid_thenThrowException() {
+            // mockito
+            Mockito.doThrow(new UnsupportedImageContentTypeException("invalid/type"))
+                    .when(imageValidator)
+                    .validate(any(MultipartFile.class));
+
+            // when + then
+            assertThatThrownBy(() -> imageService.uploadImage(buildInvalidMultipartFile()))
+                    .isInstanceOf(UnsupportedImageContentTypeException.class);
+        }
+
+        @Test
         void whenParameterMultipartFileIsNull_thenThrowException() {
             // when + then
             assertThatThrownBy(() -> imageService.uploadImage(null)).isInstanceOf(NullPointerException.class);
+        }
+
+    }
+
+    @Nested
+    class DeleteImage {
+
+        @Test
+        void whenImageExists_thenDeleteImage() throws ImageStorageException {
+            // mockito
+            Mockito.when(imageRepository.findById(ID))
+                    .thenReturn(Optional.of(buildImage()));
+
+            // when
+            imageService.deleteImage(ID);
+
+            // then
+            Mockito.verify(imageStorage).deleteImage(KEY);
+            Mockito.verify(imageRepository).deleteById(ID);
+        }
+
+        @Test
+        void whenImageDoesntExist_thenThrowException() {
+            // mockito
+            Mockito.when(imageRepository.findById(ID))
+                    .thenReturn(Optional.empty());
+
+            // when + then
+            assertThatThrownBy(() -> imageService.deleteImage(ID)).isInstanceOf(ResourceNotFoundException.class);
+        }
+
+        @Test
+        void whenParameterImageIdIsNull_thenThrowException() {
+            // when + then
+            assertThatThrownBy(() -> imageService.deleteImage(null)).isInstanceOf(NullPointerException.class);
         }
 
     }
@@ -156,14 +214,24 @@ class ImageServiceImplTest {
         static final String NAME = "image.jpg";
         static final MIMEType MIME_TYPE = buildMIMEType();
         static final long SIZE = buildBytes().length;
-
         static final byte[] BYTES = buildBytes();
+
+        static final String INVALID_MIME_TYPE = "image/invalid-image-type";
 
         static MultipartFile buildMultipartFile() {
             return new MockMultipartFile(
                     "file",
                     NAME,
                     MIME_TYPE.getType(),
+                    BYTES
+            );
+        }
+
+        static MultipartFile buildInvalidMultipartFile() {
+            return new MockMultipartFile(
+                    "file",
+                    NAME,
+                    INVALID_MIME_TYPE,
                     BYTES
             );
         }
@@ -241,7 +309,6 @@ class ImageServiceImplTest {
                     .type("image/jpeg")
                     .build();
         }
-
     }
 
 }

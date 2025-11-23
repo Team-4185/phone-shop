@@ -1,14 +1,13 @@
-package com.challengeteam.shop.web.validator.image;
+package com.challengeteam.shop.service.impl.validator.impl;
 
 import com.challengeteam.shop.exceptionHandling.exception.UnsupportedImageContentTypeException;
-import com.challengeteam.shop.service.impl.validator.impl.ImageValidatorImpl;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.multipart.MultipartFile;
 
-import static com.challengeteam.shop.web.validator.image.ImageValidatorImplTest.TestResources.buildInvalidMultipartFile;
-import static com.challengeteam.shop.web.validator.image.ImageValidatorImplTest.TestResources.buildMultipartFile;
+import static com.challengeteam.shop.service.impl.validator.impl.ImageValidatorImplTest.TestResources.buildInvalidMultipartFile;
+import static com.challengeteam.shop.service.impl.validator.impl.ImageValidatorImplTest.TestResources.buildMultipartFile;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -22,7 +21,6 @@ class ImageValidatorImplTest {
         void whenGivenValidMultipartFile_thenDoNothing() {
             // when + then
             imageValidator.validate(buildMultipartFile());
-            assertThat(true).isFalse(); // rewrite code
         }
 
         @Test
@@ -66,7 +64,6 @@ class ImageValidatorImplTest {
                     CONTENT
             );
         }
-
     }
 
 }

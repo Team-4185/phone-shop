@@ -48,8 +48,8 @@ public class PhoneController {
                           "Use 'page' and 'size' query parameters to control pagination."
     )
     @GetMapping
-    public ResponseEntity<Page<PhoneResponseDto>> getAllPhones(@RequestParam(defaultValue = "0") int page,
-                                                                @RequestParam(defaultValue = "10") int size) {
+    public ResponseEntity<Page<PhoneResponseDto>> getPhones(@RequestParam(defaultValue = "0") int page,
+                                                            @RequestParam(defaultValue = "10") int size) {
         Page<Phone> phones = phoneService.getPhones(page, size);
         Page<PhoneResponseDto> response = phones.map(phoneMapper::toResponse);
 

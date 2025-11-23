@@ -20,6 +20,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.Arrays;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -72,6 +73,7 @@ public class ImageServiceImpl implements ImageService {
     public Optional<Image> getImageById(Long id) {
         Objects.requireNonNull(id, "id");
 
+        log.debug("Getting image by id: {}", id);
         return imageRepository.findById(id);
     }
 
@@ -98,6 +100,8 @@ public class ImageServiceImpl implements ImageService {
     @Transactional
     @Override
     public void deleteImage(Long imageId) {
+        Objects.requireNonNull(imageId, "imageId");
+
         Image image = imageRepository
                 .findById(imageId)
                 .orElseThrow(() -> new ResourceNotFoundException("Not found image with id: " + imageId));

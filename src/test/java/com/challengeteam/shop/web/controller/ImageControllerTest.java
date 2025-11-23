@@ -1,7 +1,11 @@
 package com.challengeteam.shop.web.controller;
 
+import com.challengeteam.shop.entity.image.Image;
+import com.challengeteam.shop.entity.image.MIMEType;
 import com.challengeteam.shop.persistence.repository.ImageRepository;
+import com.challengeteam.shop.persistence.repository.MIMETypeRepository;
 import com.challengeteam.shop.service.ImageService;
+import com.challengeteam.shop.service.MIMETypeService;
 import com.challengeteam.shop.testContainer.ContainerExtension;
 import com.challengeteam.shop.testContainer.TestContextConfigurator;
 import com.challengeteam.shop.web.TestAuthHelper;
@@ -19,12 +23,14 @@ import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.io.InputStream;
 
 import static com.challengeteam.shop.web.controller.ImageControllerTest.TestResources.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -32,14 +38,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @ExtendWith(ContainerExtension.class)
 class ImageControllerTest {
-    @Autowired
-    private TestAuthHelper testAuthHelper;
-    @Autowired
-    private ImageRepository imageRepository;
-    @Autowired
-    private ImageService imageService;
-    @Autowired
-    private MockMvc mockMvc;
+    @Autowired private TestAuthHelper testAuthHelper;
+    @Autowired private ImageService imageService;
+    @Autowired private ImageRepository imageRepository;
+    @Autowired private MIMETypeService mimeTypeService;
+    @Autowired private MockMvc mockMvc;
     private Long imageId;
     private Long unsupportedImageId;
     private String accessToken;
@@ -60,16 +63,32 @@ class ImageControllerTest {
         // add test data
         imageId = imageService.uploadImage(buildMultipartFile(TestImage.IMAGE_1));
         // IMAGE_3 is unsupported
-        unsupportedImageId = imageService.uploadImage(buildMultipartFile(TestImage.IMAGE_3));
+        unsupportedImageId = loadUnsupportedImage(TestImage.IMAGE_1, TestImage.IMAGE_3);
 
         // authorize
         accessToken = testAuthHelper.authorizeLikeTestUser();
     }
 
+    private Long loadUnsupportedImage(TestImage supported, TestImage unsupported) {
+        // first load support image
+        Long id = imageService.uploadImage(buildMultipartFile(supported));
+        Image image = imageRepository
+                .findById(id)
+                .orElseThrow();
+
+        // add unsupported MIMEType
+        MIMEType unsupportedType = mimeTypeService.createIfDoesntExist(buildMultipartFile(unsupported));
+
+        // change existing image MIMEType
+        image.setMimeType(unsupportedType);
+        imageRepository.save(image);
+
+        return id;
+    }
 
     @Nested
     @DisplayName("GET /api/v1/images/{id}")
-    class GetImageByIdTest {
+    class GetImageTest {
         private final static String URL = "/api/v1/images/{id}";
 
         @Test
@@ -114,7 +133,7 @@ class ImageControllerTest {
 
     @Nested
     @DisplayName("GET /api/v1/images/{id}/metadata")
-    class GetImageMetadataByIdTest {
+    class GetImageMetadataTest {
         private static final String URL = "/api/v1/images/{id}/metadata";
 
         @Test
@@ -151,10 +170,23 @@ class ImageControllerTest {
     }
 
     @Nested
-    class UploadImageTemporalEndpointTest {
+    @DisplayName("DELETE /api/v1/images/{id}")
+    class DeleteImageTest {
+        private static final String URL = "/api/v1/images/{id}";
 
-        // POST /api/v1/images
-        // temporal endpoint, so no need to write it
+        @Test
+        void whenImageExists_thenDeleteAndReturn204() throws Exception {
+            mockMvc.perform(delete(URL, imageId)
+                            .header(HttpHeaders.AUTHORIZATION, auth(accessToken)))
+                    .andExpect(status().isNoContent());
+        }
+
+        @Test
+        void whenImageDoesntExist_thenReturn404() throws Exception {
+            mockMvc.perform(delete(URL, NON_EXISTING_ID)
+                            .header(HttpHeaders.AUTHORIZATION, auth(accessToken)))
+                    .andExpect(status().isNotFound());
+        }
 
     }
 

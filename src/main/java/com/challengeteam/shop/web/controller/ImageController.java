@@ -7,22 +7,13 @@ import com.challengeteam.shop.exceptionHandling.exception.ResourceNotFoundExcept
 import com.challengeteam.shop.mapper.ImageMapper;
 import com.challengeteam.shop.service.ImageService;
 import com.challengeteam.shop.web.resolver.headerResolver.imageHeaderResolver.ImageHeadersResolver;
-import com.challengeteam.shop.service.impl.validator.ImageValidator;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.bind.annotation.*;
 
 @RequiredArgsConstructor
 @RestController
@@ -67,7 +58,10 @@ public class ImageController {
         return ResponseEntity.ok(body);
     }
 
-    // todo: describe docs
+    @Operation(
+            summary = "Delete image by id",
+            description = "Deletes image by id"
+    )
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteImage(@PathVariable Long id) {
         imageService.deleteImage(id);
