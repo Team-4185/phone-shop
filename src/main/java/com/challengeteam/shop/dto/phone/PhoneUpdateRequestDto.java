@@ -6,24 +6,20 @@ import java.math.BigDecimal;
 
 public record PhoneUpdateRequestDto(
 
-        @NotBlank(message = "Name must not be empty")
-        @Size(min = 3, max = 255, message = "Name must be between 3 and 255 characters")
+        @Size(min = 3, max = 255, message = "Name must be between {min} and {max} characters")
         String newName,
 
-        @Size(max = 1000, message = "Description must be at most 1000 characters long")
+        @Size(max = 1000, message = "Description must be at most {max} characters long")
         String newDescription,
 
-        @NotNull(message = "Price must not be null")
-        @DecimalMin(value = "0.00", message = "Price must be greater than 0")
+        @DecimalMin(value = "0.00", message = "Price must be greater than {value}")
         BigDecimal newPrice,
 
-        @NotBlank(message = "Brand must not be empty")
-        @Size(min = 3, max = 255, message = "Brand must be between 3 and 255 characters")
+        @Size(min = 3, max = 255, message = "Brand must be between {min} and {max} characters")
         String newBrand,
 
-        @NotNull(message = "Release year must not be null")
-        @Min(value = 1970, message = "Release year must be no earlier than 1970")
-        @Max(value = 2026, message = "Release year must not be in the future")
+        @Min(value = 1970, message = "Release year must be no earlier than {value}")
+        @Max(value = 2026, message = "Release year must be no later than {value}")
         Integer newReleaseYear
 ) {
 }
