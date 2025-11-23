@@ -1,5 +1,6 @@
 package com.challengeteam.shop.web.controller;
 
+import com.challengeteam.shop.dto.pagination.PageResponseDto;
 import com.challengeteam.shop.dto.phone.PhoneCreateRequestDto;
 import com.challengeteam.shop.dto.phone.PhoneResponseDto;
 import com.challengeteam.shop.dto.phone.PhoneUpdateRequestDto;
@@ -33,14 +34,14 @@ public class PhoneController {
                     "Use 'page' and 'size' query parameters to control pagination."
     )
     @GetMapping
-    public ResponseEntity<Page<PhoneResponseDto>> getAllPhones(
+    public ResponseEntity<PageResponseDto<PhoneResponseDto>> getAllPhones(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size
     ) {
         Page<Phone> phones = phoneService.getPhones(page, size);
         Page<PhoneResponseDto> response = phones.map(phoneMapper::toResponse);
 
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(PageResponseDto.of(response));
     }
 
     @Operation(
