@@ -81,6 +81,10 @@ public class PhoneServiceImpl implements PhoneService {
     public void delete(Long id) {
         Objects.requireNonNull(id, "id");
 
+        if(!phoneRepository.existsById(id)) {
+            throw new ResourceNotFoundException("Not found phone with id: " + id);
+        }
+
         phoneRepository.deleteById(id);
         log.debug("Deleted phone with id: {}", id);
     }

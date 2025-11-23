@@ -10,9 +10,12 @@ import com.challengeteam.shop.mapper.PhoneMapper;
 import com.challengeteam.shop.service.PhoneService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
@@ -22,6 +25,7 @@ import java.net.URI;
 @RequestMapping("/api/v1/phones")
 @RequiredArgsConstructor
 @SecurityRequirement(name = "bearer-jwt")
+@Validated
 public class PhoneController {
 
     private final PhoneService phoneService;
@@ -35,14 +39,14 @@ public class PhoneController {
     )
     @GetMapping
     public ResponseEntity<PageResponseDto<PhoneResponseDto>> getAllPhones(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size
+            @RequestParam @Min(value = 0, message = "Page must be >= 0") int page,
+            @RequestParam @Min(value = 1, message = "Size must be >= 1") int size
     ) {
         Page<Phone> phones = phoneService.getPhones(page, size);
         Page<PhoneResponseDto> response = phones.map(phoneMapper::toResponse);
-
         return ResponseEntity.ok(PageResponseDto.of(response));
     }
+
 
     @Operation(
             summary = "Get phone by id",
@@ -63,7 +67,7 @@ public class PhoneController {
             description = "Creates a new phone based on input data."
     )
     @PostMapping
-    public ResponseEntity<Void> createPhone(@RequestBody PhoneCreateRequestDto phoneCreateRequestDto) {
+    public ResponseEntity<Void> createPhone(@Valid @RequestBody PhoneCreateRequestDto phoneCreateRequestDto) {
         Long id = phoneService.create(phoneCreateRequestDto);
         URI newPhoneLocation = ServletUriComponentsBuilder
                 .fromCurrentContextPath()
@@ -81,7 +85,7 @@ public class PhoneController {
     )
     @PutMapping("/{id}")
     public ResponseEntity<Void> updatePhone(@PathVariable Long id,
-                                            @RequestBody PhoneUpdateRequestDto phoneUpdateRequestDto) {
+                                            @Valid @RequestBody PhoneUpdateRequestDto phoneUpdateRequestDto) {
         phoneService.update(id, phoneUpdateRequestDto);
 
         return ResponseEntity.noContent().build();

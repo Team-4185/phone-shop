@@ -314,6 +314,9 @@ class PhoneServiceImplTest {
             // given
             Long id = 10L;
 
+            //mockito
+            Mockito.when(phoneRepository.existsById(id)).thenReturn(true);
+
             // when
             phoneService.delete(id);
 
