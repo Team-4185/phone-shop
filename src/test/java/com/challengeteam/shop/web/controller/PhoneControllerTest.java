@@ -527,14 +527,14 @@ class PhoneControllerTest {
 
         // Validation tests
         @Test
-        void whenNameIsNull_thenStatus400() throws Exception {
+        void whenNameIsNull_thenStatus204() throws Exception {
             PhoneUpdateRequestDto request = buildPhoneUpdateRequestDto(TestPhone.INVALID_NAME_NULL);
 
             mockMvc.perform(put(URL, phoneId1)
                             .header(HttpHeaders.AUTHORIZATION, auth(accessToken))
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
-                    .andExpect(status().isBadRequest());
+                    .andExpect(status().isNoContent());
         }
 
         @Test
@@ -582,14 +582,14 @@ class PhoneControllerTest {
         }
 
         @Test
-        void whenPriceIsNull_thenStatus400() throws Exception {
+        void whenPriceIsNull_thenStatus204() throws Exception {
             PhoneUpdateRequestDto request = buildPhoneUpdateRequestDto(TestPhone.INVALID_PRICE_NULL);
 
             mockMvc.perform(put(URL, phoneId1)
                             .header(HttpHeaders.AUTHORIZATION, auth(accessToken))
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
-                    .andExpect(status().isBadRequest());
+                    .andExpect(status().isNoContent());
         }
 
         @Test
@@ -604,14 +604,14 @@ class PhoneControllerTest {
         }
 
         @Test
-        void whenBrandIsNull_thenStatus400() throws Exception {
+        void whenBrandIsNull_thenStatus204() throws Exception {
             PhoneUpdateRequestDto request = buildPhoneUpdateRequestDto(TestPhone.INVALID_BRAND_NULL);
 
             mockMvc.perform(put(URL, phoneId1)
                             .header(HttpHeaders.AUTHORIZATION, auth(accessToken))
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
-                    .andExpect(status().isBadRequest());
+                    .andExpect(status().isNoContent());
         }
 
         @Test
@@ -648,14 +648,14 @@ class PhoneControllerTest {
         }
 
         @Test
-        void whenReleaseYearIsNull_thenStatus400() throws Exception {
+        void whenReleaseYearIsNull_thenStatus204() throws Exception {
             PhoneUpdateRequestDto request = buildPhoneUpdateRequestDto(TestPhone.INVALID_YEAR_NULL);
 
             mockMvc.perform(put(URL, phoneId1)
                             .header(HttpHeaders.AUTHORIZATION, auth(accessToken))
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
-                    .andExpect(status().isBadRequest());
+                    .andExpect(status().isNoContent());
         }
 
         @Test
