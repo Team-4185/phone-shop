@@ -7,6 +7,7 @@ import com.challengeteam.shop.service.PhoneService;
 import com.challengeteam.shop.testContainer.ContainerExtension;
 import com.challengeteam.shop.testContainer.TestContextConfigurator;
 import com.challengeteam.shop.web.TestAuthHelper;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -32,6 +33,7 @@ import static com.challengeteam.shop.web.controller.PhoneControllerTest.TestPhon
 import static com.challengeteam.shop.web.controller.PhoneControllerTest.TestPhone.VALID_PHONE_BOUNDARY_MIN;
 import static com.challengeteam.shop.web.controller.PhoneControllerTest.TestResources.*;
 import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.hasValue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -65,9 +67,18 @@ class PhoneControllerTest {
         phoneRepository.deleteAll();
 
         // add 3 phones
-        phone1 = phoneService.create(buildPhoneCreateRequestDto(TestPhone.PHONE_1), new ArrayList<>());
-        phone2 = phoneService.create(buildPhoneCreateRequestDto(TestPhone.PHONE_2), List.of(buildMultipartFile()));
-        phone3 = phoneService.create(buildPhoneCreateRequestDto(TestPhone.PHONE_3), List.of(buildMultipartFile()));
+        phone1 = phoneService.create(
+                buildPhoneCreateRequestDto(TestPhone.PHONE_1),
+                new ArrayList<>()
+        );
+        phone2 = phoneService.create(
+                buildPhoneCreateRequestDto(TestPhone.PHONE_2),
+                List.of(buildMultipartFile("images"), buildMultipartFile("images"))
+        );
+        phone3 = phoneService.create(
+                buildPhoneCreateRequestDto(TestPhone.PHONE_3),
+                List.of(buildMultipartFile("images"))
+        );
 
         // authorize
         token = testAuthHelper.authorizeLikeTestUser();
@@ -225,7 +236,7 @@ class PhoneControllerTest {
 
             var request = multipart(URL)
                     .file((MockMultipartFile) buildJsonLikeMultipartFile(content, "phone"))
-                    .file((MockMultipartFile) buildMultipartFile())
+                    .file((MockMultipartFile) buildMultipartFile("images"))
                     .header(HttpHeaders.AUTHORIZATION, auth(token));
 
             mockMvc.perform(request)
@@ -240,7 +251,7 @@ class PhoneControllerTest {
 
             var request = multipart(URL)
                     .file((MockMultipartFile) buildJsonLikeMultipartFile(content, "phone"))
-                    .file((MockMultipartFile) buildMultipartFile())
+                    .file((MockMultipartFile) buildMultipartFile("images"))
                     .header(HttpHeaders.AUTHORIZATION, auth(token));
 
             mockMvc.perform(request)
@@ -255,7 +266,7 @@ class PhoneControllerTest {
 
             var request = multipart(URL)
                     .file((MockMultipartFile) buildJsonLikeMultipartFile(content, "phone"))
-                    .file((MockMultipartFile) buildMultipartFile())
+                    .file((MockMultipartFile) buildMultipartFile("images"))
                     .header(HttpHeaders.AUTHORIZATION, auth(token));
 
             mockMvc.perform(request)
@@ -270,7 +281,7 @@ class PhoneControllerTest {
 
             var request = multipart(URL)
                     .file((MockMultipartFile) buildJsonLikeMultipartFile(content, "phone"))
-                    .file((MockMultipartFile) buildMultipartFile())
+                    .file((MockMultipartFile) buildMultipartFile("images"))
                     .header(HttpHeaders.AUTHORIZATION, auth(token));
 
             mockMvc.perform(request)
@@ -285,7 +296,7 @@ class PhoneControllerTest {
 
             var request = multipart(URL)
                     .file((MockMultipartFile) buildJsonLikeMultipartFile(content, "phone"))
-                    .file((MockMultipartFile) buildMultipartFile());
+                    .file((MockMultipartFile) buildMultipartFile("images"));
 
             mockMvc.perform(request)
                     .andExpect(status().isForbidden());
@@ -298,7 +309,7 @@ class PhoneControllerTest {
 
             var request = multipart(URL)
                     .file((MockMultipartFile) buildJsonLikeMultipartFile(content, "phone"))
-                    .file((MockMultipartFile) buildMultipartFile())
+                    .file((MockMultipartFile) buildMultipartFile("images"))
                     .header(HttpHeaders.AUTHORIZATION, auth("some_invalid_text"));
 
             mockMvc.perform(request)
@@ -377,13 +388,58 @@ class PhoneControllerTest {
             expect400WithInvalidBody(TestPhone.INVALID_YEAR_FUTURE);
         }
 
+        @Test
+        void whenCreateWithoutImages_thenReturn201() throws Exception {
+            PhoneCreateRequestDto json = buildPhoneCreateRequestDto(TestPhone.VALID_PHONE);
+            byte[] content = objectMapper.writeValueAsBytes(json);
+
+            var request = multipart(URL)
+                    .file((MockMultipartFile) buildJsonLikeMultipartFile(content, "phone"))
+                    .header(HttpHeaders.AUTHORIZATION, auth(token));
+
+            mockMvc.perform(request)
+                    .andExpect(status().isCreated());
+        }
+
+        @Test
+        void whenCreateWithMultipleImages_thenReturn201() throws Exception {
+            PhoneCreateRequestDto json = buildPhoneCreateRequestDto(TestPhone.VALID_PHONE);
+            byte[] content = objectMapper.writeValueAsBytes(json);
+
+            var request = multipart(URL)
+                    .file((MockMultipartFile) buildJsonLikeMultipartFile(content, "phone"))
+                    .file((MockMultipartFile) buildMultipartFile("images"))
+                    .file((MockMultipartFile) buildMultipartFile("images"))
+                    .file((MockMultipartFile) buildMultipartFile("images"))
+                    .header(HttpHeaders.AUTHORIZATION, auth(token));
+
+            mockMvc.perform(request)
+                    .andExpect(status().isCreated());
+        }
+
+        @Test
+        void whenCreateWithUnsupportedImage_thenReturn400() throws Exception {
+            PhoneCreateRequestDto json = buildPhoneCreateRequestDto(TestPhone.VALID_PHONE);
+            byte[] content = objectMapper.writeValueAsBytes(json);
+
+            var request = multipart(URL)
+                    .file((MockMultipartFile) buildJsonLikeMultipartFile(content, "phone"))
+                    .file((MockMultipartFile) buildMultipartFile("images"))
+                    .file((MockMultipartFile) buildUnsupportedMultipartFile("images"))      // unsupported file
+                    .file((MockMultipartFile) buildMultipartFile("images"))
+                    .header(HttpHeaders.AUTHORIZATION, auth(token));
+
+            mockMvc.perform(request)
+                    .andExpect(status().isBadRequest());
+        }
+
         private void expect400WithInvalidBody(TestPhone phone) throws Exception {
             PhoneCreateRequestDto json = buildPhoneCreateRequestDto(phone);
             byte[] content = objectMapper.writeValueAsBytes(json);
 
             var request = multipart(URL)
                     .file((MockMultipartFile) buildJsonLikeMultipartFile(content, "phone"))
-                    .file((MockMultipartFile) buildMultipartFile())
+                    .file((MockMultipartFile) buildMultipartFile("images"))
                     .header(HttpHeaders.AUTHORIZATION, auth(token));
 
             mockMvc.perform(request)
@@ -651,13 +707,119 @@ class PhoneControllerTest {
 
     }
 
+    @Nested
+    @DisplayName("GET /api/v1/phones/{id}/images")
+    class GetPhoneImages {
+        private final static String URL = "/api/v1/phones/{id}/images";
+
+        @Test
+        void whenPhoneHasImages_thenStatus200WithImages() throws Exception {
+            var request = get(URL, phone2)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .header(HttpHeaders.AUTHORIZATION, auth(token));
+
+            mockMvc.perform(request)
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.size()").value(2))
+                    .andExpect(jsonPath("$.[0].id").exists())
+                    .andExpect(jsonPath("$.[0].name").exists())
+                    .andExpect(jsonPath("$.[0].url").exists())
+                    .andExpect(jsonPath("$.[0].size").exists())
+                    .andExpect(jsonPath("$.[0].mimeType").exists());
+        }
+
+        @Test
+        void whenPhoneDoesntHaveImages_thenStatus200WithEmptyArray() throws Exception {
+            var request = get(URL, phone1)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .header(HttpHeaders.AUTHORIZATION, auth(token));
+
+            mockMvc.perform(request)
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.size()").value(0))
+                    .andExpect(jsonPath("$.[0].id").doesNotExist());
+        }
+
+        @Test
+        void whenPhoneDoesntExist_thenReturn404() throws Exception {
+            var request = get(URL, NON_EXISTING_ID)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .header(HttpHeaders.AUTHORIZATION, auth(token));
+
+            mockMvc.perform(request)
+                    .andExpect(status().isNotFound());
+        }
+
+        @Test
+        void whenRequestMissingToken_thenStatus403() throws Exception {
+            mockMvc.perform(get(URL, phone1))
+                    .andExpect(status().isForbidden());
+        }
+
+        @Test
+        void whenRequestHasInvalidToken_thenStatus403() throws Exception {
+            mockMvc.perform(get(URL, phone1)
+                            .header(HttpHeaders.AUTHORIZATION, auth("some_invalid_text")))
+                    .andExpect(status().isForbidden());
+        }
+
+        @Nested
+        @DisplayName("POST /api/v1/phones/{id}/add-image")
+        class AddImageToPhone {
+            private static final String URL = "/api/v1/phones/{id}/add-image";
+
+            @Test
+            void whenPhoneExists_thenAddImageAndReturn204() throws Exception {
+                var request = multipart(URL, phone1)
+                        .file((MockMultipartFile) buildMultipartFile("image"))
+                        .header(HttpHeaders.AUTHORIZATION, auth(token));
+
+                mockMvc.perform(request)
+                        .andExpect(status().isNoContent());
+            }
+
+            @Test
+            void whenPhoneDoesntExists_thenReturn404() throws Exception {
+                var request = multipart(URL, NON_EXISTING_ID)
+                        .file((MockMultipartFile) buildMultipartFile("image"))
+                        .header(HttpHeaders.AUTHORIZATION, auth(token));
+
+                mockMvc.perform(request)
+                        .andExpect(status().isNotFound());
+            }
+
+            @Test
+            void whenImageIsMissing_thenReturn400() throws Exception {
+                var request = multipart(URL, phone1)
+                        .header(HttpHeaders.AUTHORIZATION, auth(token));
+
+                mockMvc.perform(request)
+                        .andExpect(status().isBadRequest());
+
+            }
+
+            @Test
+            void whenAddUnsupportedImage_thenReturn400() throws Exception {
+                var request = multipart(URL, phone1)
+                        .file((MockMultipartFile) buildUnsupportedMultipartFile("image"))
+                        .header(HttpHeaders.AUTHORIZATION, auth(token));
+
+                mockMvc.perform(request)
+                        .andExpect(status().isBadRequest());
+            }
+
+        }
+
+    }
+
     static class TestResources {
         static final long NON_EXISTING_ID = 99_999L;
 
-        static final String FILE_NAME = "images";
         static final String FILE_ORIGINAL_NAME = "file.jpeg";
         static final String FILE_CONTENT_TYPE = "image/jpeg";
         static final byte[] FILE_CONTENT = FILE_ORIGINAL_NAME.getBytes();
+
+        static final String UNSUPPORTED_FILE_CONTENT_TYPE = "image/gif";
 
 
         static String auth(String token) {
@@ -684,11 +846,20 @@ class PhoneControllerTest {
             );
         }
 
-        static MultipartFile buildMultipartFile() {
+        static MultipartFile buildMultipartFile(String name) {
             return new MockMultipartFile(
-                    FILE_NAME,
+                    name,
                     FILE_ORIGINAL_NAME,
                     FILE_CONTENT_TYPE,
+                    FILE_CONTENT
+            );
+        }
+
+        static MultipartFile buildUnsupportedMultipartFile(String name) {
+            return new MockMultipartFile(
+                    name,
+                    FILE_ORIGINAL_NAME,
+                    UNSUPPORTED_FILE_CONTENT_TYPE,
                     FILE_CONTENT
             );
         }

@@ -27,6 +27,9 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.net.URI;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Enumeration;
 import java.util.List;
 
 @RestController
@@ -72,12 +75,14 @@ public class PhoneController {
 
     @Operation(
             summary = "Create new phone",
-            description = "Creates a new phone based on input data."
+            description = "Creates a new phone based on input data and also adds provided images. " +
+                          "Images are optional."
     )
-
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Void> createPhone(@Valid @RequestPart("phone") PhoneCreateRequestDto phoneCreateRequestDto,
-                                            @RequestPart("images") List<MultipartFile> images) {
+                                            @RequestPart(value = "images", required = false) List<MultipartFile> images) {
+        images = images != null ? images : new ArrayList<>();
+
         Long id = phoneService.create(phoneCreateRequestDto, images);
         URI newPhoneLocation = ServletUriComponentsBuilder
                 .fromCurrentContextPath()
@@ -103,7 +108,7 @@ public class PhoneController {
 
     @Operation(
             summary = "Delete phone by id",
-            description = "Deletes phone by id"
+            description = "Deletes phone by id."
     )
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deletePhone(@PathVariable Long id) {
@@ -112,7 +117,10 @@ public class PhoneController {
         return ResponseEntity.noContent().build();
     }
 
-    // todo: describe docs
+    @Operation(
+            summary = "Get phone's images",
+            description = "Returns all images of specified phone."
+    )
     @GetMapping("/{id}/images")
     public ResponseEntity<List<ImageMetadataResponseDto>> getPhoneImages(@PathVariable Long id) {
         List<Image> images = phoneService.getPhoneImages(id);
@@ -121,7 +129,10 @@ public class PhoneController {
         return ResponseEntity.ok(response);
     }
 
-    // todo: describe docs
+    @Operation(
+            summary = "Add image for phone",
+            description = "Adds one image for specified phone."
+    )
     @PostMapping(value = "/{id}/add-image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Void> addImageToPhone(@PathVariable Long id,
                                                 @RequestParam("image") MultipartFile image) {
