@@ -326,6 +326,9 @@ class PhoneServiceImplTest {
 
         @Test
         void whenCalled_thenDeleteSuccessfully() {
+            //mockito
+            Mockito.when(phoneRepository.existsById(PHONE_ID)).thenReturn(true);
+
             // when
             phoneService.delete(PHONE_ID);
 

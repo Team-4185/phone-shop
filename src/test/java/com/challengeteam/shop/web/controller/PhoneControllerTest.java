@@ -1,6 +1,7 @@
 package com.challengeteam.shop.web.controller;
 
 import com.challengeteam.shop.dto.phone.PhoneCreateRequestDto;
+import com.challengeteam.shop.dto.phone.PhoneUpdateRequestDto;
 import com.challengeteam.shop.persistence.repository.PhoneRepository;
 import com.challengeteam.shop.service.PhoneService;
 import com.challengeteam.shop.testContainer.ContainerExtension;
@@ -27,15 +28,17 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.challengeteam.shop.web.controller.PhoneControllerTest.TestPhone.VALID_PHONE_BOUNDARY_MAX;
+import static com.challengeteam.shop.web.controller.PhoneControllerTest.TestPhone.VALID_PHONE_BOUNDARY_MIN;
 import static com.challengeteam.shop.web.controller.PhoneControllerTest.TestResources.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
+import static org.hamcrest.Matchers.hasSize;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @SpringBootTest
 @AutoConfigureMockMvc
 @ExtendWith(ContainerExtension.class)
-public class PhoneControllerTest {
+class PhoneControllerTest {
     @Autowired
     private TestAuthHelper testAuthHelper;
     @Autowired
@@ -52,7 +55,7 @@ public class PhoneControllerTest {
     private Long phone3;
 
     @DynamicPropertySource
-    public static void loadPropertiesForTest(DynamicPropertyRegistry propertyRegistry) {
+    static void loadPropertiesForTest(DynamicPropertyRegistry propertyRegistry) {
         TestContextConfigurator.initRequiredProperties(propertyRegistry);
     }
 
@@ -68,72 +71,118 @@ public class PhoneControllerTest {
 
         // authorize
         token = testAuthHelper.authorizeLikeTestUser();
+
     }
 
     @Nested
     @DisplayName("GET /api/v1/phones")
     class GetPhonesTest {
-        public static final String URL = "/api/v1/phones";
+        private final static String URL = "/api/v1/phones";
 
         @Test
-        void whenDefaultRequest_thenReturnFirstPage() throws Exception {
-            var request = get(URL)
-                    .header(HttpHeaders.AUTHORIZATION, auth(token));
-
-            mockMvc.perform(request)
+        void whenValidRequest_thenStatus200AndReturnPagedPhones() throws Exception {
+            mockMvc.perform(get(URL)
+                            .header(HttpHeaders.AUTHORIZATION, auth(token)))
                     .andExpect(status().isOk())
+                    .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                    .andExpect(jsonPath("$.content").isArray())
+                    .andExpect(jsonPath("$.content", hasSize(3)))
                     .andExpect(jsonPath("$.totalElements").value(3))
                     .andExpect(jsonPath("$.totalPages").value(1))
-                    .andExpect(jsonPath("$.numberOfElements").value(3))
-                    .andExpect(jsonPath("$.content.size()").value(3))
-                    .andExpect(jsonPath("$.content.[0].id").value(phone1));
+                    .andExpect(jsonPath("$.size").value(10))
+                    .andExpect(jsonPath("$.page").value(0))
+                    .andExpect(jsonPath("$.content[0].id").value(phone1))
+                    .andExpect(jsonPath("$.content[0].name").value(TestPhone.PHONE_1.name))
+                    .andExpect(jsonPath("$.content[0].description").value(TestPhone.PHONE_1.description))
+                    .andExpect(jsonPath("$.content[0].price").value(TestPhone.PHONE_1.price))
+                    .andExpect(jsonPath("$.content[0].brand").value(TestPhone.PHONE_1.brand))
+                    .andExpect(jsonPath("$.content[0].releaseYear").value(TestPhone.PHONE_1.releaseYear));
         }
 
         @Test
-        void whenRequestSecondPage_thenReturnEmptyPage() throws Exception {
-            var request = get(URL)
-                    .param("page", "1")
-                    .header(HttpHeaders.AUTHORIZATION, auth(token));
-
-            mockMvc.perform(request)
+        void whenRequestWithPagination_thenReturnCorrectPage() throws Exception {
+            mockMvc.perform(get(URL)
+                            .param("page", "0")
+                            .param("size", "2")
+                            .header(HttpHeaders.AUTHORIZATION, auth(token)))
                     .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.content", hasSize(2)))
                     .andExpect(jsonPath("$.totalElements").value(3))
-                    .andExpect(jsonPath("$.totalPages").value(1))
-                    .andExpect(jsonPath("$.numberOfElements").value(0))
-                    .andExpect(jsonPath("$.content.size()").value(0));
+                    .andExpect(jsonPath("$.totalPages").value(2))
+                    .andExpect(jsonPath("$.size").value(2))
+                    .andExpect(jsonPath("$.page").value(0));
         }
 
         @Test
-        void whenRequestMissingToken_thenReturn403() throws Exception {
-            var request = get(URL);
+        void whenRequestSecondPage_thenReturnCorrectPage() throws Exception {
+            mockMvc.perform(get(URL)
+                            .param("page", "1")
+                            .param("size", "2")
+                            .header(HttpHeaders.AUTHORIZATION, auth(token)))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.content", hasSize(1)))
+                    .andExpect(jsonPath("$.totalElements").value(3))
+                    .andExpect(jsonPath("$.totalPages").value(2))
+                    .andExpect(jsonPath("$.size").value(2))
+                    .andExpect(jsonPath("$.page").value(1));
+        }
 
-            mockMvc.perform(request)
+        @Test
+        void whenRequestEmptyPage_thenReturnEmptyContent() throws Exception {
+            mockMvc.perform(get(URL)
+                            .param("page", "1")
+                            .param("size", "3")
+                            .header(HttpHeaders.AUTHORIZATION, auth(token)))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.content", hasSize(0)))
+                    .andExpect(jsonPath("$.totalElements").value(3))
+                    .andExpect(jsonPath("$.page").value(1));
+        }
+
+        @Test
+        void whenRequestMissingToken_thenStatus403() throws Exception {
+            mockMvc.perform(get(URL))
                     .andExpect(status().isForbidden());
         }
 
         @Test
-        void whenRequestHasInvalidToken_thenReturn403() throws Exception {
-            var request = get(URL)
-                    .header(HttpHeaders.AUTHORIZATION, auth("invalid_token"));
-
-            mockMvc.perform(request)
+        void whenRequestHasInvalidToken_thenStatus403() throws Exception {
+            mockMvc.perform(get(URL)
+                            .header(HttpHeaders.AUTHORIZATION, auth("some_invalid_text")))
                     .andExpect(status().isForbidden());
+        }
+
+        @Test
+        void whenPageIsNegative_thenStatus400() throws Exception {
+            mockMvc.perform(get(URL)
+                            .param("page", "-1")
+                            .param("size", "10")
+                            .header(HttpHeaders.AUTHORIZATION, auth(token)))
+                    .andExpect(status().isBadRequest());
+        }
+
+        @Test
+        void whenSizeIsLessThenOne_thenStatus400() throws Exception {
+            mockMvc.perform(get(URL)
+                            .param("page", "0")
+                            .param("size", "0")
+                            .header(HttpHeaders.AUTHORIZATION, auth(token)))
+                    .andExpect(status().isBadRequest());
         }
 
     }
 
     @Nested
-    @DisplayName("GET /api/v1/phones/{id}")
+    @DisplayName("GET /api/v1/phones/{phoneId}")
     class GetPhoneByIdTest {
-        public static final String URL = "/api/v1/phones/{id}";
+        private final static String URL = "/api/v1/phones/{phoneId}";
 
         @Test
-        void whenPhoneExists_thenReturnPhoneAndStatus200() throws Exception {
-            var request = get(URL, phone1)
-                    .header(HttpHeaders.AUTHORIZATION, auth(token));
-
-            mockMvc.perform(request)
+        void whenExists_thenStatus200AndReturnPhoneResponseDto() throws Exception {
+            mockMvc.perform(get(URL, phone1)
+                            .header(HttpHeaders.AUTHORIZATION, auth(token)))
                     .andExpect(status().isOk())
+                    .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                     .andExpect(jsonPath("$.id").value(phone1))
                     .andExpect(jsonPath("$.name").value(TestPhone.PHONE_1.name))
                     .andExpect(jsonPath("$.description").value(TestPhone.PHONE_1.description))
@@ -143,31 +192,22 @@ public class PhoneControllerTest {
         }
 
         @Test
-        void whenPhoneDoesntExists_thenReturnStatus404() throws Exception {
-            var request = get(URL, UNEXISTING_PHONE_ID)
-                    .header(HttpHeaders.AUTHORIZATION, auth(token));
-
-            mockMvc.perform(request)
-                    .andExpect(status().isNotFound())
-                    .andExpect(jsonPath("$.title").value("Not Found Resource"))
-                    .andExpect(jsonPath("$.status").value(404))
-                    .andExpect(jsonPath("$.detail").value("Not found phone with id: " + UNEXISTING_PHONE_ID));
+        void whenDoesntExist_thenStatus404() throws Exception {
+            mockMvc.perform(get(URL, NON_EXISTING_ID)
+                            .header(HttpHeaders.AUTHORIZATION, auth(token)))
+                    .andExpect(status().isNotFound());
         }
 
         @Test
-        void whenRequestMissingToken_thenReturn403() throws Exception {
-            var request = get(URL, phone1);
-
-            mockMvc.perform(request)
+        void whenRequestMissingToken_thenStatus403() throws Exception {
+            mockMvc.perform(get(URL, phone1))
                     .andExpect(status().isForbidden());
         }
 
         @Test
-        void whenRequestHasInvalidToken_thenReturn403() throws Exception {
-            var request = get(URL, phone1)
-                    .header(HttpHeaders.AUTHORIZATION, auth("invalid_token"));
-
-            mockMvc.perform(request)
+        void whenRequestHasInvalidToken_thenStatus403() throws Exception {
+            mockMvc.perform(get(URL, phone1)
+                            .header(HttpHeaders.AUTHORIZATION, auth("some_invalid_text")))
                     .andExpect(status().isForbidden());
         }
 
@@ -176,95 +216,528 @@ public class PhoneControllerTest {
     @Nested
     @DisplayName("POST /api/v1/phones")
     class CreatePhoneTest {
-        public static final String URL = "/api/v1/phones";
+        private final static String URL = "/api/v1/phones";
 
         @Test
-        void whenDataValid_thenCreateAndReturn201() throws Exception {
-            // when
+        void whenValidRequest_thenStatus201AndLocationHeader() throws Exception {
+            PhoneCreateRequestDto json = buildPhoneCreateRequestDto(TestPhone.VALID_PHONE);
+            byte[] content = objectMapper.writeValueAsBytes(json);
+
             var request = multipart(URL)
-                    .file((MockMultipartFile) buildPhoneMultipartFile(TestPhone.PHONE_2, objectMapper))
+                    .file((MockMultipartFile) buildJsonLikeMultipartFile(content, "phone"))
                     .file((MockMultipartFile) buildMultipartFile())
-                    .file((MockMultipartFile) buildMultipartFile())
-                    .header(HttpHeaders.AUTHORIZATION, auth(token))
-                    .accept(MediaType.MULTIPART_FORM_DATA_VALUE);
+                    .header(HttpHeaders.AUTHORIZATION, auth(token));
 
             mockMvc.perform(request)
                     .andExpect(status().isCreated())
-                    .andExpect(header().exists("location"));
+                    .andExpect(header().exists(HttpHeaders.LOCATION));
         }
 
-        // todo: continue
+        @Test
+        void whenValidRequestWithNullDescription_thenStatus201() throws Exception {
+            PhoneCreateRequestDto json = buildPhoneCreateRequestDto(TestPhone.VALID_PHONE_NULL_DESCRIPTION);
+            byte[] content = objectMapper.writeValueAsBytes(json);
+
+            var request = multipart(URL)
+                    .file((MockMultipartFile) buildJsonLikeMultipartFile(content, "phone"))
+                    .file((MockMultipartFile) buildMultipartFile())
+                    .header(HttpHeaders.AUTHORIZATION, auth(token));
+
+            mockMvc.perform(request)
+                    .andExpect(status().isCreated())
+                    .andExpect(header().exists(HttpHeaders.LOCATION));
+        }
+
+        @Test
+        void whenValidRequestWithBoundaryMinValues_thenStatus201() throws Exception {
+            PhoneCreateRequestDto json = buildPhoneCreateRequestDto(VALID_PHONE_BOUNDARY_MIN);
+            byte[] content = objectMapper.writeValueAsBytes(json);
+
+            var request = multipart(URL)
+                    .file((MockMultipartFile) buildJsonLikeMultipartFile(content, "phone"))
+                    .file((MockMultipartFile) buildMultipartFile())
+                    .header(HttpHeaders.AUTHORIZATION, auth(token));
+
+            mockMvc.perform(request)
+                    .andExpect(status().isCreated())
+                    .andExpect(header().exists(HttpHeaders.LOCATION));
+        }
+
+        @Test
+        void whenValidRequestWithBoundaryMaxValues_thenStatus201() throws Exception {
+            PhoneCreateRequestDto json = buildPhoneCreateRequestDto(VALID_PHONE_BOUNDARY_MAX);
+            byte[] content = objectMapper.writeValueAsBytes(json);
+
+            var request = multipart(URL)
+                    .file((MockMultipartFile) buildJsonLikeMultipartFile(content, "phone"))
+                    .file((MockMultipartFile) buildMultipartFile())
+                    .header(HttpHeaders.AUTHORIZATION, auth(token));
+
+            mockMvc.perform(request)
+                    .andExpect(status().isCreated())
+                    .andExpect(header().exists(HttpHeaders.LOCATION));
+        }
+
+        @Test
+        void whenRequestMissingToken_thenStatus403() throws Exception {
+            PhoneCreateRequestDto json = buildPhoneCreateRequestDto(TestPhone.VALID_PHONE);
+            byte[] content = objectMapper.writeValueAsBytes(json);
+
+            var request = multipart(URL)
+                    .file((MockMultipartFile) buildJsonLikeMultipartFile(content, "phone"))
+                    .file((MockMultipartFile) buildMultipartFile());
+
+            mockMvc.perform(request)
+                    .andExpect(status().isForbidden());
+        }
+
+        @Test
+        void whenRequestHasInvalidToken_thenStatus403() throws Exception {
+            PhoneCreateRequestDto json = buildPhoneCreateRequestDto(TestPhone.VALID_PHONE);
+            byte[] content = objectMapper.writeValueAsBytes(json);
+
+            var request = multipart(URL)
+                    .file((MockMultipartFile) buildJsonLikeMultipartFile(content, "phone"))
+                    .file((MockMultipartFile) buildMultipartFile())
+                    .header(HttpHeaders.AUTHORIZATION, auth("some_invalid_text"));
+
+            mockMvc.perform(request)
+                    .andExpect(status().isForbidden());
+        }
+
+        // Validation tests
+        @Test
+        void whenNameIsNull_thenStatus400() throws Exception {
+            expect400WithInvalidBody(TestPhone.INVALID_NAME_NULL);
+        }
+
+        @Test
+        void whenNameIsBlank_thenStatus400() throws Exception {
+            expect400WithInvalidBody(TestPhone.INVALID_NAME_BLANK);
+        }
+
+
+        @Test
+        void whenNameTooShort_thenStatus400() throws Exception {
+            expect400WithInvalidBody(TestPhone.INVALID_NAME_TOO_SHORT);
+        }
+
+        @Test
+        void whenNameTooLong_thenStatus400() throws Exception {
+            expect400WithInvalidBody(TestPhone.INVALID_NAME_TOO_LONG);
+        }
+
+        @Test
+        void whenDescriptionTooLong_thenStatus400() throws Exception {
+            expect400WithInvalidBody(TestPhone.INVALID_DESCRIPTION_TOO_LONG);
+        }
+
+        @Test
+        void whenPriceIsNull_thenStatus400() throws Exception {
+            expect400WithInvalidBody(TestPhone.INVALID_PRICE_NULL);
+        }
+
+        @Test
+        void whenPriceIsNegative_thenStatus400() throws Exception {
+            expect400WithInvalidBody(TestPhone.INVALID_PRICE_NEGATIVE);
+        }
+
+        @Test
+        void whenBrandIsNull_thenStatus400() throws Exception {
+            expect400WithInvalidBody(TestPhone.INVALID_BRAND_NULL);
+        }
+
+        @Test
+        void whenBrandIsBlank_thenStatus400() throws Exception {
+            expect400WithInvalidBody(TestPhone.INVALID_BRAND_BLANK);
+        }
+
+        @Test
+        void whenBrandTooShort_thenStatus400() throws Exception {
+            expect400WithInvalidBody(TestPhone.INVALID_BRAND_TOO_SHORT);
+        }
+
+        @Test
+        void whenBrandTooLong_thenStatus400() throws Exception {
+            expect400WithInvalidBody(TestPhone.INVALID_BRAND_TOO_LONG);
+        }
+
+        @Test
+        void whenReleaseYearIsNull_thenStatus400() throws Exception {
+            expect400WithInvalidBody(TestPhone.INVALID_YEAR_NULL);
+        }
+
+        @Test
+        void whenReleaseYearTooEarly_thenStatus400() throws Exception {
+            expect400WithInvalidBody(TestPhone.INVALID_YEAR_TOO_EARLY);
+        }
+
+        @Test
+        void whenReleaseYearInFuture_thenStatus400() throws Exception {
+            expect400WithInvalidBody(TestPhone.INVALID_YEAR_FUTURE);
+        }
+
+        private void expect400WithInvalidBody(TestPhone phone) throws Exception {
+            PhoneCreateRequestDto json = buildPhoneCreateRequestDto(phone);
+            byte[] content = objectMapper.writeValueAsBytes(json);
+
+            var request = multipart(URL)
+                    .file((MockMultipartFile) buildJsonLikeMultipartFile(content, "phone"))
+                    .file((MockMultipartFile) buildMultipartFile())
+                    .header(HttpHeaders.AUTHORIZATION, auth(token));
+
+            mockMvc.perform(request)
+                    .andExpect(status().isBadRequest());
+        }
+    }
+
+    @Nested
+    @DisplayName("PUT /api/v1/phones/{phoneId}")
+    class UpdatePhoneTest {
+        private final static String URL = "/api/v1/phones/{phoneId}";
+
+        @Test
+        void whenValidRequest_thenStatus204() throws Exception {
+            PhoneUpdateRequestDto request = buildPhoneUpdateRequestDto(TestPhone.VALID_PHONE);
+
+            mockMvc.perform(put(URL, phone1)
+                            .header(HttpHeaders.AUTHORIZATION, auth(token))
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(request)))
+                    .andExpect(status().isNoContent());
+        }
+
+        @Test
+        void whenValidRequestWithNullDescription_thenStatus204() throws Exception {
+            PhoneUpdateRequestDto request = buildPhoneUpdateRequestDto(TestPhone.VALID_PHONE_NULL_DESCRIPTION);
+
+            mockMvc.perform(put(URL, phone1)
+                            .header(HttpHeaders.AUTHORIZATION, auth(token))
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(request)))
+                    .andExpect(status().isNoContent());
+        }
+
+        @Test
+        void whenValidRequestWithBoundaryMinValues_thenStatus204() throws Exception {
+            PhoneUpdateRequestDto request = buildPhoneUpdateRequestDto(VALID_PHONE_BOUNDARY_MIN);
+
+            mockMvc.perform(put(URL, phone1)
+                            .header(HttpHeaders.AUTHORIZATION, auth(token))
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(request)))
+                    .andExpect(status().isNoContent());
+        }
+
+        @Test
+        void whenValidRequestWithBoundaryMaxValues_thenStatus204() throws Exception {
+            PhoneUpdateRequestDto request = buildPhoneUpdateRequestDto(VALID_PHONE_BOUNDARY_MAX);
+
+            mockMvc.perform(put(URL, phone1)
+                            .header(HttpHeaders.AUTHORIZATION, auth(token))
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(request)))
+                    .andExpect(status().isNoContent());
+        }
+
+        @Test
+        void whenRequestMissingToken_thenStatus403() throws Exception {
+            PhoneUpdateRequestDto request = buildPhoneUpdateRequestDto(TestPhone.VALID_PHONE);
+
+            mockMvc.perform(put(URL, phone1)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(request)))
+                    .andExpect(status().isForbidden());
+        }
+
+        @Test
+        void whenRequestHasInvalidToken_thenStatus403() throws Exception {
+            PhoneUpdateRequestDto request = buildPhoneUpdateRequestDto(TestPhone.VALID_PHONE);
+
+            mockMvc.perform(put(URL, phone1)
+                            .header(HttpHeaders.AUTHORIZATION, auth("some_invalid_text"))
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(request)))
+                    .andExpect(status().isForbidden());
+        }
+
+        // Validation tests
+        @Test
+        void whenNameIsNull_thenStatus204() throws Exception {
+            PhoneUpdateRequestDto request = buildPhoneUpdateRequestDto(TestPhone.INVALID_NAME_NULL);
+
+            mockMvc.perform(put(URL, phone1)
+                            .header(HttpHeaders.AUTHORIZATION, auth(token))
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(request)))
+                    .andExpect(status().isNoContent());
+        }
+
+        @Test
+        void whenNameIsBlank_thenStatus400() throws Exception {
+            PhoneUpdateRequestDto request = buildPhoneUpdateRequestDto(TestPhone.INVALID_NAME_BLANK);
+
+            mockMvc.perform(put(URL, phone1)
+                            .header(HttpHeaders.AUTHORIZATION, auth(token))
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(request)))
+                    .andExpect(status().isBadRequest());
+        }
+
+        @Test
+        void whenNameTooShort_thenStatus400() throws Exception {
+            PhoneUpdateRequestDto request = buildPhoneUpdateRequestDto(TestPhone.INVALID_NAME_TOO_SHORT);
+
+            mockMvc.perform(put(URL, phone1)
+                            .header(HttpHeaders.AUTHORIZATION, auth(token))
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(request)))
+                    .andExpect(status().isBadRequest());
+        }
+
+        @Test
+        void whenNameTooLong_thenStatus400() throws Exception {
+            PhoneUpdateRequestDto request = buildPhoneUpdateRequestDto(TestPhone.INVALID_NAME_TOO_LONG);
+
+            mockMvc.perform(put(URL, phone1)
+                            .header(HttpHeaders.AUTHORIZATION, auth(token))
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(request)))
+                    .andExpect(status().isBadRequest());
+        }
+
+        @Test
+        void whenDescriptionTooLong_thenStatus400() throws Exception {
+            PhoneUpdateRequestDto request = buildPhoneUpdateRequestDto(TestPhone.INVALID_DESCRIPTION_TOO_LONG);
+
+            mockMvc.perform(put(URL, phone1)
+                            .header(HttpHeaders.AUTHORIZATION, auth(token))
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(request)))
+                    .andExpect(status().isBadRequest());
+        }
+
+        @Test
+        void whenPriceIsNull_thenStatus204() throws Exception {
+            PhoneUpdateRequestDto request = buildPhoneUpdateRequestDto(TestPhone.INVALID_PRICE_NULL);
+
+            mockMvc.perform(put(URL, phone1)
+                            .header(HttpHeaders.AUTHORIZATION, auth(token))
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(request)))
+                    .andExpect(status().isNoContent());
+        }
+
+        @Test
+        void whenPriceIsNegative_thenStatus400() throws Exception {
+            PhoneUpdateRequestDto request = buildPhoneUpdateRequestDto(TestPhone.INVALID_PRICE_NEGATIVE);
+
+            mockMvc.perform(put(URL, phone1)
+                            .header(HttpHeaders.AUTHORIZATION, auth(token))
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(request)))
+                    .andExpect(status().isBadRequest());
+        }
+
+        @Test
+        void whenBrandIsNull_thenStatus204() throws Exception {
+            PhoneUpdateRequestDto request = buildPhoneUpdateRequestDto(TestPhone.INVALID_BRAND_NULL);
+
+            mockMvc.perform(put(URL, phone1)
+                            .header(HttpHeaders.AUTHORIZATION, auth(token))
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(request)))
+                    .andExpect(status().isNoContent());
+        }
+
+        @Test
+        void whenBrandIsBlank_thenStatus400() throws Exception {
+            PhoneUpdateRequestDto request = buildPhoneUpdateRequestDto(TestPhone.INVALID_BRAND_BLANK);
+
+            mockMvc.perform(put(URL, phone1)
+                            .header(HttpHeaders.AUTHORIZATION, auth(token))
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(request)))
+                    .andExpect(status().isBadRequest());
+        }
+
+        @Test
+        void whenBrandTooShort_thenStatus400() throws Exception {
+            PhoneUpdateRequestDto request = buildPhoneUpdateRequestDto(TestPhone.INVALID_BRAND_TOO_SHORT);
+
+            mockMvc.perform(put(URL, phone1)
+                            .header(HttpHeaders.AUTHORIZATION, auth(token))
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(request)))
+                    .andExpect(status().isBadRequest());
+        }
+
+        @Test
+        void whenBrandTooLong_thenStatus400() throws Exception {
+            PhoneUpdateRequestDto request = buildPhoneUpdateRequestDto(TestPhone.INVALID_BRAND_TOO_LONG);
+
+            mockMvc.perform(put(URL, phone1)
+                            .header(HttpHeaders.AUTHORIZATION, auth(token))
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(request)))
+                    .andExpect(status().isBadRequest());
+        }
+
+        @Test
+        void whenReleaseYearIsNull_thenStatus204() throws Exception {
+            PhoneUpdateRequestDto request = buildPhoneUpdateRequestDto(TestPhone.INVALID_YEAR_NULL);
+
+            mockMvc.perform(put(URL, phone1)
+                            .header(HttpHeaders.AUTHORIZATION, auth(token))
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(request)))
+                    .andExpect(status().isNoContent());
+        }
+
+        @Test
+        void whenReleaseYearTooEarly_thenStatus400() throws Exception {
+            PhoneUpdateRequestDto request = buildPhoneUpdateRequestDto(TestPhone.INVALID_YEAR_TOO_EARLY);
+
+            mockMvc.perform(put(URL, phone1)
+                            .header(HttpHeaders.AUTHORIZATION, auth(token))
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(request)))
+                    .andExpect(status().isBadRequest());
+        }
+
+        @Test
+        void whenReleaseYearInFuture_thenStatus400() throws Exception {
+            PhoneUpdateRequestDto request = buildPhoneUpdateRequestDto(TestPhone.INVALID_YEAR_FUTURE);
+
+            mockMvc.perform(put(URL, phone1)
+                            .header(HttpHeaders.AUTHORIZATION, auth(token))
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(request)))
+                    .andExpect(status().isBadRequest());
+        }
+    }
+
+    @Nested
+    @DisplayName("DELETE /api/v1/phones/{phoneId}")
+    class DeletePhoneByIdTest {
+        private final static String URL = "/api/v1/phones/{phoneId}";
+
+        @Test
+        void whenExists_thenStatus204() throws Exception {
+            mockMvc.perform(delete(URL, phone1)
+                            .header(HttpHeaders.AUTHORIZATION, auth(token)))
+                    .andExpect(status().isNoContent());
+        }
+
+        @Test
+        void whenDoesntExist_thenStatus404() throws Exception {
+            mockMvc.perform(delete(URL, NON_EXISTING_ID)
+                            .header(HttpHeaders.AUTHORIZATION, auth(token)))
+                    .andExpect(status().isNotFound());
+        }
+
+        @Test
+        void whenRequestMissingToken_thenStatus403() throws Exception {
+            mockMvc.perform(get(URL, phone1))
+                    .andExpect(status().isForbidden());
+        }
+
+        @Test
+        void whenRequestHasInvalidToken_thenStatus403() throws Exception {
+            mockMvc.perform(get(URL, phone1)
+                            .header(HttpHeaders.AUTHORIZATION, auth("some_invalid_text")))
+                    .andExpect(status().isForbidden());
+        }
 
     }
 
-    // todo: continue
-
     static class TestResources {
-        public static final String IMAGE_NAME = "images";
-        public static final String IMAGE_ORIGINAL_NAME = "image.jpeg";
-        public static final String IMAGE_CONTENT_TYPE = "image/jpeg";
-        public static final byte[] IMAGE_CONTENT = IMAGE_ORIGINAL_NAME.getBytes();
+        static final long NON_EXISTING_ID = 99_999L;
 
-        public static final Long UNEXISTING_PHONE_ID = 999_999L;
+        static final String FILE_NAME = "images";
+        static final String FILE_ORIGINAL_NAME = "file.jpeg";
+        static final String FILE_CONTENT_TYPE = "image/jpeg";
+        static final byte[] FILE_CONTENT = FILE_ORIGINAL_NAME.getBytes();
 
-        public static MultipartFile buildMultipartFile() {
-            return new MockMultipartFile(
-                    IMAGE_NAME,
-                    IMAGE_ORIGINAL_NAME,
-                    IMAGE_CONTENT_TYPE,
-                    IMAGE_CONTENT
-            );
-        }
-
-        public static MultipartFile buildPhoneMultipartFile(TestPhone phone, ObjectMapper mapper) throws Exception {
-            PhoneCreateRequestDto phoneCreateRequestDto = buildPhoneCreateRequestDto(phone);
-
-            return new MockMultipartFile(
-                    "phone",
-                    "",
-                    MediaType.APPLICATION_JSON.toString(),
-                    mapper.writeValueAsBytes(phoneCreateRequestDto)
-            );
-        }
-
-        public static PhoneCreateRequestDto buildPhoneCreateRequestDto(TestPhone phone) {
-            return new PhoneCreateRequestDto(
-                    phone.name,
-                    phone.description,
-                    phone.price,
-                    phone.brand,
-                    phone.releaseYear
-            );
-        }
 
         static String auth(String token) {
             return "Bearer " + token;
         }
 
+        static PhoneCreateRequestDto buildPhoneCreateRequestDto(TestPhone testPhone) {
+            return new PhoneCreateRequestDto(
+                    testPhone.name,
+                    testPhone.description,
+                    testPhone.price,
+                    testPhone.brand,
+                    testPhone.releaseYear
+            );
+        }
+
+        static PhoneUpdateRequestDto buildPhoneUpdateRequestDto(TestPhone testPhone) {
+            return new PhoneUpdateRequestDto(
+                    testPhone.name,
+                    testPhone.description,
+                    testPhone.price,
+                    testPhone.brand,
+                    testPhone.releaseYear
+            );
+        }
+
+        static MultipartFile buildMultipartFile() {
+            return new MockMultipartFile(
+                    FILE_NAME,
+                    FILE_ORIGINAL_NAME,
+                    FILE_CONTENT_TYPE,
+                    FILE_CONTENT
+            );
+        }
+
+        static MultipartFile buildJsonLikeMultipartFile(byte[] content, String name) {
+            return new MockMultipartFile(
+                    name,
+                    "doesnt_matter",
+                    "application/json",
+                    content
+            );
+        }
+
     }
 
     enum TestPhone {
-        PHONE_1(
-                "Phone_1",
-                "Description_1",
-                new BigDecimal("1000.0"),
-                "Brand_1",
-                2001
-        ),
-        PHONE_2(
-                "Phone_2",
-                "Description_2",
-                new BigDecimal("2000.0"),
-                "Brand_2",
-                2002
-        ),
-        PHONE_3(
-                "Phone_3",
-                null,
-                new BigDecimal("3000.0"),
-                "Brand_3",
-                2003
-        );
+        // Valid phones
+        PHONE_1("iPhone 15", "Latest Apple smartphone", new BigDecimal("999.99"), "Apple", 2024),
+        PHONE_2("Samsung Galaxy S24", "Flagship Samsung phone", new BigDecimal("899.99"), "Samsung", 2024),
+        PHONE_3("Google Pixel 8", "Pure Android experience", new BigDecimal("699.99"), "Google", 2023),
+
+        VALID_PHONE("Valid Phone", "Valid description", new BigDecimal("500.00"), "ValidBrand", 2020),
+        VALID_PHONE_NULL_DESCRIPTION("Valid Phone", null, new BigDecimal("500.00"), "ValidBrand", 2020),
+        VALID_PHONE_BOUNDARY_MIN("Abc", "", new BigDecimal("0.00"), "Abc", 1970),
+        VALID_PHONE_BOUNDARY_MAX("N".repeat(255), "D".repeat(1000), new BigDecimal("99999.99"), "B".repeat(255), 2026),
+
+        // Invalid name
+        INVALID_NAME_NULL(null, "description", new BigDecimal("100.00"), "Brand", 2020),
+        INVALID_NAME_BLANK("", "description", new BigDecimal("100.00"), "Brand", 2020),
+        INVALID_NAME_TOO_SHORT("Ab", "description", new BigDecimal("100.00"), "Brand", 2020),
+        INVALID_NAME_TOO_LONG("N".repeat(256), "description", new BigDecimal("100.00"), "Brand", 2020),
+
+        // Invalid description
+        INVALID_DESCRIPTION_TOO_LONG("Phone", "D".repeat(1001), new BigDecimal("100.00"), "Brand", 2020),
+
+        // Invalid price
+        INVALID_PRICE_NULL("Phone", "description", null, "Brand", 2020),
+        INVALID_PRICE_NEGATIVE("Phone", "description", new BigDecimal("-0.01"), "Brand", 2020),
+
+        // Invalid brand
+        INVALID_BRAND_NULL("Phone", "description", new BigDecimal("100.00"), null, 2020),
+        INVALID_BRAND_BLANK("Phone", "description", new BigDecimal("100.00"), "", 2020),
+        INVALID_BRAND_TOO_SHORT("Phone", "description", new BigDecimal("100.00"), "Ab", 2020),
+        INVALID_BRAND_TOO_LONG("Phone", "description", new BigDecimal("100.00"), "B".repeat(256), 2020),
+
+        // Invalid releaseYear
+        INVALID_YEAR_NULL("Phone", "description", new BigDecimal("100.00"), "Brand", null),
+        INVALID_YEAR_TOO_EARLY("Phone", "description", new BigDecimal("100.00"), "Brand", 1969),
+        INVALID_YEAR_FUTURE("Phone", "description", new BigDecimal("100.00"), "Brand", 2027);
 
         private final String name;
         private final String description;
