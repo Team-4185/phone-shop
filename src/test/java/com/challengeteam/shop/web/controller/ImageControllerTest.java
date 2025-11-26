@@ -61,7 +61,7 @@ class ImageControllerTest {
         imageRepository.deleteAll();
 
         // add test data
-        imageId = imageService.uploadImage(buildMultipartFile(TestImage.IMAGE_1));
+        imageId = imageService.uploadImage(buildMultipartFile(TestImage.IMAGE_1)).getId();
         // IMAGE_3 is unsupported
         unsupportedImageId = loadUnsupportedImage(TestImage.IMAGE_1, TestImage.IMAGE_3);
 
@@ -71,10 +71,7 @@ class ImageControllerTest {
 
     private Long loadUnsupportedImage(TestImage supported, TestImage unsupported) {
         // first load support image
-        Long id = imageService.uploadImage(buildMultipartFile(supported));
-        Image image = imageRepository
-                .findById(id)
-                .orElseThrow();
+        Image image = imageService.uploadImage(buildMultipartFile(supported));
 
         // add unsupported MIMEType
         MIMEType unsupportedType = mimeTypeService.createIfDoesntExist(buildMultipartFile(unsupported));
@@ -83,7 +80,7 @@ class ImageControllerTest {
         image.setMimeType(unsupportedType);
         imageRepository.save(image);
 
-        return id;
+        return image.getId();
     }
 
     @Nested

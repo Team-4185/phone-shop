@@ -224,9 +224,7 @@ class PhoneServiceImplTest {
             Mockito.when(phoneRepository.save(any()))
                     .thenReturn(phone);
             Mockito.when(imageService.uploadImage(any(MultipartFile.class)))
-                    .thenReturn(IMAGE_ID);
-            Mockito.when(imageService.getImageById(IMAGE_ID))
-                    .thenReturn(Optional.of(buildImage()));
+                    .thenReturn(buildImage());
 
             // when
             Long result = phoneService.create(dto, files);
@@ -354,9 +352,7 @@ class PhoneServiceImplTest {
             Mockito.when(phoneRepository.findById(PHONE_ID))
                     .thenReturn(Optional.of(buildPhone(PHONE_ID)));
             Mockito.when(imageService.uploadImage(any(MultipartFile.class)))
-                    .thenReturn(IMAGE_ID);
-            Mockito.when(imageService.getImageById(IMAGE_ID))
-                    .thenReturn(Optional.of(buildImage()));
+                    .thenReturn(buildImage());
 
             // when
             phoneService.addImageToPhone(PHONE_ID, buildMultipartFile());
@@ -500,6 +496,7 @@ class PhoneServiceImplTest {
 
         static Image buildImage() {
             return Image.builder()
+                    .id(IMAGE_ID)
                     .name(FILENAME)
                     .storageKey(ORIGINAL_FILENAME)
                     .size((long) CONTENT.length)
