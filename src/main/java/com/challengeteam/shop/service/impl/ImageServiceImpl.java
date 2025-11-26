@@ -3,11 +3,7 @@ package com.challengeteam.shop.service.impl;
 import com.challengeteam.shop.dto.image.ImageDataDto;
 import com.challengeteam.shop.entity.image.Image;
 import com.challengeteam.shop.entity.image.MIMEType;
-import com.challengeteam.shop.exceptionHandling.exception.CriticalSystemException;
-import com.challengeteam.shop.exceptionHandling.exception.FileUtilityException;
-import com.challengeteam.shop.exceptionHandling.exception.ImageStorageException;
-import com.challengeteam.shop.exceptionHandling.exception.InvalidAPIRequestException;
-import com.challengeteam.shop.exceptionHandling.exception.ResourceNotFoundException;
+import com.challengeteam.shop.exceptionHandling.exception.*;
 import com.challengeteam.shop.persistence.repository.ImageRepository;
 import com.challengeteam.shop.persistence.storage.ImageStorage;
 import com.challengeteam.shop.service.ImageService;
@@ -20,7 +16,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.Arrays;
 import java.util.Objects;
 import java.util.Optional;
 
