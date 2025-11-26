@@ -45,7 +45,7 @@ class PhoneServiceImplTest {
     @InjectMocks private PhoneServiceImpl phoneService;
 
     @Nested
-    class TetPhonesTest {
+    class GetAllPhonesTest {
 
         @Test
         void whenPhonesExist_thenReturnPageWithPhones() {

@@ -174,7 +174,7 @@ class ImageServiceImplTest {
     }
 
     @Nested
-    class DeleteImage {
+    class DeleteImageTest {
 
         @Test
         void whenImageExists_thenDeleteImage() throws ImageStorageException {
