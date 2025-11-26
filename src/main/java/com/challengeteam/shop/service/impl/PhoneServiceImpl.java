@@ -70,10 +70,7 @@ public class PhoneServiceImpl implements PhoneService {
 
         // add images
         for (MultipartFile file : images) {
-            Long imageId = imageService.uploadImage(file);
-            Image image = imageService
-                    .getImageById(imageId)
-                    .orElseThrow(() -> new CriticalSystemException("Not found image after creation, id: " + imageId));
+            Image image = imageService.uploadImage(file);
             image.setPhone(phone);
             imageRepository.save(image);
         }
@@ -121,15 +118,12 @@ public class PhoneServiceImpl implements PhoneService {
                 .orElseThrow(() -> new ResourceNotFoundException("Phone not found with id: " + phoneId));
 
         // create image
-        Long imageId = imageService.uploadImage(newImage);
-        Image image = imageService
-                .getImageById(imageId)
-                .orElseThrow(() -> new CriticalSystemException("Not found image after creation, imageId: " + imageId));
+        Image image = imageService.uploadImage(newImage);
 
         // save
         image.setPhone(phone);
         imageRepository.save(image);
-        log.debug("Successfully added image with id: {} to phone with id: {}", imageId, phoneId);
+        log.debug("Successfully added image with id: {} to phone with id: {}", image.getId(), phoneId);
     }
 
     @Transactional(readOnly = true)

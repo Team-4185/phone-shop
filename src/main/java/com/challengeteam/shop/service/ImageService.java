@@ -10,6 +10,6 @@ public interface ImageService {
 
     Optional<ImageDataDto> downloadImageById(Long id);
     Optional<Image> getImageById(Long id);
-    Long uploadImage(MultipartFile image);
+    Image uploadImage(MultipartFile image);
     void deleteImage(Long imageId);
 }

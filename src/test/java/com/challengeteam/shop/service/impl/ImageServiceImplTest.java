@@ -147,10 +147,10 @@ class ImageServiceImplTest {
                     .thenReturn(buildImage());
 
             // when
-            Long result = imageService.uploadImage(multipartFile);
+            Image result = imageService.uploadImage(multipartFile);
 
             // then
-            assertThat(result).isEqualTo(ID);
+            assertThat(result.getId()).isEqualTo(ID);
         }
 
         @Test

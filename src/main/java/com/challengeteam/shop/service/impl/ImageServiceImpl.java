@@ -74,7 +74,7 @@ public class ImageServiceImpl implements ImageService {
 
     @Transactional
     @Override
-    public Long uploadImage(MultipartFile file) {
+    public Image uploadImage(MultipartFile file) {
         Objects.requireNonNull(file, "file");
 
         imageValidator.validate(file);
@@ -84,7 +84,7 @@ public class ImageServiceImpl implements ImageService {
             imageStorage.putImage(image.getStorageKey(), file);
 
             log.debug("Successfully uploaded image with id {}", image.getId());
-            return image.getId();
+            return image;
         } catch (ImageStorageException e) {
             throw new CriticalSystemException(e.getMessage(), e);
         } catch (FileUtilityException e) {
