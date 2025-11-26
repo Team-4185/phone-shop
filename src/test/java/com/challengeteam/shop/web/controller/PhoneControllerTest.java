@@ -763,51 +763,51 @@ class PhoneControllerTest {
                     .andExpect(status().isForbidden());
         }
 
-        @Nested
-        @DisplayName("POST /api/v1/phones/{id}/add-image")
-        class AddImageToPhone {
-            private static final String URL = "/api/v1/phones/{id}/add-image";
+    }
 
-            @Test
-            void whenPhoneExists_thenAddImageAndReturn204() throws Exception {
-                var request = multipart(URL, phone1)
-                        .file((MockMultipartFile) buildMultipartFile("image"))
-                        .header(HttpHeaders.AUTHORIZATION, auth(token));
+    @Nested
+    @DisplayName("POST /api/v1/phones/{id}/add-image")
+    class AddImageToPhone {
+        private static final String URL = "/api/v1/phones/{id}/add-image";
 
-                mockMvc.perform(request)
-                        .andExpect(status().isNoContent());
-            }
+        @Test
+        void whenPhoneExists_thenAddImageAndReturn204() throws Exception {
+            var request = multipart(URL, phone1)
+                    .file((MockMultipartFile) buildMultipartFile("image"))
+                    .header(HttpHeaders.AUTHORIZATION, auth(token));
 
-            @Test
-            void whenPhoneDoesntExists_thenReturn404() throws Exception {
-                var request = multipart(URL, NON_EXISTING_ID)
-                        .file((MockMultipartFile) buildMultipartFile("image"))
-                        .header(HttpHeaders.AUTHORIZATION, auth(token));
+            mockMvc.perform(request)
+                    .andExpect(status().isNoContent());
+        }
 
-                mockMvc.perform(request)
-                        .andExpect(status().isNotFound());
-            }
+        @Test
+        void whenPhoneDoesntExists_thenReturn404() throws Exception {
+            var request = multipart(URL, NON_EXISTING_ID)
+                    .file((MockMultipartFile) buildMultipartFile("image"))
+                    .header(HttpHeaders.AUTHORIZATION, auth(token));
 
-            @Test
-            void whenImageIsMissing_thenReturn400() throws Exception {
-                var request = multipart(URL, phone1)
-                        .header(HttpHeaders.AUTHORIZATION, auth(token));
+            mockMvc.perform(request)
+                    .andExpect(status().isNotFound());
+        }
 
-                mockMvc.perform(request)
-                        .andExpect(status().isBadRequest());
+        @Test
+        void whenImageIsMissing_thenReturn400() throws Exception {
+            var request = multipart(URL, phone1)
+                    .header(HttpHeaders.AUTHORIZATION, auth(token));
 
-            }
+            mockMvc.perform(request)
+                    .andExpect(status().isBadRequest());
 
-            @Test
-            void whenAddUnsupportedImage_thenReturn400() throws Exception {
-                var request = multipart(URL, phone1)
-                        .file((MockMultipartFile) buildUnsupportedMultipartFile("image"))
-                        .header(HttpHeaders.AUTHORIZATION, auth(token));
+        }
 
-                mockMvc.perform(request)
-                        .andExpect(status().isBadRequest());
-            }
+        @Test
+        void whenAddUnsupportedImage_thenReturn400() throws Exception {
+            var request = multipart(URL, phone1)
+                    .file((MockMultipartFile) buildUnsupportedMultipartFile("image"))
+                    .header(HttpHeaders.AUTHORIZATION, auth(token));
 
+            mockMvc.perform(request)
+                    .andExpect(status().isBadRequest());
         }
 
     }
