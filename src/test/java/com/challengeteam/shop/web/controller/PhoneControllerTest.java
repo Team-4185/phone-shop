@@ -694,13 +694,13 @@ class PhoneControllerTest {
 
         @Test
         void whenRequestMissingToken_thenStatus403() throws Exception {
-            mockMvc.perform(get(URL, phone1))
+            mockMvc.perform(delete(URL, phone1))
                     .andExpect(status().isForbidden());
         }
 
         @Test
         void whenRequestHasInvalidToken_thenStatus403() throws Exception {
-            mockMvc.perform(get(URL, phone1)
+            mockMvc.perform(delete(URL, phone1)
                             .header(HttpHeaders.AUTHORIZATION, auth("some_invalid_text")))
                     .andExpect(status().isForbidden());
         }
