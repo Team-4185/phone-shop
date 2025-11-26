@@ -94,7 +94,7 @@ public class TestDataServiceImpl implements TestDataService {
         List<Long> createdPhones = new ArrayList<>(amount);
         for (PhoneCreateRequestDto phone : phones) {
             try {
-                Long id = phoneService.create(phone);
+                Long id = phoneService.create(phone, new ArrayList<>());
                 createdPhones.add(id);
             } catch (Exception e) {
                 log.debug("Test data exception: failed to create fake phone {}, because {}", phone, e.getMessage());
