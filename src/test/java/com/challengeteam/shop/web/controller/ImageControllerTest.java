@@ -185,6 +185,19 @@ class ImageControllerTest {
                     .andExpect(status().isNotFound());
         }
 
+        @Test
+        void whenRequestMissingToken_thenStatus403() throws Exception {
+            mockMvc.perform(delete(URL, imageId))
+                    .andExpect(status().isForbidden());
+        }
+
+        @Test
+        void whenRequestHasInvalidToken_thenStatus403() throws Exception {
+            mockMvc.perform(delete(URL, imageId)
+                            .header(HttpHeaders.AUTHORIZATION, auth("some_invalid_text")))
+                    .andExpect(status().isForbidden());
+        }
+
     }
 
     static class TestResources {
