@@ -531,46 +531,22 @@ class PhoneControllerTest {
 
         @Test
         void whenNameIsBlank_thenStatus400() throws Exception {
-            PhoneUpdateRequestDto request = buildPhoneUpdateRequestDto(TestPhone.INVALID_NAME_BLANK);
-
-            mockMvc.perform(put(URL, phone1)
-                            .header(HttpHeaders.AUTHORIZATION, auth(token))
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(request)))
-                    .andExpect(status().isBadRequest());
+            expect400WithInvalidBody(TestPhone.INVALID_NAME_BLANK);
         }
 
         @Test
         void whenNameTooShort_thenStatus400() throws Exception {
-            PhoneUpdateRequestDto request = buildPhoneUpdateRequestDto(TestPhone.INVALID_NAME_TOO_SHORT);
-
-            mockMvc.perform(put(URL, phone1)
-                            .header(HttpHeaders.AUTHORIZATION, auth(token))
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(request)))
-                    .andExpect(status().isBadRequest());
+            expect400WithInvalidBody(TestPhone.INVALID_NAME_TOO_SHORT);
         }
 
         @Test
         void whenNameTooLong_thenStatus400() throws Exception {
-            PhoneUpdateRequestDto request = buildPhoneUpdateRequestDto(TestPhone.INVALID_NAME_TOO_LONG);
-
-            mockMvc.perform(put(URL, phone1)
-                            .header(HttpHeaders.AUTHORIZATION, auth(token))
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(request)))
-                    .andExpect(status().isBadRequest());
+            expect400WithInvalidBody(TestPhone.INVALID_NAME_TOO_LONG);
         }
 
         @Test
         void whenDescriptionTooLong_thenStatus400() throws Exception {
-            PhoneUpdateRequestDto request = buildPhoneUpdateRequestDto(TestPhone.INVALID_DESCRIPTION_TOO_LONG);
-
-            mockMvc.perform(put(URL, phone1)
-                            .header(HttpHeaders.AUTHORIZATION, auth(token))
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(request)))
-                    .andExpect(status().isBadRequest());
+            expect400WithInvalidBody(TestPhone.INVALID_DESCRIPTION_TOO_LONG);
         }
 
         @Test
@@ -586,13 +562,7 @@ class PhoneControllerTest {
 
         @Test
         void whenPriceIsNegative_thenStatus400() throws Exception {
-            PhoneUpdateRequestDto request = buildPhoneUpdateRequestDto(TestPhone.INVALID_PRICE_NEGATIVE);
-
-            mockMvc.perform(put(URL, phone1)
-                            .header(HttpHeaders.AUTHORIZATION, auth(token))
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(request)))
-                    .andExpect(status().isBadRequest());
+            expect400WithInvalidBody(TestPhone.INVALID_PRICE_NEGATIVE);
         }
 
         @Test
@@ -608,35 +578,17 @@ class PhoneControllerTest {
 
         @Test
         void whenBrandIsBlank_thenStatus400() throws Exception {
-            PhoneUpdateRequestDto request = buildPhoneUpdateRequestDto(TestPhone.INVALID_BRAND_BLANK);
-
-            mockMvc.perform(put(URL, phone1)
-                            .header(HttpHeaders.AUTHORIZATION, auth(token))
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(request)))
-                    .andExpect(status().isBadRequest());
+            expect400WithInvalidBody(TestPhone.INVALID_BRAND_BLANK);
         }
 
         @Test
         void whenBrandTooShort_thenStatus400() throws Exception {
-            PhoneUpdateRequestDto request = buildPhoneUpdateRequestDto(TestPhone.INVALID_BRAND_TOO_SHORT);
-
-            mockMvc.perform(put(URL, phone1)
-                            .header(HttpHeaders.AUTHORIZATION, auth(token))
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(request)))
-                    .andExpect(status().isBadRequest());
+            expect400WithInvalidBody(TestPhone.INVALID_BRAND_TOO_SHORT);
         }
 
         @Test
         void whenBrandTooLong_thenStatus400() throws Exception {
-            PhoneUpdateRequestDto request = buildPhoneUpdateRequestDto(TestPhone.INVALID_BRAND_TOO_LONG);
-
-            mockMvc.perform(put(URL, phone1)
-                            .header(HttpHeaders.AUTHORIZATION, auth(token))
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(request)))
-                    .andExpect(status().isBadRequest());
+            expect400WithInvalidBody(TestPhone.INVALID_BRAND_TOO_LONG);
         }
 
         @Test
@@ -652,18 +604,16 @@ class PhoneControllerTest {
 
         @Test
         void whenReleaseYearTooEarly_thenStatus400() throws Exception {
-            PhoneUpdateRequestDto request = buildPhoneUpdateRequestDto(TestPhone.INVALID_YEAR_TOO_EARLY);
-
-            mockMvc.perform(put(URL, phone1)
-                            .header(HttpHeaders.AUTHORIZATION, auth(token))
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(request)))
-                    .andExpect(status().isBadRequest());
+            expect400WithInvalidBody(TestPhone.INVALID_YEAR_TOO_EARLY);
         }
 
         @Test
         void whenReleaseYearInFuture_thenStatus400() throws Exception {
-            PhoneUpdateRequestDto request = buildPhoneUpdateRequestDto(TestPhone.INVALID_YEAR_FUTURE);
+            expect400WithInvalidBody(TestPhone.INVALID_YEAR_FUTURE);
+        }
+
+        private void expect400WithInvalidBody(TestPhone phone) throws Exception {
+            PhoneUpdateRequestDto request = buildPhoneUpdateRequestDto(phone);
 
             mockMvc.perform(put(URL, phone1)
                             .header(HttpHeaders.AUTHORIZATION, auth(token))
@@ -671,6 +621,7 @@ class PhoneControllerTest {
                             .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isBadRequest());
         }
+
     }
 
     @Nested
