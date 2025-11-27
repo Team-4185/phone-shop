@@ -30,6 +30,10 @@ import java.util.Date;
 @RequiredArgsConstructor
 public class JwtServiceImpl implements JwtService {
 
+    private static final String TOKEN_TYPE_CLAIM = "tokenType";
+    private static final String ACCESS_TOKEN_TYPE = "ACCESS";
+    private static final String REFRESH_TOKEN_TYPE = "REFRESH";
+
     private final JwtProperties jwtProperties;
 
     private PrivateKey privateKey;
@@ -64,6 +68,7 @@ public class JwtServiceImpl implements JwtService {
                 .subject(user.getEmail())
                 .add("userId", user.getId())
                 .add("role", user.getRole().getName())
+                .add(TOKEN_TYPE_CLAIM, ACCESS_TOKEN_TYPE)
                 .build();
 
         Instant expiration = Instant.now().plus(jwtProperties.getAccessTokenExpiration(), ChronoUnit.MINUTES);
@@ -76,6 +81,7 @@ public class JwtServiceImpl implements JwtService {
                 .subject(user.getEmail())
                 .add("userId", user.getId())
                 .add("role", user.getRole().getName())
+                .add(TOKEN_TYPE_CLAIM, REFRESH_TOKEN_TYPE)
                 .build();
 
         Instant expiration = Instant.now().plus(jwtProperties.getRefreshTokenExpiration(), ChronoUnit.HOURS);
@@ -104,6 +110,20 @@ public class JwtServiceImpl implements JwtService {
         } catch (InvalidTokenException e) {
             return false;
         }
+    }
+
+    @Override
+    public boolean isAccessToken(String token) {
+        Claims claims = getClaims(token);
+        String tokenType = claims.get(TOKEN_TYPE_CLAIM, String.class);
+        return ACCESS_TOKEN_TYPE.equals(tokenType);
+    }
+
+    @Override
+    public boolean isRefreshToken(String token) {
+        Claims claims = getClaims(token);
+        String tokenType = claims.get(TOKEN_TYPE_CLAIM, String.class);
+        return REFRESH_TOKEN_TYPE.equals(tokenType);
     }
 
     @Override

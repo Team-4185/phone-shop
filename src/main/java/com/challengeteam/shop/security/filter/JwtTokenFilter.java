@@ -1,5 +1,6 @@
 package com.challengeteam.shop.security.filter;
 
+import com.challengeteam.shop.exceptionHandling.exception.InvalidTokenException;
 import com.challengeteam.shop.service.JwtService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -8,7 +9,6 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -35,6 +35,9 @@ public class JwtTokenFilter extends OncePerRequestFilter {
         }
 
         if (bearerToken != null && jwtService.isValid(bearerToken)) {
+            if (!jwtService.isAccessToken(bearerToken)) {
+                throw new InvalidTokenException("Invalid token type. Access token required.");
+            }
             authenticateByToken(bearerToken);
         }
 

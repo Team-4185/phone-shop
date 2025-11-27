@@ -67,6 +67,10 @@ public class JwtAuthorizationServiceImpl implements JwtAuthorizationService {
     public JwtResponseDto refresh(String refreshToken) {
         Objects.requireNonNull(refreshToken, "refreshToken");
 
+        if (!jwtService.isRefreshToken(refreshToken)) {
+            throw new InvalidTokenException("Invalid token type. Refresh token required.");
+        }
+
         if (jwtService.isValid(refreshToken)) {
             String email = jwtService.getEmailFromToken(refreshToken);
             User user = userService
