@@ -13,6 +13,10 @@ public interface JwtService {
 
     boolean isValid(String token);
 
+    boolean isAccessToken(String token);
+
+    boolean isRefreshToken(String token);
+
     String getEmailFromToken(String token);
 
 }

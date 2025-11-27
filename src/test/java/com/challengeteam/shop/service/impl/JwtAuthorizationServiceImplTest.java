@@ -191,6 +191,8 @@ public class JwtAuthorizationServiceImplTest {
             );
 
             // mockito
+            Mockito.when(jwtService.isRefreshToken(refreshToken))
+                    .thenReturn(true);
             Mockito.when(jwtService.isValid(refreshToken))
                     .thenReturn(true);
             Mockito.when(jwtService.getEmailFromToken(refreshToken))
@@ -212,11 +214,26 @@ public class JwtAuthorizationServiceImplTest {
         }
 
         @Test
+        void whenTokenIsNotRefresh_thenThrowException() throws Exception {
+            // given
+            String refreshToken = "refreshToken";
+
+            // mockito
+            Mockito.when(jwtService.isRefreshToken(refreshToken))
+                    .thenReturn(false);
+
+            // when + then
+            assertThrows(InvalidTokenException.class, () -> jwtAuthorizationService.refresh(refreshToken));
+        }
+
+        @Test
         void whenTokenIsNotValid_thenThrowException() throws Exception {
             // given
             String refreshToken = "refreshToken";
 
             // mockito
+            Mockito.when(jwtService.isRefreshToken(refreshToken))
+                    .thenReturn(true);
             Mockito.when(jwtService.isValid(refreshToken))
                     .thenReturn(false);
 
@@ -231,6 +248,8 @@ public class JwtAuthorizationServiceImplTest {
             String email = "jeremy@gamil.com";
 
             // mockito
+            Mockito.when(jwtService.isRefreshToken(refreshToken))
+                    .thenReturn(true);
             Mockito.when(jwtService.isValid(refreshToken))
                     .thenReturn(true);
             Mockito.when(jwtService.getEmailFromToken(refreshToken))
