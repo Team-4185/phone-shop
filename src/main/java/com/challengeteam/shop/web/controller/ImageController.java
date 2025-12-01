@@ -58,15 +58,4 @@ public class ImageController {
         return ResponseEntity.ok(body);
     }
 
-    @Operation(
-            summary = "Delete image by id",
-            description = "Deletes image by id"
-    )
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteImage(@PathVariable Long id) {
-        imageService.deleteImage(id);
-
-        return ResponseEntity.noContent().build();
-    }
-
 }

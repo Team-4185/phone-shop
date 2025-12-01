@@ -140,4 +140,25 @@ public class PhoneServiceImpl implements PhoneService {
         return imageRepository.getImagesByPhone_Id(phoneId);
     }
 
+    @Transactional
+    @Override
+    public void deletePhonesImageById(Long phoneId, Long imageId) {
+        Objects.requireNonNull(phoneId, "phoneId");
+        Objects.requireNonNull(imageId, "imageId");
+
+        // verify phone has specific image
+        if (!phoneRepository.existsPhoneByIdWithImage(phoneId, imageId)) {
+            String message = "Not found phone with id: %s that contains image with id: %s".formatted(phoneId, imageId);
+            throw new ResourceNotFoundException(message);
+        }
+
+        // delete
+        try {
+            imageService.deleteImage(imageId);
+        } catch (ResourceNotFoundException e) {
+            String message = "Not found image by id: %s after verifying".formatted(imageId);
+            throw new CriticalSystemException(message);
+        }
+    }
+
 }

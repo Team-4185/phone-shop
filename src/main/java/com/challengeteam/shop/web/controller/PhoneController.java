@@ -139,4 +139,16 @@ public class PhoneController {
                 .build();
     }
 
+    @Operation(
+            summary = "Delete phone's image by id",
+            description = "Deletes phone's image by id."
+    )
+    @DeleteMapping("/{id}/images/{imageId}")
+    public ResponseEntity<Void> deletePhonesImageById(@PathVariable Long id,
+                                            @PathVariable Long imageId) {
+        phoneService.deletePhonesImageById(id, imageId);
+
+        return ResponseEntity.noContent().build();
+    }
+
 }
