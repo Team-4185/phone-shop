@@ -5,6 +5,7 @@ import com.challengeteam.shop.dto.phone.PhoneUpdateRequestDto;
 import com.challengeteam.shop.entity.image.Image;
 import com.challengeteam.shop.entity.image.MIMEType;
 import com.challengeteam.shop.entity.phone.Phone;
+import com.challengeteam.shop.exceptionHandling.exception.CriticalSystemException;
 import com.challengeteam.shop.exceptionHandling.exception.ResourceNotFoundException;
 import com.challengeteam.shop.persistence.repository.ImageRepository;
 import com.challengeteam.shop.persistence.repository.PhoneRepository;
@@ -432,6 +433,75 @@ class PhoneServiceImplTest {
             // when + then
             assertThatThrownBy(() -> phoneService.getPhoneImages(null))
                     .isInstanceOf(NullPointerException.class);
+        }
+
+    }
+
+    @Nested
+    class DeletePhonesImageByIdTest {
+
+        @Test
+        void whenPhoneExistsAndContainsImage_thenDeleteImage() {
+            // mockito
+            Mockito.when(phoneRepository.existsPhoneByIdWithImage(PHONE_ID, IMAGE_ID))
+                    .thenReturn(true);
+
+            // when
+            phoneService.deletePhonesImageById(PHONE_ID, IMAGE_ID);
+
+            // then
+            Mockito.verify(imageService).deleteImage(IMAGE_ID);
+        }
+
+        @Test
+        void whenExistsButDoesntContainImage_thenThrowException() {
+            // mockito
+            Mockito.when(phoneRepository.existsPhoneByIdWithImage(PHONE_ID, IMAGE_ID))
+                        .thenReturn(false);
+
+            // when + then
+            assertThatThrownBy(() -> phoneService.deletePhonesImageById(PHONE_ID, IMAGE_ID))
+                    .isInstanceOf(ResourceNotFoundException.class);
+        }
+
+        @Test
+        void whenDoesntExist_thenThrowException() {
+            // mockito
+            Mockito.when(phoneRepository.existsPhoneByIdWithImage(PHONE_ID, IMAGE_ID))
+                    .thenReturn(false);
+
+            // when + then
+            assertThatThrownBy(() -> phoneService.deletePhonesImageById(PHONE_ID, IMAGE_ID))
+                    .isInstanceOf(ResourceNotFoundException.class);
+        }
+
+        @Test
+        void whenNotFoundImageAfterVerifying_thenThrowException() {
+            // mockito
+            Mockito.when(phoneRepository.existsPhoneByIdWithImage(PHONE_ID, IMAGE_ID))
+                    .thenReturn(true);
+            Mockito.doThrow(ResourceNotFoundException.class)
+                    .when(imageService)
+                    .deleteImage(IMAGE_ID);
+
+            // when + then
+            assertThatThrownBy(() -> phoneService.deletePhonesImageById(PHONE_ID, IMAGE_ID))
+                    .isInstanceOf(CriticalSystemException.class);
+        }
+
+        @Test
+        void whenParameterPhoneIdIsNull_thenThrowException() {
+            // when + then
+            assertThatThrownBy(() -> phoneService.deletePhonesImageById(null, IMAGE_ID))
+                    .isInstanceOf(NullPointerException.class);
+        }
+
+        @Test
+        void whenParameterImageIdIsNull_thenThrowException() {
+            // when + then
+            assertThatThrownBy(() -> phoneService.deletePhonesImageById(PHONE_ID, null))
+                    .isInstanceOf(NullPointerException.class);
+
         }
 
     }

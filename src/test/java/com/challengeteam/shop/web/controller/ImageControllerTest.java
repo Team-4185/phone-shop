@@ -166,40 +166,6 @@ class ImageControllerTest {
         }
     }
 
-    @Nested
-    @DisplayName("DELETE /api/v1/images/{id}")
-    class DeleteImageTest {
-        private static final String URL = "/api/v1/images/{id}";
-
-        @Test
-        void whenImageExists_thenDeleteAndReturn204() throws Exception {
-            mockMvc.perform(delete(URL, imageId)
-                            .header(HttpHeaders.AUTHORIZATION, auth(accessToken)))
-                    .andExpect(status().isNoContent());
-        }
-
-        @Test
-        void whenImageDoesntExist_thenReturn404() throws Exception {
-            mockMvc.perform(delete(URL, NON_EXISTING_ID)
-                            .header(HttpHeaders.AUTHORIZATION, auth(accessToken)))
-                    .andExpect(status().isNotFound());
-        }
-
-        @Test
-        void whenRequestMissingToken_thenStatus403() throws Exception {
-            mockMvc.perform(delete(URL, imageId))
-                    .andExpect(status().isForbidden());
-        }
-
-        @Test
-        void whenRequestHasInvalidToken_thenStatus403() throws Exception {
-            mockMvc.perform(delete(URL, imageId)
-                            .header(HttpHeaders.AUTHORIZATION, auth("some_invalid_text")))
-                    .andExpect(status().isForbidden());
-        }
-
-    }
-
     static class TestResources {
         static final long NON_EXISTING_ID = 99_999L;
 

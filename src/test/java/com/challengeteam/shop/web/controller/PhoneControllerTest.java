@@ -2,12 +2,12 @@ package com.challengeteam.shop.web.controller;
 
 import com.challengeteam.shop.dto.phone.PhoneCreateRequestDto;
 import com.challengeteam.shop.dto.phone.PhoneUpdateRequestDto;
+import com.challengeteam.shop.entity.image.Image;
 import com.challengeteam.shop.persistence.repository.PhoneRepository;
 import com.challengeteam.shop.service.PhoneService;
 import com.challengeteam.shop.testContainer.ContainerExtension;
 import com.challengeteam.shop.testContainer.TestContextConfigurator;
 import com.challengeteam.shop.web.TestAuthHelper;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -763,8 +763,77 @@ class PhoneControllerTest {
 
     }
 
+    @Nested
+    @DisplayName("DELETE /api/v1/phones/{id}/images/{imageId}")
+    class DeletePhonesImageByIdTest {
+        private static final String URL = "/api/v1/phones/{id}/images/{imageId}";
+        private List<Image> phone2Images;
+        private List<Image> phone3Images;
+
+        @BeforeEach
+        void getImages() {
+            // after phone was inserted with images we retrieve list of images
+            phone3Images = phoneService.getPhoneImages(phone3);
+
+            // get foreign images to try to delete them
+            phone2Images = phoneService.getPhoneImages(phone2);
+        }
+
+        @Test
+        void whenPhoneExistsAndHaveImage_thenDeleteImageAndReturn204() throws Exception {
+            var request = delete(URL, phone3, phone3Images.get(0).getId())
+                    .header(HttpHeaders.AUTHORIZATION, auth(token));
+
+            mockMvc.perform(request)
+                    .andExpect(status().isNoContent());
+        }
+
+        @Test
+        void whenPhoneDoesntExist_thenReturn404() throws Exception {
+            var request = delete(URL, NON_EXISTING_ID, phone3Images.get(0).getId())
+                    .header(HttpHeaders.AUTHORIZATION, auth(token));
+
+            mockMvc.perform(request)
+                    .andExpect(status().isNotFound());
+        }
+
+        @Test
+        void whenImageDoesntExist_thenReturn404() throws Exception {
+            var request = delete(URL, phone3, NON_EXISTING_IMAGE_ID)
+                    .header(HttpHeaders.AUTHORIZATION, auth(token));
+
+            mockMvc.perform(request)
+                    .andExpect(status().isNotFound());
+        }
+
+        @Test
+        void whenTryToDeleteForeignImage_thenReturn400() throws Exception {
+            // use phone3, but delete image from phone2
+            var request = delete(URL, phone3, phone2Images.get(0).getId())
+                    .header(HttpHeaders.AUTHORIZATION, auth(token));
+
+            mockMvc.perform(request)
+                    .andExpect(status().isNotFound());
+        }
+
+        @Test
+        void whenRequestMissingToken_thenStatus403() throws Exception {
+            mockMvc.perform(delete(URL, phone3, phone3Images.get(0).getId()))
+                    .andExpect(status().isForbidden());
+        }
+
+        @Test
+        void whenRequestHasInvalidToken_thenStatus403() throws Exception {
+            mockMvc.perform(delete(URL, phone3, phone3Images.get(0).getId())
+                            .header(HttpHeaders.AUTHORIZATION, auth("some_invalid_text")))
+                    .andExpect(status().isForbidden());
+        }
+
+    }
+
     static class TestResources {
         static final long NON_EXISTING_ID = 99_999L;
+        static final long NON_EXISTING_IMAGE_ID = 99_999L;
 
         static final String FILE_ORIGINAL_NAME = "file.jpeg";
         static final String FILE_CONTENT_TYPE = "image/jpeg";
