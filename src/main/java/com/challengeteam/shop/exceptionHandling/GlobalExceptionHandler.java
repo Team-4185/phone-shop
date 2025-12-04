@@ -1,15 +1,20 @@
 package com.challengeteam.shop.exceptionHandling;
 
+import com.challengeteam.shop.dto.validation.ValidationDetailsDto;
 import com.challengeteam.shop.exceptionHandling.exception.*;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.ObjectError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
+import org.springframework.web.multipart.support.MissingServletRequestPartException;
+
+import java.util.List;
 
 @Slf4j
 @RestControllerAdvice
@@ -251,12 +256,19 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ProblemDetail> handleValidationExceptions(MethodArgumentNotValidException e) {
+    public ResponseEntity<ProblemDetail> handleMethodArgumentNotValidException(MethodArgumentNotValidException e) {
         log.warn("Validation error: {}", e.getMessage());
+
+        String parameterName = e.getParameter().getParameterName();
+        List<String> errorMessages = e.getAllErrors().stream()
+                .map(ObjectError::getDefaultMessage)
+                .toList();
+        int countErrors = e.getErrorCount();
 
         var problem = ProblemDetail.forStatus(HttpStatus.BAD_REQUEST.value());
         problem.setTitle("Validation Failed");
-        problem.setDetail(e.getMessage());
+        problem.setDetail("Request parameters have " + countErrors + " validation problems");
+        problem.setProperty("validationDetails", new ValidationDetailsDto(parameterName, errorMessages));
 
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
@@ -264,7 +276,7 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(ConstraintViolationException.class)
-    public ResponseEntity<ProblemDetail> handleConstraintViolation(ConstraintViolationException e) {
+    public ResponseEntity<ProblemDetail> handleConstraintViolationException(ConstraintViolationException e) {
         log.warn("Constraint violation: {}", e.getMessage());
 
         var problem = ProblemDetail.forStatus(HttpStatus.BAD_REQUEST.value());
@@ -274,6 +286,15 @@ public class GlobalExceptionHandler {
         return ResponseEntity.badRequest().body(problem);
     }
 
+    @ExceptionHandler(MissingServletRequestPartException.class)
+    public ResponseEntity<ProblemDetail> handleMissingServletRequestPartException(MissingServletRequestPartException e) {
+        log.warn("4xx exception: {}", e.getMessage());
 
+        var problem = ProblemDetail.forStatus(HttpStatus.BAD_REQUEST.value());
+        problem.setTitle("Missing Request Part");
+        problem.setDetail(e.getMessage());
+
+        return ResponseEntity.badRequest().body(problem);
+    }
 
 }

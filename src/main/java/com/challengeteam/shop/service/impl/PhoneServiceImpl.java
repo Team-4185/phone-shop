@@ -2,9 +2,13 @@ package com.challengeteam.shop.service.impl;
 
 import com.challengeteam.shop.dto.phone.PhoneCreateRequestDto;
 import com.challengeteam.shop.dto.phone.PhoneUpdateRequestDto;
+import com.challengeteam.shop.entity.image.Image;
 import com.challengeteam.shop.entity.phone.Phone;
+import com.challengeteam.shop.exceptionHandling.exception.CriticalSystemException;
 import com.challengeteam.shop.exceptionHandling.exception.ResourceNotFoundException;
+import com.challengeteam.shop.persistence.repository.ImageRepository;
 import com.challengeteam.shop.persistence.repository.PhoneRepository;
+import com.challengeteam.shop.service.ImageService;
 import com.challengeteam.shop.service.PhoneService;
 import com.challengeteam.shop.service.impl.merger.PhoneMerger;
 import lombok.RequiredArgsConstructor;
@@ -14,7 +18,9 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -22,10 +28,11 @@ import java.util.Optional;
 @Service
 @RequiredArgsConstructor
 public class PhoneServiceImpl implements PhoneService {
-
     private final PhoneRepository phoneRepository;
-
     private final PhoneMerger phoneMerger;
+    private final ImageService imageService;
+    private final ImageRepository imageRepository;
+
 
     @Transactional(readOnly = true)
     @Override
@@ -46,9 +53,11 @@ public class PhoneServiceImpl implements PhoneService {
 
     @Transactional
     @Override
-    public Long create(PhoneCreateRequestDto phoneCreateRequestDto) {
+    public Long create(PhoneCreateRequestDto phoneCreateRequestDto, List<MultipartFile> images) {
         Objects.requireNonNull(phoneCreateRequestDto, "phoneCreateRequestDto");
+        Objects.requireNonNull(images, "images");
 
+        // create phone
         var phone = Phone.builder()
                 .name(phoneCreateRequestDto.name())
                 .description(phoneCreateRequestDto.description())
@@ -58,7 +67,15 @@ public class PhoneServiceImpl implements PhoneService {
                 .build();
 
         phone = phoneRepository.save(phone);
-        log.debug("Created new phone: {}", phone);
+
+        // add images
+        for (MultipartFile file : images) {
+            Image image = imageService.uploadImage(file);
+            image.setPhone(phone);
+            imageRepository.save(image);
+        }
+
+        log.debug("Created new phone with id: {} with images: {}", phone, images.size());
         return phone.getId();
     }
 
@@ -87,6 +104,61 @@ public class PhoneServiceImpl implements PhoneService {
 
         phoneRepository.deleteById(id);
         log.debug("Deleted phone with id: {}", id);
+    }
+
+    @Transactional
+    @Override
+    public void addImageToPhone(Long phoneId, MultipartFile newImage) {
+        Objects.requireNonNull(phoneId, "phoneId");
+        Objects.requireNonNull(newImage, "newImage");
+
+        // get phone
+        Phone phone = phoneRepository
+                .findById(phoneId)
+                .orElseThrow(() -> new ResourceNotFoundException("Phone not found with id: " + phoneId));
+
+        // create image
+        Image image = imageService.uploadImage(newImage);
+
+        // save
+        image.setPhone(phone);
+        imageRepository.save(image);
+        log.debug("Successfully added image with id: {} to phone with id: {}", image.getId(), phoneId);
+    }
+
+    @Transactional(readOnly = true)
+    @Override
+    public List<Image> getPhoneImages(Long phoneId) {
+        Objects.requireNonNull(phoneId, "phoneId");
+
+        // verify that phone exists
+        phoneRepository
+                .findById(phoneId)
+                .orElseThrow(() -> new ResourceNotFoundException("Not found phone with id: " + phoneId));
+
+        log.debug("Get list of images of phone with id: {}", phoneId);
+        return imageRepository.getImagesByPhone_Id(phoneId);
+    }
+
+    @Transactional
+    @Override
+    public void deletePhonesImageById(Long phoneId, Long imageId) {
+        Objects.requireNonNull(phoneId, "phoneId");
+        Objects.requireNonNull(imageId, "imageId");
+
+        // verify phone has specific image
+        if (!phoneRepository.existsPhoneByIdWithImage(phoneId, imageId)) {
+            String message = "Not found phone with id: %s that contains image with id: %s".formatted(phoneId, imageId);
+            throw new ResourceNotFoundException(message);
+        }
+
+        // delete
+        try {
+            imageService.deleteImage(imageId);
+        } catch (ResourceNotFoundException e) {
+            String message = "Not found image by id: %s after verifying".formatted(imageId);
+            throw new CriticalSystemException(message);
+        }
     }
 
 }

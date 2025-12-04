@@ -94,7 +94,7 @@ public class TestDataServiceImpl implements TestDataService {
         List<Long> createdPhones = new ArrayList<>(amount);
         for (PhoneCreateRequestDto phone : phones) {
             try {
-                Long id = phoneService.create(phone);
+                Long id = phoneService.create(phone, new ArrayList<>());
                 createdPhones.add(id);
             } catch (Exception e) {
                 log.debug("Test data exception: failed to create fake phone {}, because {}", phone, e.getMessage());
@@ -122,7 +122,7 @@ public class TestDataServiceImpl implements TestDataService {
 
     private static class UserGenerator {
         public final static String GENERATOR_URL = "https://randomuser.me";
-        public final static String DEFAULT_PASSWORD = "pass1234";
+        public final static String DEFAULT_PASSWORD = "Password1234!";
         public final static int API_RESTRICTION = 5_000;
         private final RestClient client;
         private final ObjectMapper objectMapper;

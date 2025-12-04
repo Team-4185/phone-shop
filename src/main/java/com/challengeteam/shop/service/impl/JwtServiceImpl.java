@@ -96,8 +96,8 @@ public class JwtServiceImpl implements JwtService {
         return new JwtResponseDto(
                 user.getId(),
                 user.getEmail(),
-                newRefreshToken,
-                newAccessToken
+                newAccessToken,
+                newRefreshToken
         );
     }
 

@@ -7,9 +7,9 @@ import org.mapstruct.Mapper;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
-import org.springframework.web.util.UriComponentsBuilder;
 
 import java.net.URI;
+import java.util.List;
 
 @Mapper(componentModel = "spring")
 public interface ImageMapper {
@@ -26,11 +26,14 @@ public interface ImageMapper {
                 .toUri();
 
         return new ImageMetadataResponseDto(
+                image.getId(),
                 image.getName(),
                 uri.toString(),
                 image.getSize(),
                 image.getMimeType().getType()
         );
     }
+
+    List<ImageMetadataResponseDto> toListOfMetadata(List<Image> images);
 
 }
