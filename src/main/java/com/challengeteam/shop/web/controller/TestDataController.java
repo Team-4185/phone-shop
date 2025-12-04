@@ -19,8 +19,9 @@ public class TestDataController {
     @Operation(
             deprecated = true,
             summary = "temporal: Endpoint for creating fake users",
-            description = "Creates amount of fake users. This endpoint is going to be removed" +
-                          " in the future. There is a limit to create at the same time: 1_000."
+            description = "Creates amount of fake users. This endpoint is going to be removed " +
+                          "in the future. There is a limit to create at the same time: 1_000. " +
+                          "For each generated user password is: Password1234!"
     )
     @PostMapping("/generate-users/{amount}")
     public ResponseEntity<TestDataResponse> createUsers(@PathVariable int amount) {
@@ -33,8 +34,8 @@ public class TestDataController {
     @Operation(
             deprecated = true,
             summary = "temporal: Endpoint for creating fake phones",
-            description = "Creates amount of fake phones. This endpoint is going to be removed" +
-                          " in the future. There is a limit to create at the same time: 10_000."
+            description = "Creates amount of fake phones. This endpoint is going to be removed " +
+                          "in the future. There is a limit to create at the same time: 10_000."
     )
     @PostMapping("/generate-phones/{amount}")
     public ResponseEntity<TestDataResponse> createPhones(@PathVariable int amount) {
