@@ -12,14 +12,14 @@ public record UserRegisterRequestDto(
         @NotBlank(message = "Password must be present")
         @Size(min = 8, max = 100, message = "Password length must be between {min} and {max}")
         @Pattern(
-                regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[!@#$%^&*])[a-zA-Z0-9!@#$%^&*]{8,100}$",
+                regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[!@#$%^&*])[a-zA-Z0-9!@#$%^&*]+$",
                 message = "Password must contains: capital letter, small letter, number and special symbol (!@#$%^&*)"
         )
         String password,
         @NotBlank(message = "Password confirmation must be present")
         @Size(min = 8, max = 100, message = "Password confirmation length must be between {min} and {max}")
         @Pattern(
-                regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[!@#$%^&*])[a-zA-Z0-9!@#$%^&*]{8,100}$",
+                regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[!@#$%^&*])[a-zA-Z0-9!@#$%^&*]+$",
                 message = "Password confirmation must contains: capital letter, small letter, number and special symbol (!@#$%^&*)"
         )
         String passwordConfirmation
