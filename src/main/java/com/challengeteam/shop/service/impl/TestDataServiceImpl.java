@@ -122,7 +122,7 @@ public class TestDataServiceImpl implements TestDataService {
 
     private static class UserGenerator {
         public final static String GENERATOR_URL = "https://randomuser.me";
-        public final static String DEFAULT_PASSWORD = "pass1234";
+        public final static String DEFAULT_PASSWORD = "Password1234!";
         public final static int API_RESTRICTION = 5_000;
         private final RestClient client;
         private final ObjectMapper objectMapper;
