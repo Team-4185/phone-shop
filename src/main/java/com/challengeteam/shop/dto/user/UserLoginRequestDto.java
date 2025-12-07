@@ -10,7 +10,7 @@ public record UserLoginRequestDto(
         @Pattern(regexp = "^[a-zA-Z0-9._%+-]{3,}@[a-zA-Z0-9.-]{3,}\\.[a-zA-Z]{2,}$", message = "Email must match the pattern 'xxx@xxx.xx'")
         String email,
         @NotBlank(message = "Password must be present")
-        @Size(min = 8, max = 100, message = "Password length must be between {min} and {max}")
+        @Size(min = 8, max = 72, message = "Password length must be between {min} and {max}")
         @Pattern(
                 regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[!@#$%^&*])[a-zA-Z0-9!@#$%^&*]+$",
                 message = "Password must contains: capital letter, small letter, number and special symbol (!@#$%^&*)"
