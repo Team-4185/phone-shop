@@ -526,7 +526,7 @@ class UserControllerTest {
 
         VALID_USER("newvalid.user@example.com", "Valid123!Pass"),
         VALID_USER_BOUNDARY_MIN("abc@def.gh", "Aa1!bcde"),
-        VALID_USER_BOUNDARY_MAX("newuserxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx@example.com", "Valid1!" + "p".repeat(65)),
+        VALID_USER_BOUNDARY_MAX("newuserxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx@example.com", "Valid1!" + "p".repeat(43)),
 
         // Invalid email
         EMAIL_IS_NULL(null, "Valid123!Pass"),
@@ -540,7 +540,7 @@ class UserControllerTest {
         PASSWORD_IS_NULL("test@example.com", null),
         PASSWORD_IS_BLANK("test@example.com", ""),
         PASSWORD_IS_TOO_SHORT("test@example.com", "Pa1!swd"),
-        PASSWORD_IS_TOO_LONG("test@example.com", "Valid1!" + "p".repeat(94)),
+        PASSWORD_IS_TOO_LONG("test@example.com", "Valid1!" + "p".repeat(44)),
         PASSWORD_IS_MISSING_CAPITAL_LETTER("test@example.com", "password123!"),
         PASSWORD_IS_MISSING_SMALL_LETTER("test@example.com", "PASSWORD123!"),
         PASSWORD_IS_MISSING_DIGIT("test@example.com", "Password!"),

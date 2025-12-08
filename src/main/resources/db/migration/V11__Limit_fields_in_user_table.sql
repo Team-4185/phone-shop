@@ -9,3 +9,6 @@ ALTER TABLE users
 
 ALTER TABLE users
     ALTER COLUMN phone_number TYPE VARCHAR(13);
+
+ALTER TABLE users
+    ALTER COLUMN password TYPE VARCHAR(60);
