@@ -110,6 +110,10 @@ public class UserServiceImpl implements UserService {
     public void delete(Long id) {
         Objects.requireNonNull(id, "id");
 
+        if(!userRepository.existsById(id)) {
+            throw new ResourceNotFoundException("Not found user with id: " + id);
+        }
+
         userRepository.deleteById(id);
         log.debug("Deleted user with id: {}", id);
     }
