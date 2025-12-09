@@ -9,6 +9,7 @@ import com.challengeteam.shop.mapper.UserMapper;
 import com.challengeteam.shop.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -28,8 +29,8 @@ public class UserController {
     @Operation(
             deprecated = true,
             summary = "temporary: Get all users",
-            description = "Returns a list of all users. Later there will be a lot of users," +
-                          " so for efficient work user retrieving should be pageable."
+            description = "Returns a list of all users. Later there will be a lot of users, " +
+                          "so for efficient work user retrieving should be pageable."
     )
     @GetMapping
     public ResponseEntity<List<UserResponseDto>> getAllUsers() {
@@ -55,11 +56,11 @@ public class UserController {
 
     @Operation(
             summary = "Create new user",
-            description = "Creates new user based on input data. Email must be unique." +
-                          " Password and password confirmation must be equal. The user will have role: USER."
+            description = "Creates new user based on input data. Email must be unique. " +
+                          "Password and password confirmation must be equal. The user will have role: USER."
     )
     @PostMapping
-    public ResponseEntity<Void> createDefaultUser(@RequestBody CreateUserDto createUserDto) {
+    public ResponseEntity<Void> createDefaultUser(@Valid @RequestBody CreateUserDto createUserDto) {
         Long id = userService.createDefaultUser(createUserDto);
         URI newUserLocation = ServletUriComponentsBuilder
                 .fromCurrentContextPath()
@@ -72,12 +73,12 @@ public class UserController {
 
     @Operation(
             summary = "Update user by id",
-            description = "Updates user by id based on input data." +
-                          " If field empty in request, the field won't be changed."
+            description = "Updates user by id based on input data. " +
+                          "If field empty in request, the field won't be changed."
     )
     @PatchMapping("/{id}/update-profile")
     public ResponseEntity<Void> updateProfile(@PathVariable Long id,
-                                              @RequestBody UpdateProfileDto updateProfileDto) {
+                                              @Valid @RequestBody UpdateProfileDto updateProfileDto) {
         userService.updateProfile(id, updateProfileDto);
 
         return ResponseEntity.noContent().build();
