@@ -101,7 +101,7 @@ class PhoneControllerTest {
                     .andExpect(jsonPath("$.totalElements").value(3))
                     .andExpect(jsonPath("$.totalPages").value(1))
                     .andExpect(jsonPath("$.size").value(10))
-                    .andExpect(jsonPath("$.page").value(0))
+                    .andExpect(jsonPath("$.page").value(1))
                     .andExpect(jsonPath("$.content[0].id").value(phone1))
                     .andExpect(jsonPath("$.content[0].name").value(TestPhone.PHONE_1.name))
                     .andExpect(jsonPath("$.content[0].description").value(TestPhone.PHONE_1.description))
@@ -113,7 +113,7 @@ class PhoneControllerTest {
         @Test
         void whenRequestWithPagination_thenReturnCorrectPage() throws Exception {
             mockMvc.perform(get(URL)
-                            .param("page", "0")
+                            .param("page", "1")
                             .param("size", "2")
                             .header(HttpHeaders.AUTHORIZATION, auth(token)))
                     .andExpect(status().isOk())
@@ -121,13 +121,13 @@ class PhoneControllerTest {
                     .andExpect(jsonPath("$.totalElements").value(3))
                     .andExpect(jsonPath("$.totalPages").value(2))
                     .andExpect(jsonPath("$.size").value(2))
-                    .andExpect(jsonPath("$.page").value(0));
+                    .andExpect(jsonPath("$.page").value(1));
         }
 
         @Test
         void whenRequestSecondPage_thenReturnCorrectPage() throws Exception {
             mockMvc.perform(get(URL)
-                            .param("page", "1")
+                            .param("page", "2")
                             .param("size", "2")
                             .header(HttpHeaders.AUTHORIZATION, auth(token)))
                     .andExpect(status().isOk())
@@ -135,19 +135,19 @@ class PhoneControllerTest {
                     .andExpect(jsonPath("$.totalElements").value(3))
                     .andExpect(jsonPath("$.totalPages").value(2))
                     .andExpect(jsonPath("$.size").value(2))
-                    .andExpect(jsonPath("$.page").value(1));
+                    .andExpect(jsonPath("$.page").value(2));
         }
 
         @Test
         void whenRequestEmptyPage_thenReturnEmptyContent() throws Exception {
             mockMvc.perform(get(URL)
-                            .param("page", "1")
+                            .param("page", "2")
                             .param("size", "3")
                             .header(HttpHeaders.AUTHORIZATION, auth(token)))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.content", hasSize(0)))
                     .andExpect(jsonPath("$.totalElements").value(3))
-                    .andExpect(jsonPath("$.page").value(1));
+                    .andExpect(jsonPath("$.page").value(2));
         }
 
         @Test
@@ -164,18 +164,18 @@ class PhoneControllerTest {
         }
 
         @Test
-        void whenPageIsNegative_thenStatus400() throws Exception {
+        void whenPageOutOfBounds_thenStatus400() throws Exception {
             mockMvc.perform(get(URL)
-                            .param("page", "-1")
+                            .param("page", "0")
                             .param("size", "10")
                             .header(HttpHeaders.AUTHORIZATION, auth(token)))
                     .andExpect(status().isBadRequest());
         }
 
         @Test
-        void whenSizeIsLessThenOne_thenStatus400() throws Exception {
+        void whenSizeOutOfBounds_thenStatus400() throws Exception {
             mockMvc.perform(get(URL)
-                            .param("page", "0")
+                            .param("page", "1")
                             .param("size", "0")
                             .header(HttpHeaders.AUTHORIZATION, auth(token)))
                     .andExpect(status().isBadRequest());
