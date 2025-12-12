@@ -5,6 +5,7 @@ import com.challengeteam.shop.exceptionHandling.exception.*;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -48,15 +49,20 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ProblemDetail> handleCriticalSystemException(CriticalSystemException e) {
         log.error("500  A critical error occurred that should not have occurred: {}", e.getMessage(), e);
 
+        // todo: error showing should be cut out after developing end
         String message = """
                 Occurred an unexpected error on the server side. We are already working on it. Please, try again later.
-                """;
+                
+                error occurred:
+                %s
+                """.formatted(e.getMessage());
         var problem = ProblemDetail.forStatus(HttpStatus.INTERNAL_SERVER_ERROR.value());
         problem.setTitle("Unexpected Internal Server Error");
         problem.setDetail(message);
 
         return ResponseEntity
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .contentType(MediaType.APPLICATION_JSON)
                 .body(problem);
     }
 
@@ -72,15 +78,20 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ProblemDetail> handleException(Exception e) {
         log.error("500  Unhandled exception: {}", e.getMessage(), e);
 
+        // todo: error showing should be cut out after developing end
         String message = """
-                Occurred an error on the server side. We are already working on it. Please, try again later.
-                """;
+                Occurred unhandled error on the server side. We are already working on it. Please, try again later.
+                
+                error occurred:
+                %s
+                """.formatted(e.getMessage());
         var problem = ProblemDetail.forStatus(HttpStatus.INTERNAL_SERVER_ERROR.value());
         problem.setTitle("Internal Server Error");
         problem.setDetail(message);
 
         return ResponseEntity
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .contentType(MediaType.APPLICATION_JSON)
                 .body(problem);
     }
 
@@ -96,6 +107,7 @@ public class GlobalExceptionHandler {
 
         return ResponseEntity
                 .status(HttpStatus.NOT_FOUND)
+                .contentType(MediaType.APPLICATION_JSON)
                 .body(problem);
     }
 
@@ -109,6 +121,7 @@ public class GlobalExceptionHandler {
 
         return ResponseEntity
                 .status(HttpStatus.UNAUTHORIZED)
+                .contentType(MediaType.APPLICATION_JSON)
                 .body(problem);
     }
 
@@ -122,6 +135,7 @@ public class GlobalExceptionHandler {
 
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
+                .contentType(MediaType.APPLICATION_JSON)
                 .body(problem);
     }
 
@@ -135,6 +149,7 @@ public class GlobalExceptionHandler {
 
         return ResponseEntity
                 .status(HttpStatus.UNAUTHORIZED)
+                .contentType(MediaType.APPLICATION_JSON)
                 .body(problem);
     }
 
@@ -148,6 +163,7 @@ public class GlobalExceptionHandler {
 
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
+                .contentType(MediaType.APPLICATION_JSON)
                 .body(problem);
     }
 
@@ -162,6 +178,7 @@ public class GlobalExceptionHandler {
 
         return ResponseEntity
                 .status(HttpStatus.UNAUTHORIZED)
+                .contentType(MediaType.APPLICATION_JSON)
                 .body(problem);
     }
 
@@ -176,6 +193,7 @@ public class GlobalExceptionHandler {
 
         return ResponseEntity
                 .status(HttpStatus.FORBIDDEN)
+                .contentType(MediaType.APPLICATION_JSON)
                 .body(problem);
     }
 
@@ -190,6 +208,7 @@ public class GlobalExceptionHandler {
 
         return ResponseEntity
                 .status(HttpStatus.FORBIDDEN)
+                .contentType(MediaType.APPLICATION_JSON)
                 .body(problem);
     }
 
@@ -203,6 +222,7 @@ public class GlobalExceptionHandler {
 
         return ResponseEntity
                 .status(HttpStatus.FORBIDDEN)
+                .contentType(MediaType.APPLICATION_JSON)
                 .body(problem);
     }
 
@@ -216,6 +236,7 @@ public class GlobalExceptionHandler {
 
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
+                .contentType(MediaType.APPLICATION_JSON)
                 .body(problem);
     }
 
@@ -228,6 +249,7 @@ public class GlobalExceptionHandler {
 
         return ResponseEntity
                 .status(HttpStatus.PAYLOAD_TOO_LARGE)
+                .contentType(MediaType.APPLICATION_JSON)
                 .body(problem);
     }
 
@@ -241,6 +263,7 @@ public class GlobalExceptionHandler {
 
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
+                .contentType(MediaType.APPLICATION_JSON)
                 .body(problem);
     }
 
@@ -254,6 +277,7 @@ public class GlobalExceptionHandler {
 
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
+                .contentType(MediaType.APPLICATION_JSON)
                 .body(problem);
     }
 
@@ -274,6 +298,7 @@ public class GlobalExceptionHandler {
 
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
+                .contentType(MediaType.APPLICATION_JSON)
                 .body(problem);
     }
 
@@ -285,7 +310,10 @@ public class GlobalExceptionHandler {
         problem.setTitle("Constraint Violation");
         problem.setDetail(e.getMessage());
 
-        return ResponseEntity.badRequest().body(problem);
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(problem);
     }
 
     @ExceptionHandler(MissingServletRequestPartException.class)
@@ -296,10 +324,13 @@ public class GlobalExceptionHandler {
         problem.setTitle("Missing Request Part");
         problem.setDetail(e.getMessage());
 
-        return ResponseEntity.badRequest().body(problem);
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(problem);
     }
 
-    @ExceptionHandler(HttpMessageNotReadableException.class)
+    @ExceptionHandler(value = HttpMessageNotReadableException.class)
     public ResponseEntity<ProblemDetail> handleHttpMessageNotReadableException(HttpMessageNotReadableException e) {
         log.warn("400  Invalid request body:  {}", e.getMessage());
 
@@ -307,7 +338,10 @@ public class GlobalExceptionHandler {
         problem.setTitle("Bad Request Body");
         problem.setDetail("Request body is invalid");
 
-        return ResponseEntity.badRequest().body(problem);
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(problem);
     }
 
     @ExceptionHandler(NoResourceFoundException.class)
@@ -318,7 +352,10 @@ public class GlobalExceptionHandler {
         problem.setTitle("Not Found");
         problem.setDetail(e.getMessage());
 
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(problem);
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(problem);
     }
 
 }
