@@ -7,21 +7,21 @@ public record UpdateProfileDto(
 
         @Size(min = 3, max = 255, message = "First name must be between {min} and {max} characters")
         @Pattern(
-                regexp = "^[A-Za-zА-Яа-яІіЇїЄєҐґ]+$",
+                regexp = "^[A-Za-zА-Яа-яІіЇїЄєҐґ]+(?:[-' ]?[A-Za-zА-Яа-яІіЇїЄєҐґ]+)*$",
                 message = "First name can contain letters only"
         )
         String newFirstname,
 
         @Size(min = 3, max = 255, message = "Last name must be between {min} and {max} characters")
         @Pattern(
-                regexp = "^[A-Za-zА-Яа-яІіЇїЄєҐґ]+$",
+                regexp = "^[A-Za-zА-Яа-яІіЇїЄєҐґ]+(?:[-' ]?[A-Za-zА-Яа-яІіЇїЄєҐґ]+)*$",
                 message = "Last name can contain letters only"
         )
         String newLastname,
 
         @Size(min = 3, max = 255, message = "City must be between {min} and {max} characters")
         @Pattern(
-                regexp = "^[A-Za-zА-Яа-яІіЇїЄєҐґ]+$",
+                regexp = "^[A-Za-zА-Яа-яІіЇїЄєҐґ]+(?:[-' ]?[A-Za-zА-Яа-яІіЇїЄєҐґ]+)*$",
                 message = "City can contain letters only"
         )
         String newCity,
