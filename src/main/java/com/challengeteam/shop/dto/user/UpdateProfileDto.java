@@ -1,5 +1,9 @@
 package com.challengeteam.shop.dto.user;
 
+<<<<<<< HEAD
+=======
+import jakarta.validation.constraints.NotBlank;
+>>>>>>> 850e3095f24ef9a459006d4b5830467ce2cc75e3
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 

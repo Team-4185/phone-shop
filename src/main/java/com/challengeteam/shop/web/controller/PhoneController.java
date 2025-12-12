@@ -47,10 +47,10 @@ public class PhoneController {
     )
     @GetMapping
     public ResponseEntity<PageResponseDto<PhoneResponseDto>> getAllPhones(
-            @RequestParam(defaultValue = "0") @Min(value = 0, message = "Page must be >= 0") int page,
-            @RequestParam(defaultValue = "10") @Min(value = 1, message = "Size must be >= 1") int size
+            @RequestParam(defaultValue = "1") @Min(value = 1, message = "Page must be > 0") int page,
+            @RequestParam(defaultValue = "10") @Min(value = 1, message = "Size must be > 0") int size
     ) {
-        Page<Phone> phones = phoneService.getPhones(page, size);
+        Page<Phone> phones = phoneService.getPhones(page - 1, size);
         Page<PhoneResponseDto> response = phones.map(phoneMapper::toResponse);
         return ResponseEntity.ok(PageResponseDto.of(response));
     }
