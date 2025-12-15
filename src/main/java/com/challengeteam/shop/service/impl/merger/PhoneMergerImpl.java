@@ -17,7 +17,7 @@ public class PhoneMergerImpl implements PhoneMerger {
 
         String newName = newPhone.newName();
         if (newName != null) {
-            phone.setName(newName);
+            phone.setName(newName.trim());
         }
 
         String newDescription = newPhone.newDescription();
@@ -32,7 +32,7 @@ public class PhoneMergerImpl implements PhoneMerger {
 
         String newBrand = newPhone.newBrand();
         if (newBrand != null) {
-            phone.setBrand(newBrand);
+            phone.setBrand(newBrand.trim());
         }
 
         Integer newReleaseYear = newPhone.newReleaseYear();
