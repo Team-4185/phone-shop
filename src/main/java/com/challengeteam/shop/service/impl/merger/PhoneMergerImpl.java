@@ -15,27 +15,27 @@ public class PhoneMergerImpl implements PhoneMerger {
         Objects.requireNonNull(phone,"phone");
         Objects.requireNonNull(newPhone,"newPhone");
 
-        String newName = newPhone.newName();
+        String newName = newPhone.name();
         if (newName != null) {
             phone.setName(newName.trim());
         }
 
-        String newDescription = newPhone.newDescription();
+        String newDescription = newPhone.description();
         if (newDescription != null) {
             phone.setDescription(newDescription);
         }
 
-        BigDecimal newPrice = newPhone.newPrice();
+        BigDecimal newPrice = newPhone.price();
         if (newPrice != null) {
             phone.setPrice(newPrice);
         }
 
-        String newBrand = newPhone.newBrand();
+        String newBrand = newPhone.brand();
         if (newBrand != null) {
             phone.setBrand(newBrand.trim());
         }
 
-        Integer newReleaseYear = newPhone.newReleaseYear();
+        Integer newReleaseYear = newPhone.releaseYear();
         if (newReleaseYear != null) {
             phone.setReleaseYear(newReleaseYear);
         }
