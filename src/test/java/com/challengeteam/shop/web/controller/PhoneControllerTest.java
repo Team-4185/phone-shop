@@ -23,6 +23,7 @@ import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.math.BigDecimal;
@@ -222,6 +223,16 @@ class PhoneControllerTest {
                     .andExpect(status().isForbidden());
         }
 
+        @Test
+        void whenIdIsNotInteger_thenStatus404() throws Exception {
+            var request = get(URL, "not_integer")
+                    .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+                    .header(HttpHeaders.AUTHORIZATION, auth(token));
+
+            mockMvc.perform(request)
+                    .andExpect(status().isNotFound());
+        }
+
     }
 
     @Nested
@@ -326,7 +337,6 @@ class PhoneControllerTest {
         void whenNameIsBlank_thenStatus400() throws Exception {
             expect400WithInvalidBody(TestPhone.INVALID_NAME_BLANK);
         }
-
 
         @Test
         void whenNameTooShort_thenStatus400() throws Exception {
@@ -517,6 +527,16 @@ class PhoneControllerTest {
                     .andExpect(status().isForbidden());
         }
 
+        @Test
+        void whenIdIsNotInteger_thenStatus404() throws Exception {
+            var request = put(URL, "not_integer")
+                    .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+                    .header(HttpHeaders.AUTHORIZATION, auth(token));
+
+            mockMvc.perform(request)
+                    .andExpect(status().isNotFound());
+        }
+
         // Validation tests
         @Test
         void whenNameIsNull_thenStatus204() throws Exception {
@@ -656,6 +676,16 @@ class PhoneControllerTest {
                     .andExpect(status().isForbidden());
         }
 
+        @Test
+        void whenIdIsNotInteger_thenStatus404() throws Exception {
+            var request = delete(URL, "not_integer")
+                    .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+                    .header(HttpHeaders.AUTHORIZATION, auth(token));
+
+            mockMvc.perform(request)
+                    .andExpect(status().isNotFound());
+        }
+
     }
 
     @Nested
@@ -714,6 +744,16 @@ class PhoneControllerTest {
                     .andExpect(status().isForbidden());
         }
 
+        @Test
+        void whenIdIsNotInteger_thenStatus404() throws Exception {
+            var request = get(URL, "not_integer")
+                    .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+                    .header(HttpHeaders.AUTHORIZATION, auth(token));
+
+            mockMvc.perform(request)
+                    .andExpect(status().isNotFound());
+        }
+
     }
 
     @Nested
@@ -759,6 +799,38 @@ class PhoneControllerTest {
 
             mockMvc.perform(request)
                     .andExpect(status().isBadRequest());
+        }
+
+        @Test
+        void whenRequestMissingToken_thenStatus403() throws Exception {
+            var request = multipart(URL, phone1)
+                    .file((MockMultipartFile) buildUnsupportedMultipartFile("image"))
+                    .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
+
+            mockMvc.perform(request)
+                    .andExpect(status().isForbidden());
+        }
+
+        @Test
+        void whenRequestHasInvalidToken_thenStatus403() throws Exception {
+            var request = multipart(URL, phone1)
+                    .file((MockMultipartFile) buildUnsupportedMultipartFile("image"))
+                    .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+                    .header(HttpHeaders.AUTHORIZATION, auth("not_valid_token"));
+
+            mockMvc.perform(request)
+                    .andExpect(status().isForbidden());
+        }
+
+        @Test
+        void whenIdIsNotInteger_thenStatus404() throws Exception {
+            var request = multipart(URL, "not_integer")
+                    .file((MockMultipartFile) buildUnsupportedMultipartFile("image"))
+                    .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+                    .header(HttpHeaders.AUTHORIZATION, auth(token));
+
+            mockMvc.perform(request)
+                    .andExpect(status().isNotFound());
         }
 
     }
@@ -827,6 +899,26 @@ class PhoneControllerTest {
             mockMvc.perform(delete(URL, phone3, phone3Images.get(0).getId())
                             .header(HttpHeaders.AUTHORIZATION, auth("some_invalid_text")))
                     .andExpect(status().isForbidden());
+        }
+
+        @Test
+        void whenIdIsNotInteger_thenStatus404() throws Exception {
+            var request = delete(URL, "not_integer", phone3Images.get(0).getId())
+                    .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+                    .header(HttpHeaders.AUTHORIZATION, auth(token));
+
+            mockMvc.perform(request)
+                    .andExpect(status().isNotFound());
+        }
+
+        @Test
+        void whenImageIdIsNotInteger_thenStatus404() throws Exception {
+            var request = delete(URL, phone3, "not_integer")
+                    .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+                    .header(HttpHeaders.AUTHORIZATION, auth(token));
+
+            mockMvc.perform(request)
+                    .andExpect(status().isNotFound());
         }
 
     }
