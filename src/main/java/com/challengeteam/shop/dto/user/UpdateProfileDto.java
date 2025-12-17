@@ -1,9 +1,5 @@
 package com.challengeteam.shop.dto.user;
 
-<<<<<<< HEAD
-=======
-import jakarta.validation.constraints.NotBlank;
->>>>>>> 850e3095f24ef9a459006d4b5830467ce2cc75e3
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
@@ -12,21 +8,21 @@ public record UpdateProfileDto(
         @Size(min = 3, max = 255, message = "First name must be between {min} and {max} characters")
         @Pattern(
                 regexp = "^[A-Za-zА-Яа-яІіЇїЄєҐґ]+(?:[-' ]?[A-Za-zА-Яа-яІіЇїЄєҐґ]+)*$",
-                message = "First name can contain letters only"
+                message = "First name may contain one or more words with letters, spaces, hyphens, or apostrophes"
         )
         String newFirstname,
 
         @Size(min = 3, max = 255, message = "Last name must be between {min} and {max} characters")
         @Pattern(
                 regexp = "^[A-Za-zА-Яа-яІіЇїЄєҐґ]+(?:[-' ]?[A-Za-zА-Яа-яІіЇїЄєҐґ]+)*$",
-                message = "Last name can contain letters only"
+                message = "Last name may contain one or more words with letters, spaces, hyphens, or apostrophes"
         )
         String newLastname,
 
         @Size(min = 3, max = 255, message = "City must be between {min} and {max} characters")
         @Pattern(
                 regexp = "^[A-Za-zА-Яа-яІіЇїЄєҐґ]+(?:[-' ]?[A-Za-zА-Яа-яІіЇїЄєҐґ]+)*$",
-                message = "City can contain letters only"
+                message = "City may contain one or more words with letters, spaces, hyphens, or apostrophes"
         )
         String newCity,
 
