@@ -10,6 +10,8 @@ import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.ObjectError;
+import org.springframework.web.HttpMediaTypeNotSupportedException;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -354,6 +356,34 @@ public class GlobalExceptionHandler {
 
         return ResponseEntity
                 .status(HttpStatus.NOT_FOUND)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(problem);
+    }
+
+    @ExceptionHandler(HttpMediaTypeNotSupportedException.class)
+    public ResponseEntity<ProblemDetail> handleHttpMediaTypeNotSupportedException(HttpMediaTypeNotSupportedException e) {
+        log.warn("400  {}", e.getMessage());
+
+        var problem = ProblemDetail.forStatus(HttpStatus.BAD_REQUEST.value());
+        problem.setTitle("Bad Request");
+        problem.setDetail("This endpoint supported other Content Type");
+
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(problem);
+    }
+
+    @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
+    public ResponseEntity<ProblemDetail> handleHttpRequestMethodNotSupportedException(HttpRequestMethodNotSupportedException e) {
+        log.warn("405  {}", e.getMessage());
+
+        var problem = ProblemDetail.forStatus(HttpStatus.METHOD_NOT_ALLOWED.value());
+        problem.setTitle("Method Not Allowed");
+        problem.setDetail("Method '%s' is not supported for this URL".formatted(e.getMethod()));
+
+        return ResponseEntity
+                .status(HttpStatus.METHOD_NOT_ALLOWED)
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(problem);
     }

@@ -59,10 +59,10 @@ public class PhoneServiceImpl implements PhoneService {
 
         // create phone
         var phone = Phone.builder()
-                .name(phoneCreateRequestDto.name())
+                .name(phoneCreateRequestDto.name().trim())
                 .description(phoneCreateRequestDto.description())
                 .price(phoneCreateRequestDto.price())
-                .brand(phoneCreateRequestDto.brand())
+                .brand(phoneCreateRequestDto.brand().trim())
                 .releaseYear(phoneCreateRequestDto.releaseYear())
                 .build();
 
