@@ -256,6 +256,34 @@ class PhoneServiceImplTest {
         }
 
         @Test
+        void whenFieldsHaveWhitespaces_thenTrimBeforeSave() {
+            // given
+            PhoneCreateRequestDto dto = buildPhoneCreateRequestDtoWithWhitespaces();
+            List<MultipartFile> files = List.of(buildMultipartFile());
+
+            // mockito
+            Mockito.when(phoneRepository.save(any(Phone.class)))
+                    .thenReturn(buildPhone(PHONE_ID));
+            Mockito.when(imageService.uploadImage(any(MultipartFile.class)))
+                    .thenReturn(buildImage());
+
+            // when
+            phoneService.create(dto, files);
+
+            // captor
+            ArgumentCaptor<Phone> captor = ArgumentCaptor.forClass(Phone.class);
+            Mockito.verify(phoneRepository).save(captor.capture());
+            Phone forSave = captor.getValue();
+
+            // then
+            assertThat(forSave.getName()).isEqualTo(PHONE_NAME);
+            assertThat(forSave.getDescription()).isEqualTo(dto.description());
+            assertThat(forSave.getPrice()).isEqualTo(dto.price());
+            assertThat(forSave.getBrand()).isEqualTo(PHONE_BRAND);
+            assertThat(forSave.getReleaseYear()).isEqualTo(dto.releaseYear());
+        }
+
+        @Test
         void whenDtoIsNull_thenThrowNullPointerException() {
             // when + then
             assertThatThrownBy(() -> phoneService.create(null, new ArrayList<>()))
@@ -507,14 +535,25 @@ class PhoneServiceImplTest {
     }
 
     static class TestResources {
-        public static final Long PHONE_ID = 100L;
-
+        public static final Long IMAGE_ID = 10L;
         public static final String FILENAME = "file";
         public static final String ORIGINAL_FILENAME = "file.jpeg";
         public static final String CONTENT_TYPE = "image/jpeg";
         public static final byte[] CONTENT = ORIGINAL_FILENAME.getBytes();
 
-        public static final Long IMAGE_ID = 10L;
+        public static final Long PHONE_ID = 100L;
+        public static final String PHONE_NAME = "phone_name";
+        public static final String PHONE_DESCRIPTION = "Phone description.";
+        public static final BigDecimal PHONE_PRICE = new BigDecimal("1000.0");
+        public static final String PHONE_BRAND = "phone_brand";
+        public static final int PHONE_RELEASE_YEAR = 2020;
+
+        public static final String NEW_PHONE_NAME = "new_phone_name";
+        public static final String NEW_PHONE_DESCRIPTION = "New phone description.";
+        public static final BigDecimal NEW_PHONE_PRICE = new BigDecimal("2000.0");
+        public static final String NEW_PHONE_BRAND = "new_phone_brand";
+        public static final int NEW_PHONE_RELEASE_YEAR = 2021;
+
 
         static List<Phone> buildPhonesFromTo(long from, long to) {
             return LongStream.range(from, to)
@@ -524,11 +563,11 @@ class PhoneServiceImplTest {
 
         static Phone buildPhone(Long id) {
             Phone phone = Phone.builder()
-                    .name("name" + id)
-                    .description("description" + id)
-                    .price(BigDecimal.valueOf(1000 + id))
-                    .brand("brand" + id)
-                    .releaseYear(2025)
+                    .name(PHONE_NAME + id)
+                    .description(PHONE_DESCRIPTION + id)
+                    .price(PHONE_PRICE.add(new BigDecimal(id)))
+                    .brand(PHONE_BRAND + id)
+                    .releaseYear(PHONE_RELEASE_YEAR)
                     .build();
             phone.setId(id);
             phone.setCreatedAt(Instant.now());
@@ -537,21 +576,31 @@ class PhoneServiceImplTest {
 
         static PhoneCreateRequestDto buildPhoneCreateRequestDto() {
             return new PhoneCreateRequestDto(
-                    "name",
-                    "description",
-                    BigDecimal.valueOf(100),
-                    "brand",
-                    2025
+                    PHONE_NAME,
+                    PHONE_DESCRIPTION,
+                    PHONE_PRICE,
+                    PHONE_BRAND,
+                    PHONE_RELEASE_YEAR
+            );
+        }
+
+        static PhoneCreateRequestDto buildPhoneCreateRequestDtoWithWhitespaces() {
+            return new PhoneCreateRequestDto(
+                    "  " + PHONE_NAME + "  ",
+                    "  " + PHONE_DESCRIPTION + "  ",
+                    PHONE_PRICE,
+                    "  " + PHONE_BRAND + "  ",
+                    PHONE_RELEASE_YEAR
             );
         }
 
         static PhoneUpdateRequestDto buildPhoneUpdateRequestDto() {
             return new PhoneUpdateRequestDto(
-                    "newName",
-                    "newDescription",
-                    new BigDecimal("19999"),
-                    "newBrand",
-                    2025
+                    NEW_PHONE_NAME,
+                    NEW_PHONE_DESCRIPTION,
+                    NEW_PHONE_PRICE,
+                    NEW_PHONE_BRAND,
+                    NEW_PHONE_RELEASE_YEAR
             );
         }
 

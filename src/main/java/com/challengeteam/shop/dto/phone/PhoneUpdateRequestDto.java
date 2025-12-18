@@ -7,19 +7,19 @@ import java.math.BigDecimal;
 public record PhoneUpdateRequestDto(
 
         @Size(min = 3, max = 255, message = "Name must be between {min} and {max} characters")
-        String newName,
+        String name,
 
         @Size(max = 1000, message = "Description must be at most {max} characters long")
-        String newDescription,
+        String description,
 
         @DecimalMin(value = "0.00", message = "Price must be greater than {value}")
-        BigDecimal newPrice,
+        BigDecimal price,
 
         @Size(min = 3, max = 255, message = "Brand must be between {min} and {max} characters")
-        String newBrand,
+        String brand,
 
         @Min(value = 1970, message = "Release year must be no earlier than {value}")
         @Max(value = 2026, message = "Release year must be no later than {value}")
-        Integer newReleaseYear
+        Integer releaseYear
 ) {
 }

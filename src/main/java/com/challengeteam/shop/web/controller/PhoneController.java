@@ -60,7 +60,7 @@ public class PhoneController {
             summary = "Get phone by id",
             description = "Returns a phone by id."
     )
-    @GetMapping("/{id}")
+    @GetMapping("/{id:\\d+}")
     public ResponseEntity<PhoneResponseDto> getPhoneById(@PathVariable Long id) {
         Phone phone = phoneService
                 .getById(id)
@@ -95,7 +95,7 @@ public class PhoneController {
             description = "Updates phone by id, based on input data. Where field is empty," +
                           " there will be no changes in this field."
     )
-    @PutMapping("/{id}")
+    @PutMapping("/{id:\\d+}")
     public ResponseEntity<Void> updatePhone(@PathVariable Long id,
                                             @Valid @RequestBody PhoneUpdateRequestDto phoneUpdateRequestDto) {
         phoneService.update(id, phoneUpdateRequestDto);
@@ -107,7 +107,7 @@ public class PhoneController {
             summary = "Delete phone by id",
             description = "Deletes phone by id."
     )
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/{id:\\d+}")
     public ResponseEntity<Void> deletePhone(@PathVariable Long id) {
         phoneService.delete(id);
 
@@ -118,7 +118,7 @@ public class PhoneController {
             summary = "Get phone's images",
             description = "Returns all images of specified phone."
     )
-    @GetMapping("/{id}/images")
+    @GetMapping("/{id:\\d+}/images")
     public ResponseEntity<List<ImageMetadataResponseDto>> getPhoneImages(@PathVariable Long id) {
         List<Image> images = phoneService.getPhoneImages(id);
         List<ImageMetadataResponseDto> response = imageMapper.toListOfMetadata(images);
@@ -130,7 +130,7 @@ public class PhoneController {
             summary = "Add image for phone",
             description = "Adds one image for specified phone."
     )
-    @PostMapping(value = "/{id}/add-image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PostMapping(value = "/{id:\\d+}/add-image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Void> addImageToPhone(@PathVariable Long id,
                                                 @RequestParam("image") MultipartFile image) {
         phoneService.addImageToPhone(id, image);
@@ -143,9 +143,9 @@ public class PhoneController {
             summary = "Delete phone's image by id",
             description = "Deletes phone's image by id."
     )
-    @DeleteMapping("/{id}/images/{imageId}")
+    @DeleteMapping("/{id:\\d+}/images/{imageId:\\d+}")
     public ResponseEntity<Void> deletePhonesImageById(@PathVariable Long id,
-                                            @PathVariable Long imageId) {
+                                                      @PathVariable Long imageId) {
         phoneService.deletePhonesImageById(id, imageId);
 
         return ResponseEntity.noContent().build();
