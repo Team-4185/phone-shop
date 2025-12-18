@@ -10,25 +10,25 @@ public record UpdateProfileDto(
                 regexp = "^[A-Za-zА-Яа-яІіЇїЄєҐґ]+(?:[-' ]?[A-Za-zА-Яа-яІіЇїЄєҐґ]+)*$",
                 message = "First name may contain one or more words with letters, spaces, hyphens, or apostrophes"
         )
-        String newFirstname,
+        String firstName,
 
         @Size(min = 3, max = 255, message = "Last name must be between {min} and {max} characters")
         @Pattern(
                 regexp = "^[A-Za-zА-Яа-яІіЇїЄєҐґ]+(?:[-' ]?[A-Za-zА-Яа-яІіЇїЄєҐґ]+)*$",
                 message = "Last name may contain one or more words with letters, spaces, hyphens, or apostrophes"
         )
-        String newLastname,
+        String lastName,
 
         @Size(min = 3, max = 255, message = "City must be between {min} and {max} characters")
         @Pattern(
                 regexp = "^[A-Za-zА-Яа-яІіЇїЄєҐґ]+(?:[-' ]?[A-Za-zА-Яа-яІіЇїЄєҐґ]+)*$",
                 message = "City may contain one or more words with letters, spaces, hyphens, or apostrophes"
         )
-        String newCity,
+        String city,
 
         @Pattern(
                 regexp = "^(\\+?380)([0-9]{9})$",
                 message = "Phone number must be in the format +380XXXXXXXXX"
         )
-        String newPhoneNumber
+        String phoneNumber
 ) {}
