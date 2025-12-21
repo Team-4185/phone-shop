@@ -39,10 +39,10 @@ class UserMergerImplTest {
             assertNull(user.getPassword());
             assertEquals(expected.getId(), user.getId());
             assertEquals(expected.getEmail(), user.getEmail());
-            assertEquals(dto.newLastname(), user.getLastName());
-            assertEquals(dto.newCity(), user.getCity());
-            assertNotEquals(dto.newFirstname(), user.getFirstName());
-            assertNotEquals(dto.newPhoneNumber(), user.getPhoneNumber());
+            assertEquals(dto.lastName(), user.getLastName());
+            assertEquals(dto.city(), user.getCity());
+            assertNotEquals(dto.firstName(), user.getFirstName());
+            assertNotEquals(dto.phoneNumber(), user.getPhoneNumber());
         }
 
         @Test
