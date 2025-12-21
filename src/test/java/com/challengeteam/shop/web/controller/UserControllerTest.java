@@ -22,6 +22,7 @@ import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 
+import static com.challengeteam.shop.web.controller.PhoneControllerTest.TestResources.auth;
 import static com.challengeteam.shop.web.controller.UserControllerTest.TestResources.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -121,6 +122,16 @@ class UserControllerTest {
             mockMvc.perform(get(URL, user1)
                             .header(HttpHeaders.AUTHORIZATION, auth("invalid_token")))
                     .andExpect(status().isForbidden());
+        }
+
+        @Test
+        void whenIdIsNotInteger_thenStatus404() throws Exception {
+            var request = get(URL, "not_integer")
+                    .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+                    .header(HttpHeaders.AUTHORIZATION, auth(token));
+
+            mockMvc.perform(request)
+                    .andExpect(status().isNotFound());
         }
     }
 
@@ -413,6 +424,16 @@ class UserControllerTest {
         }
 
         @Test
+        void whenIdIsNotInteger_thenStatus404() throws Exception {
+            var request = put(URL, "not_integer")
+                    .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+                    .header(HttpHeaders.AUTHORIZATION, auth(token));
+
+            mockMvc.perform(request)
+                    .andExpect(status().isNotFound());
+        }
+
+        @Test
         void whenUserDoesntExist_thenStatus404() throws Exception {
             UpdateProfileDto request = buildUpdateProfileDto(TestUserProfile.VALID_PROFILE);
 
@@ -604,6 +625,16 @@ class UserControllerTest {
             mockMvc.perform(delete(URL, user1)
                             .header(HttpHeaders.AUTHORIZATION, auth("invalid_token")))
                     .andExpect(status().isForbidden());
+        }
+
+        @Test
+        void whenIdIsNotInteger_thenStatus404() throws Exception {
+            var request = delete(URL, "not_integer")
+                    .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+                    .header(HttpHeaders.AUTHORIZATION, auth(token));
+
+            mockMvc.perform(request)
+                    .andExpect(status().isNotFound());
         }
     }
 

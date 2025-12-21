@@ -44,7 +44,7 @@ public class UserController {
             summary = "Get user by id",
             description = "Returns user by id"
     )
-    @GetMapping("/{id}")
+    @GetMapping("/{id:\\d+}")
     public ResponseEntity<UserResponseDto> getUserById(@PathVariable Long id) {
         User user = userService
                 .getById(id)
@@ -76,7 +76,7 @@ public class UserController {
             description = "Updates user by id based on input data. " +
                           "If field empty in request, the field won't be changed."
     )
-    @PatchMapping("/{id}/update-profile")
+    @PatchMapping("/{id:\\d+}/update-profile")
     public ResponseEntity<Void> updateProfile(@PathVariable Long id,
                                               @Valid @RequestBody UpdateProfileDto updateProfileDto) {
         userService.updateProfile(id, updateProfileDto);
@@ -88,7 +88,7 @@ public class UserController {
             summary = "Delete user by id",
             description = "Deletes user by id"
     )
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/{id:\\d+}")
     public ResponseEntity<Void> deleteById(@PathVariable Long id) {
         userService.delete(id);
 
