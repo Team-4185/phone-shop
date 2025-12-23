@@ -1,39 +1,34 @@
 package com.challengeteam.shop.dto.user;
 
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 public record UpdateProfileDto(
 
-        @NotBlank(message = "First name must not be empty")
         @Size(min = 3, max = 255, message = "First name must be between {min} and {max} characters")
         @Pattern(
-                regexp = "^[A-Za-zА-Яа-яІіЇїЄєҐґ]+$",
-                message = "First name can contain letters only"
+                regexp = "^[A-Za-zА-Яа-яІіЇїЄєҐґ]+(?:[-' ]?[A-Za-zА-Яа-яІіЇїЄєҐґ]+)*$",
+                message = "First name may contain one or more words with letters, spaces, hyphens, or apostrophes"
         )
-        String newFirstname,
+        String firstName,
 
-        @NotBlank(message = "Last name must not be empty")
         @Size(min = 3, max = 255, message = "Last name must be between {min} and {max} characters")
         @Pattern(
-                regexp = "^[A-Za-zА-Яа-яІіЇїЄєҐґ]+$",
-                message = "Last name can contain letters only"
+                regexp = "^[A-Za-zА-Яа-яІіЇїЄєҐґ]+(?:[-' ]?[A-Za-zА-Яа-яІіЇїЄєҐґ]+)*$",
+                message = "Last name may contain one or more words with letters, spaces, hyphens, or apostrophes"
         )
-        String newLastname,
+        String lastName,
 
-        @NotBlank(message = "City must not be empty")
         @Size(min = 3, max = 255, message = "City must be between {min} and {max} characters")
         @Pattern(
-                regexp = "^[A-Za-zА-Яа-яІіЇїЄєҐґ]+$",
-                message = "City can contain letters only"
+                regexp = "^[A-Za-zА-Яа-яІіЇїЄєҐґ]+(?:[-' ]?[A-Za-zА-Яа-яІіЇїЄєҐґ]+)*$",
+                message = "City may contain one or more words with letters, spaces, hyphens, or apostrophes"
         )
-        String newCity,
+        String city,
 
-        @NotBlank(message = "Phone number must not be empty")
         @Pattern(
                 regexp = "^(\\+?380)([0-9]{9})$",
                 message = "Phone number must be in the format +380XXXXXXXXX"
         )
-        String newPhoneNumber
+        String phoneNumber
 ) {}

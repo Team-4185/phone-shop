@@ -22,6 +22,7 @@ import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 
+import static com.challengeteam.shop.web.controller.PhoneControllerTest.TestResources.auth;
 import static com.challengeteam.shop.web.controller.UserControllerTest.TestResources.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -121,6 +122,16 @@ class UserControllerTest {
             mockMvc.perform(get(URL, user1)
                             .header(HttpHeaders.AUTHORIZATION, auth("invalid_token")))
                     .andExpect(status().isForbidden());
+        }
+
+        @Test
+        void whenIdIsNotInteger_thenStatus404() throws Exception {
+            var request = get(URL, "not_integer")
+                    .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+                    .header(HttpHeaders.AUTHORIZATION, auth(token));
+
+            mockMvc.perform(request)
+                    .andExpect(status().isNotFound());
         }
     }
 
@@ -315,6 +326,83 @@ class UserControllerTest {
         }
 
         @Test
+        void whenValidRequestWithHyphenatedName_thenStatus204() throws Exception {
+            UpdateProfileDto request = buildUpdateProfileDto(TestUserProfile.VALID_PROFILE_WITH_HYPHEN);
+
+            mockMvc.perform(patch(URL, user1)
+                            .header(HttpHeaders.AUTHORIZATION, auth(token))
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(request)))
+                    .andExpect(status().isNoContent());
+        }
+
+        @Test
+        void whenValidRequestWithApostrophe_thenStatus204() throws Exception {
+            UpdateProfileDto request = buildUpdateProfileDto(TestUserProfile.VALID_PROFILE_WITH_APOSTROPHE);
+
+            mockMvc.perform(patch(URL, user1)
+                            .header(HttpHeaders.AUTHORIZATION, auth(token))
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(request)))
+                    .andExpect(status().isNoContent());
+        }
+
+        @Test
+        void whenValidRequestWithSpacedName_thenStatus204() throws Exception {
+            UpdateProfileDto request = buildUpdateProfileDto(TestUserProfile.VALID_PROFILE_WITH_SPACE);
+
+            mockMvc.perform(patch(URL, user1)
+                            .header(HttpHeaders.AUTHORIZATION, auth(token))
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(request)))
+                    .andExpect(status().isNoContent());
+        }
+
+        @Test
+        void whenValidRequestWithLatinNames_thenStatus204() throws Exception {
+            UpdateProfileDto request = buildUpdateProfileDto(TestUserProfile.VALID_PROFILE_LATIN);
+
+            mockMvc.perform(patch(URL, user1)
+                            .header(HttpHeaders.AUTHORIZATION, auth(token))
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(request)))
+                    .andExpect(status().isNoContent());
+        }
+
+        @Test
+        void whenValidRequestWithCyrillicNames_thenStatus204() throws Exception {
+            UpdateProfileDto request = buildUpdateProfileDto(TestUserProfile.VALID_PROFILE_CYRILLIC);
+
+            mockMvc.perform(patch(URL, user1)
+                            .header(HttpHeaders.AUTHORIZATION, auth(token))
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(request)))
+                    .andExpect(status().isNoContent());
+        }
+
+        @Test
+        void whenValidRequestWithOptionalPhone_thenStatus204() throws Exception {
+            UpdateProfileDto request = buildUpdateProfileDto(TestUserProfile.VALID_PROFILE_WITHOUT_PHONE);
+
+            mockMvc.perform(patch(URL, user1)
+                            .header(HttpHeaders.AUTHORIZATION, auth(token))
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(request)))
+                    .andExpect(status().isNoContent());
+        }
+
+        @Test
+        void whenValidRequestWithPhone380Format_thenStatus204() throws Exception {
+            UpdateProfileDto request = buildUpdateProfileDto(TestUserProfile.VALID_PROFILE_PHONE_WITHOUT_PLUS);
+
+            mockMvc.perform(patch(URL, user1)
+                            .header(HttpHeaders.AUTHORIZATION, auth(token))
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(request)))
+                    .andExpect(status().isNoContent());
+        }
+
+        @Test
         void whenRequestMissingToken_thenStatus403() throws Exception {
             UpdateProfileDto request = buildUpdateProfileDto(TestUserProfile.VALID_PROFILE);
 
@@ -336,6 +424,16 @@ class UserControllerTest {
         }
 
         @Test
+        void whenIdIsNotInteger_thenStatus404() throws Exception {
+            var request = put(URL, "not_integer")
+                    .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+                    .header(HttpHeaders.AUTHORIZATION, auth(token));
+
+            mockMvc.perform(request)
+                    .andExpect(status().isNotFound());
+        }
+
+        @Test
         void whenUserDoesntExist_thenStatus404() throws Exception {
             UpdateProfileDto request = buildUpdateProfileDto(TestUserProfile.VALID_PROFILE);
 
@@ -347,98 +445,118 @@ class UserControllerTest {
         }
 
         @Test
-        void whenFirstNameIsNull_thenReturn400() throws Exception {
-            expect400WithInvalidBody(TestUserProfile.FIRSTNAME_IS_NULL);
-        }
-
-        @Test
-        void whenFirstNameIsBlank_thenReturn400() throws Exception {
-            expect400WithInvalidBody(TestUserProfile.FIRSTNAME_IS_BLANK);
-        }
-
-        @Test
         void whenFirstNameTooShort_thenReturn400() throws Exception {
-            expect400WithInvalidBody(TestUserProfile.FIRSTNAME_IS_TOO_SHORT);
+            expect400WithInvalidBody(TestUserProfile.FIRSTNAME_TOO_SHORT);
         }
 
         @Test
         void whenFirstNameTooLong_thenReturn400() throws Exception {
-            expect400WithInvalidBody(TestUserProfile.FIRSTNAME_IS_TOO_LONG);
+            expect400WithInvalidBody(TestUserProfile.FIRSTNAME_TOO_LONG);
         }
 
         @Test
-        void whenFirstNameInvalidPattern_thenReturn400() throws Exception {
-            expect400WithInvalidBody(TestUserProfile.FIRSTNAME_INVALID_PATTERN);
+        void whenFirstNameWithDigits_thenReturn400() throws Exception {
+            expect400WithInvalidBody(TestUserProfile.FIRSTNAME_WITH_DIGITS);
         }
 
         @Test
-        void whenLastNameIsNull_thenReturn400() throws Exception {
-            expect400WithInvalidBody(TestUserProfile.LASTNAME_IS_NULL);
+        void whenFirstNameWithSpecialChars_thenReturn400() throws Exception {
+            expect400WithInvalidBody(TestUserProfile.FIRSTNAME_WITH_SPECIAL_CHARS);
         }
 
         @Test
-        void whenLastNameIsBlank_thenReturn400() throws Exception {
-            expect400WithInvalidBody(TestUserProfile.LASTNAME_IS_BLANK);
+        void whenFirstNameStartsWithHyphen_thenReturn400() throws Exception {
+            expect400WithInvalidBody(TestUserProfile.FIRSTNAME_STARTS_WITH_HYPHEN);
+        }
+
+        @Test
+        void whenFirstNameEndsWithHyphen_thenReturn400() throws Exception {
+            expect400WithInvalidBody(TestUserProfile.FIRSTNAME_ENDS_WITH_HYPHEN);
+        }
+
+        @Test
+        void whenFirstNameDoubleHyphen_thenReturn400() throws Exception {
+            expect400WithInvalidBody(TestUserProfile.FIRSTNAME_DOUBLE_HYPHEN);
+        }
+
+        @Test
+        void whenFirstNameDoubleSpace_thenReturn400() throws Exception {
+            expect400WithInvalidBody(TestUserProfile.FIRSTNAME_DOUBLE_SPACE);
         }
 
         @Test
         void whenLastNameTooShort_thenReturn400() throws Exception {
-            expect400WithInvalidBody(TestUserProfile.LASTNAME_IS_TOO_SHORT);
+            expect400WithInvalidBody(TestUserProfile.LASTNAME_TOO_SHORT);
         }
 
         @Test
         void whenLastNameTooLong_thenReturn400() throws Exception {
-            expect400WithInvalidBody(TestUserProfile.LASTNAME_IS_TOO_LONG);
+            expect400WithInvalidBody(TestUserProfile.LASTNAME_TOO_LONG);
         }
 
         @Test
-        void whenLastNameInvalidPattern_thenReturn400() throws Exception {
-            expect400WithInvalidBody(TestUserProfile.LASTNAME_INVALID_PATTERN);
+        void whenLastNameWithDigits_thenReturn400() throws Exception {
+            expect400WithInvalidBody(TestUserProfile.LASTNAME_WITH_DIGITS);
         }
 
         @Test
-        void whenCityIsNull_thenReturn400() throws Exception {
-            expect400WithInvalidBody(TestUserProfile.CITY_IS_NULL);
+        void whenLastNameWithSpecialChars_thenReturn400() throws Exception {
+            expect400WithInvalidBody(TestUserProfile.LASTNAME_WITH_SPECIAL_CHARS);
         }
 
         @Test
-        void whenCityIsBlank_thenReturn400() throws Exception {
-            expect400WithInvalidBody(TestUserProfile.CITY_IS_BLANK);
+        void whenLastNameStartsWithHyphen_thenReturn400() throws Exception {
+            expect400WithInvalidBody(TestUserProfile.LASTNAME_STARTS_WITH_HYPHEN);
+        }
+
+        @Test
+        void whenLastNameEndsWithHyphen_thenReturn400() throws Exception {
+            expect400WithInvalidBody(TestUserProfile.LASTNAME_ENDS_WITH_HYPHEN);
+        }
+
+        @Test
+        void whenLastNameDoubleHyphen_thenReturn400() throws Exception {
+            expect400WithInvalidBody(TestUserProfile.LASTNAME_DOUBLE_HYPHEN);
         }
 
         @Test
         void whenCityTooShort_thenReturn400() throws Exception {
-            expect400WithInvalidBody(TestUserProfile.CITY_IS_TOO_SHORT);
+            expect400WithInvalidBody(TestUserProfile.CITY_TOO_SHORT);
         }
 
         @Test
         void whenCityTooLong_thenReturn400() throws Exception {
-            expect400WithInvalidBody(TestUserProfile.CITY_IS_TOO_LONG);
+            expect400WithInvalidBody(TestUserProfile.CITY_TOO_LONG);
         }
 
         @Test
-        void whenCityInvalidPattern_thenReturn400() throws Exception {
-            expect400WithInvalidBody(TestUserProfile.CITY_INVALID_PATTERN);
+        void whenCityWithDigits_thenReturn400() throws Exception {
+            expect400WithInvalidBody(TestUserProfile.CITY_WITH_DIGITS);
         }
 
         @Test
-        void whenPhoneNumberIsNull_thenReturn400() throws Exception {
-            expect400WithInvalidBody(TestUserProfile.PHONE_IS_NULL);
+        void whenCityWithSpecialChars_thenReturn400() throws Exception {
+            expect400WithInvalidBody(TestUserProfile.CITY_WITH_SPECIAL_CHARS);
         }
 
         @Test
-        void whenPhoneNumberIsBlank_thenReturn400() throws Exception {
-            expect400WithInvalidBody(TestUserProfile.PHONE_IS_BLANK);
+        void whenCityStartsWithHyphen_thenReturn400() throws Exception {
+            expect400WithInvalidBody(TestUserProfile.CITY_STARTS_WITH_HYPHEN);
         }
 
         @Test
-        void whenPhoneNumberInvalidPattern_thenReturn400() throws Exception {
-            expect400WithInvalidBody(TestUserProfile.PHONE_INVALID_PATTERN);
+        void whenCityEndsWithHyphen_thenReturn400() throws Exception {
+            expect400WithInvalidBody(TestUserProfile.CITY_ENDS_WITH_HYPHEN);
         }
 
         @Test
-        void whenPhoneNumberWithoutCountryCode_thenReturn400() throws Exception {
-            expect400WithInvalidBody(TestUserProfile.PHONE_WITHOUT_COUNTRY_CODE);
+        void whenPhoneNumberInvalidFormat_thenReturn400() throws Exception {
+            expect400WithInvalidBody(TestUserProfile.PHONE_INVALID_FORMAT);
+        }
+
+        @Test
+        void whenPhoneNumberWithLetters_thenReturn400() throws Exception {
+            expect400WithInvalidBody(TestUserProfile.PHONE_WITH_LETTERS);
         }
 
         @Test
@@ -449,6 +567,21 @@ class UserControllerTest {
         @Test
         void whenPhoneNumberTooLong_thenReturn400() throws Exception {
             expect400WithInvalidBody(TestUserProfile.PHONE_TOO_LONG);
+        }
+
+        @Test
+        void whenPhoneNumberWrongCountryCode_thenReturn400() throws Exception {
+            expect400WithInvalidBody(TestUserProfile.PHONE_WRONG_COUNTRY_CODE);
+        }
+
+        @Test
+        void whenPhoneNumberWithSpaces_thenReturn400() throws Exception {
+            expect400WithInvalidBody(TestUserProfile.PHONE_WITH_SPACES);
+        }
+
+        @Test
+        void whenPhoneNumberWithDashes_thenReturn400() throws Exception {
+            expect400WithInvalidBody(TestUserProfile.PHONE_WITH_DASHES);
         }
 
         private void expect400WithInvalidBody(TestUserProfile profile) throws Exception {
@@ -493,6 +626,16 @@ class UserControllerTest {
                             .header(HttpHeaders.AUTHORIZATION, auth("invalid_token")))
                     .andExpect(status().isForbidden());
         }
+
+        @Test
+        void whenIdIsNotInteger_thenStatus404() throws Exception {
+            var request = delete(URL, "not_integer")
+                    .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+                    .header(HttpHeaders.AUTHORIZATION, auth(token));
+
+            mockMvc.perform(request)
+                    .andExpect(status().isNotFound());
+        }
     }
 
     static class TestResources {
@@ -524,9 +667,9 @@ class UserControllerTest {
         USER_2("user2@example.com", "Pass456!word"),
         USER_3("user3@example.com", "Pass789!word"),
 
-        VALID_USER("newvalid.user@example.com", "Valid123!Pass"),
+        VALID_USER("valid.user@example.com", "Valid123!Pass"),
         VALID_USER_BOUNDARY_MIN("abc@def.gh", "Aa1!bcde"),
-        VALID_USER_BOUNDARY_MAX("newuserxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx@example.com", "Valid1!" + "p".repeat(43)),
+        VALID_USER_BOUNDARY_MAX("userxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx@example.com", "Valid1!" + "p".repeat(43)),
 
         // Invalid email
         EMAIL_IS_NULL(null, "Valid123!Pass"),
@@ -556,38 +699,59 @@ class UserControllerTest {
     }
 
     enum TestUserProfile {
+        // Valid profiles
         VALID_PROFILE("Іван", "Петренко", "Київ", "+380123456789"),
         VALID_PROFILE_BOUNDARY_MIN("Абв", "Где", "Жзі", "+380123456789"),
         VALID_PROFILE_BOUNDARY_MAX("А".repeat(255), "Б".repeat(255), "В".repeat(255), "+380999999999"),
+        VALID_PROFILE_WITH_HYPHEN("Анна-Марія", "Коваль-Петренко", "Івано-Франківськ", "+380123456789"),
+        VALID_PROFILE_WITH_APOSTROPHE("О'Брайен", "Д'Артаньян", "Сен-Тропе", "+380123456789"),
+        VALID_PROFILE_WITH_SPACE("Жан Клод", "Ван Дамм", "Лос Анджелес", "+380123456789"),
+        VALID_PROFILE_LATIN("John", "Smith", "London", "+380123456789"),
+        VALID_PROFILE_CYRILLIC("Олександр", "Шевченко", "Дніпро", "+380123456789"),
+        VALID_PROFILE_WITHOUT_PHONE("Іван", "Петренко", "Київ", null),
+        VALID_PROFILE_PHONE_WITHOUT_PLUS("Іван", "Петренко", "Київ", "380123456789"),
 
-        // Invalid firstName
-        FIRSTNAME_IS_NULL(null, "Петренко", "Київ", "+380123456789"),
-        FIRSTNAME_IS_BLANK("", "Петренко", "Київ", "+380123456789"),
-        FIRSTNAME_IS_TOO_SHORT("Аб", "Петренко", "Київ", "+380123456789"),
-        FIRSTNAME_IS_TOO_LONG("А".repeat(256), "Петренко", "Київ", "+380123456789"),
-        FIRSTNAME_INVALID_PATTERN("John123", "Петренко", "Київ", "+380123456789"),
+        // Invalid firstName - size
+        FIRSTNAME_TOO_SHORT("Аб", "Петренко", "Київ", "+380123456789"),
+        FIRSTNAME_TOO_LONG("А".repeat(256), "Петренко", "Київ", "+380123456789"),
 
-        // Invalid lastName
-        LASTNAME_IS_NULL("Іван", null, "Київ", "+380123456789"),
-        LASTNAME_IS_BLANK("Іван", "", "Київ", "+380123456789"),
-        LASTNAME_IS_TOO_SHORT("Іван", "Пе", "Київ", "+380123456789"),
-        LASTNAME_IS_TOO_LONG("Іван", "П".repeat(256), "Київ", "+380123456789"),
-        LASTNAME_INVALID_PATTERN("Іван", "Petrov123", "Київ", "+380123456789"),
+        // Invalid firstName - pattern
+        FIRSTNAME_WITH_DIGITS("Іван123", "Петренко", "Київ", "+380123456789"),
+        FIRSTNAME_WITH_SPECIAL_CHARS("Іван@!", "Петренко", "Київ", "+380123456789"),
+        FIRSTNAME_STARTS_WITH_HYPHEN("-Іван", "Петренко", "Київ", "+380123456789"),
+        FIRSTNAME_ENDS_WITH_HYPHEN("Іван-", "Петренко", "Київ", "+380123456789"),
+        FIRSTNAME_DOUBLE_HYPHEN("Іван--Петро", "Петренко", "Київ", "+380123456789"),
+        FIRSTNAME_DOUBLE_SPACE("Іван  Петро", "Петренко", "Київ", "+380123456789"),
 
-        // Invalid city
-        CITY_IS_NULL("Іван", "Петренко", null, "+380123456789"),
-        CITY_IS_BLANK("Іван", "Петренко", "", "+380123456789"),
-        CITY_IS_TOO_SHORT("Іван", "Петренко", "Кї", "+380123456789"),
-        CITY_IS_TOO_LONG("Іван", "Петренко", "К".repeat(256), "+380123456789"),
-        CITY_INVALID_PATTERN("Іван", "Петренко", "Kyiv123", "+380123456789"),
+        // Invalid lastName - size
+        LASTNAME_TOO_SHORT("Іван", "Пе", "Київ", "+380123456789"),
+        LASTNAME_TOO_LONG("Іван", "П".repeat(256), "Київ", "+380123456789"),
 
-        // Invalid phone
-        PHONE_IS_NULL("Іван", "Петренко", "Київ", null),
-        PHONE_IS_BLANK("Іван", "Петренко", "Київ", ""),
-        PHONE_INVALID_PATTERN("Іван", "Петренко", "Київ", "123456789"),
-        PHONE_WITHOUT_COUNTRY_CODE("Іван", "Петренко", "Київ", "0501234567"),
+        // Invalid lastName - pattern
+        LASTNAME_WITH_DIGITS("Іван", "Петренко123", "Київ", "+380123456789"),
+        LASTNAME_WITH_SPECIAL_CHARS("Іван", "Петренко@#", "Київ", "+380123456789"),
+        LASTNAME_STARTS_WITH_HYPHEN("Іван", "-Петренко", "Київ", "+380123456789"),
+        LASTNAME_ENDS_WITH_HYPHEN("Іван", "Петренко-", "Київ", "+380123456789"),
+        LASTNAME_DOUBLE_HYPHEN("Іван", "Петренко--Іваненко", "Київ", "+380123456789"),
+
+        // Invalid city - size
+        CITY_TOO_SHORT("Іван", "Петренко", "Кї", "+380123456789"),
+        CITY_TOO_LONG("Іван", "Петренко", "К".repeat(256), "+380123456789"),
+
+        // Invalid city - pattern
+        CITY_WITH_DIGITS("Іван", "Петренко", "Київ123", "+380123456789"),
+        CITY_WITH_SPECIAL_CHARS("Іван", "Петренко", "Київ@#", "+380123456789"),
+        CITY_STARTS_WITH_HYPHEN("Іван", "Петренко", "-Київ", "+380123456789"),
+        CITY_ENDS_WITH_HYPHEN("Іван", "Петренко", "Київ-", "+380123456789"),
+
+        // Invalid phoneNumber - pattern
+        PHONE_INVALID_FORMAT("Іван", "Петренко", "Київ", "0501234567"),
+        PHONE_WITH_LETTERS("Іван", "Петренко", "Київ", "+380abc456789"),
         PHONE_TOO_SHORT("Іван", "Петренко", "Київ", "+38012345678"),
-        PHONE_TOO_LONG("Іван", "Петренко", "Київ", "+3801234567890");
+        PHONE_TOO_LONG("Іван", "Петренко", "Київ", "+3801234567890"),
+        PHONE_WRONG_COUNTRY_CODE("Іван", "Петренко", "Київ", "+1234567890"),
+        PHONE_WITH_SPACES("Іван", "Петренко", "Київ", "+380 12 345 6789"),
+        PHONE_WITH_DASHES("Іван", "Петренко", "Київ", "+380-12-345-6789");
 
         private final String firstName;
         private final String lastName;

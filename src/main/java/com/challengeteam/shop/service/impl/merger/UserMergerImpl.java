@@ -14,22 +14,22 @@ public class UserMergerImpl implements UserMerger {
         Objects.requireNonNull(user,"user");
         Objects.requireNonNull(newProfile,"newProfile");
 
-        String firstname = newProfile.newFirstname();
+        String firstname = newProfile.firstName();
         if (firstname != null) {
             user.setFirstName(firstname);
         }
 
-        String lastname = newProfile.newLastname();
+        String lastname = newProfile.lastName();
         if (lastname != null) {
             user.setLastName(lastname);
         }
 
-        String city = newProfile.newCity();
+        String city = newProfile.city();
         if (city != null) {
             user.setCity(city);
         }
 
-        String phoneNumber = newProfile.newPhoneNumber();
+        String phoneNumber = newProfile.phoneNumber();
         if (phoneNumber != null) {
             user.setPhoneNumber(phoneNumber);
         }
