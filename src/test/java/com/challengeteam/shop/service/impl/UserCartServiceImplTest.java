@@ -6,8 +6,10 @@ import com.challengeteam.shop.entity.cart.Cart;
 import com.challengeteam.shop.entity.cart.CartItem;
 import com.challengeteam.shop.entity.phone.Phone;
 import com.challengeteam.shop.entity.user.User;
+import com.challengeteam.shop.exceptionHandling.exception.InvalidCartItemAmountException;
 import com.challengeteam.shop.exceptionHandling.exception.ResourceNotFoundException;
 import com.challengeteam.shop.service.CartService;
+import com.challengeteam.shop.service.impl.validator.CartValidator;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -29,8 +31,13 @@ class UserCartServiceImplTest {
     @Mock
     private CartService cartService;
 
+    @Mock
+    private CartValidator cartValidator;
+
     @InjectMocks
     private UserCartServiceImpl userCartService;
+
+    private static final Integer INVALID_AMOUNT = -1;
 
     @Nested
     class GetUserCartTest {
@@ -127,6 +134,52 @@ class UserCartServiceImplTest {
             assertThatThrownBy(() -> userCartService.putItemToUserCart(USER_ID, dto))
                     .isInstanceOf(ResourceNotFoundException.class);
         }
+
+        @Test
+        void whenAmountIsInvalid_thenThrowExceptionFromValidator() {
+            // given
+            Cart cart = buildCart();
+            CartItemAddRequestDto dto =
+                    buildCartItemAddRequestDtoWithAmount(INVALID_AMOUNT);
+
+            // mockito
+            Mockito.when(cartService.getCartByUserId(USER_ID))
+                    .thenReturn(Optional.of(cart));
+            Mockito.doThrow(InvalidCartItemAmountException.class)
+                    .when(cartValidator)
+                    .validateCartItemAmountToUpdate(dto.amount());
+
+            // when + then
+            assertThatThrownBy(() -> userCartService.putItemToUserCart(USER_ID, dto))
+                    .isInstanceOf(InvalidCartItemAmountException.class);
+
+            Mockito.verify(cartValidator)
+                    .validateCartItemAmountToUpdate(dto.amount());
+        }
+
+        @Test
+        void whenTotalAmountIsInvalid_thenThrowExceptionFromValidator() {
+            // given
+            Cart cart = buildCartWithItemAmount(10);
+            CartItemAddRequestDto dto = buildAddDto();
+
+            // mockito
+            Mockito.when(cartService.getCartByUserId(USER_ID))
+                    .thenReturn(Optional.of(cart));
+            Mockito.doThrow(InvalidCartItemAmountException.class)
+                    .when(cartValidator)
+                    .validateCartItemTotalAmount(11);
+
+            // when + then
+            assertThatThrownBy(() -> userCartService.putItemToUserCart(USER_ID, dto))
+                    .isInstanceOf(InvalidCartItemAmountException.class);
+
+            Mockito.verify(cartValidator)
+                    .validateCartItemTotalAmount(11);
+            Mockito.verify(cartService, Mockito.never())
+                    .updateAmountCartItem(Mockito.any(), Mockito.any(), Mockito.any());
+        }
+
     }
 
     @Nested
@@ -209,6 +262,27 @@ class UserCartServiceImplTest {
             // when + then
             assertThatThrownBy(() -> userCartService.removeItemFromUserCart(USER_ID, removeRequest))
                     .isInstanceOf(ResourceNotFoundException.class);
+        }
+
+        @Test
+        void whenRemoveAmountIsGreaterThanCurrent_thenThrowException() {
+            // given
+            Cart cart = buildCartWithItemAmount(1);
+            CartItemRemoveRequestDto dto = buildCartItemRemoveRequestDtoWithAmount(2);
+
+            // mockito
+            Mockito.when(cartService.getCartByUserId(USER_ID))
+                    .thenReturn(Optional.of(cart));
+
+            // when + then
+            assertThatThrownBy(() ->
+                    userCartService.removeItemFromUserCart(USER_ID, dto))
+                    .isInstanceOf(InvalidCartItemAmountException.class);
+
+            Mockito.verify(cartService, Mockito.never())
+                    .updateAmountCartItem(Mockito.any(), Mockito.any(), Mockito.any());
+            Mockito.verify(cartService, Mockito.never())
+                    .removeItemFromCart(Mockito.any(), Mockito.any());
         }
     }
 
@@ -296,8 +370,16 @@ class UserCartServiceImplTest {
             return new CartItemAddRequestDto(PHONE_ID, 1);
         }
 
+        static CartItemRemoveRequestDto buildCartItemRemoveRequestDtoWithAmount(Integer amount) {
+            return new CartItemRemoveRequestDto(PHONE_ID, amount);
+        }
+
         static CartItemRemoveRequestDto buildRemoveDto() {
             return new CartItemRemoveRequestDto(PHONE_ID, 1);
+        }
+
+        static CartItemAddRequestDto buildCartItemAddRequestDtoWithAmount(Integer amount) {
+            return new CartItemAddRequestDto(PHONE_ID, amount);
         }
     }
 }
