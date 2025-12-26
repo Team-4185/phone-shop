@@ -53,3 +53,8 @@ minio:
 logging:
   level:
     root: ${LOG_LEVEL:INFO}
+
+cart:
+  min-update: 1
+  max-update: 20
+  total-amount: 100

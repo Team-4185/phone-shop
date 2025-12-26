@@ -9,6 +9,7 @@ import com.challengeteam.shop.exceptionHandling.exception.ResourceNotFoundExcept
 import com.challengeteam.shop.persistence.repository.CartItemRepository;
 import com.challengeteam.shop.persistence.repository.CartRepository;
 import com.challengeteam.shop.service.PhoneService;
+import com.challengeteam.shop.service.impl.validator.CartValidator;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -37,8 +38,13 @@ class CartServiceImplTest {
     @Mock
     private PhoneService phoneService;
 
+    @Mock
+    private CartValidator cartValidator;
+
     @InjectMocks
     private CartServiceImpl cartService;
+
+    private static final Integer INVALID_AMOUNT = -1;
 
     @Nested
     class GetCartByIdTest {
@@ -159,6 +165,27 @@ class CartServiceImplTest {
             assertThatThrownBy(() -> cartService.putItemToCart(null, dto))
                     .isInstanceOf(NullPointerException.class);
         }
+
+        @Test
+        void whenAmountIsInvalid_thenThrowExceptionFromValidator() {
+            // given
+            Cart cart = buildCart();
+            CartItemAddRequestDto dto = buildCartItemAddRequestDtoWithAmount(INVALID_AMOUNT);
+
+            // mockito
+            Mockito.doThrow(IllegalArgumentException.class)
+                    .when(cartValidator)
+                    .validateCartItemAmountToUpdate(dto.amount());
+
+            // when + then
+            assertThatThrownBy(() -> cartService.putItemToCart(cart, dto))
+                    .isInstanceOf(IllegalArgumentException.class);
+
+            Mockito.verify(cartValidator).validateCartItemAmountToUpdate(dto.amount());
+            Mockito.verifyNoInteractions(phoneService);
+            Mockito.verifyNoInteractions(cartItemRepository);
+        }
+
     }
 
     @Nested
@@ -230,6 +257,26 @@ class CartServiceImplTest {
             assertThatThrownBy(() -> cartService.updateAmountCartItem(cart, PHONE_ID, null))
                     .isInstanceOf(NullPointerException.class);
         }
+
+        @Test
+        void whenAmountIsInvalid_thenThrowExceptionFromValidator() {
+            // given
+            Cart cart = buildCart();
+
+            // mockito
+            Mockito.doThrow(IllegalArgumentException.class)
+                    .when(cartValidator)
+                    .validateCartItemAmountToUpdate(INVALID_AMOUNT);
+
+            // when + then
+            assertThatThrownBy(() -> cartService.updateAmountCartItem(cart, PHONE_ID, INVALID_AMOUNT))
+                    .isInstanceOf(IllegalArgumentException.class);
+
+            Mockito.verify(cartValidator).validateCartItemAmountToUpdate(INVALID_AMOUNT);
+            Mockito.verifyNoInteractions(cartItemRepository);
+            Mockito.verifyNoInteractions(cartRepository);
+        }
+
     }
 
     @Nested
@@ -399,5 +446,10 @@ class CartServiceImplTest {
         static CartItemAddRequestDto buildCartItemAddRequestDto() {
             return new CartItemAddRequestDto(PHONE_ID, 1);
         }
+
+        static CartItemAddRequestDto buildCartItemAddRequestDtoWithAmount(Integer amount) {
+            return new CartItemAddRequestDto(PHONE_ID, amount);
+        }
+
     }
 }

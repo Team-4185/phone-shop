@@ -3,9 +3,11 @@ package com.challengeteam.shop.service.impl;
 import com.challengeteam.shop.dto.cart.CartItemAddRequestDto;
 import com.challengeteam.shop.dto.cart.CartItemRemoveRequestDto;
 import com.challengeteam.shop.entity.cart.Cart;
+import com.challengeteam.shop.exceptionHandling.exception.InvalidCartItemAmountException;
 import com.challengeteam.shop.exceptionHandling.exception.ResourceNotFoundException;
 import com.challengeteam.shop.service.CartService;
 import com.challengeteam.shop.service.UserCartService;
+import com.challengeteam.shop.service.impl.validator.CartValidator;
 import com.challengeteam.shop.utility.CartUtility;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -21,6 +23,8 @@ import java.util.Optional;
 public class UserCartServiceImpl implements UserCartService {
 
     private final CartService cartService;
+
+    private final CartValidator cartValidator;
 
     @Transactional(readOnly = true)
     @Override
@@ -42,12 +46,15 @@ public class UserCartServiceImpl implements UserCartService {
         Long phoneId = cartItemAddRequestDto.phoneId();
         Integer amountToAdd = cartItemAddRequestDto.amount();
 
+        cartValidator.validateCartItemAmountToUpdate(amountToAdd);
+
         boolean isCartHasPhone = CartUtility.isCartHasPhone(cart, phoneId);
 
         if (isCartHasPhone) {
             log.debug("Phone {} already in cart.", phoneId);
             Integer currentAmount = CartUtility.getCartItemAmount(cart, phoneId);
             Integer newAmount = currentAmount + amountToAdd;
+            cartValidator.validateCartItemTotalAmount(newAmount);
             return cartService.updateAmountCartItem(cart, phoneId, newAmount);
         } else {
             log.debug("Adding new phone {} to cart with amount {}", phoneId, amountToAdd);
@@ -73,8 +80,13 @@ public class UserCartServiceImpl implements UserCartService {
 
         Integer currentAmount = CartUtility.getCartItemAmount(cart, phoneId);
 
+        if (currentAmount - amountToRemove < 0) {
+            throw new InvalidCartItemAmountException("Invalid amount to remove from cart");
+        }
+
         if (currentAmount > amountToRemove) {
             Integer newAmount = currentAmount - amountToRemove;
+            cartValidator.validateCartItemTotalAmount(newAmount);
             log.debug("Decreasing amount of phone {} from {} to {}", phoneId, currentAmount, newAmount);
 
             return cartService.updateAmountCartItem(cart, phoneId, newAmount);
