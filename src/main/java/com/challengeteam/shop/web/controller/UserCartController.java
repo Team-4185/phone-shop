@@ -10,6 +10,7 @@ import com.challengeteam.shop.security.SimpleUserDetailsService.SimpleUserDetail
 import com.challengeteam.shop.service.UserCartService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -44,7 +45,7 @@ public class UserCartController {
     )
     @PostMapping("/put")
     public ResponseEntity<CartResponseDto> putItemToUserCart(@AuthenticationPrincipal SimpleUserDetails simpleUserDetails,
-                                        @RequestBody CartItemAddRequestDto cartItemAddRequestDto) {
+                                        @RequestBody @Valid CartItemAddRequestDto cartItemAddRequestDto) {
         Long userId = simpleUserDetails.getUserId();
         Cart cart = userCartService.putItemToUserCart(userId, cartItemAddRequestDto);
         CartResponseDto cartResponseDto = cartMapper.toCartResponseDto(cart);
@@ -59,7 +60,7 @@ public class UserCartController {
     )
     @PostMapping("/remove")
     public ResponseEntity<CartResponseDto> removeItemFromUserCart(@AuthenticationPrincipal SimpleUserDetails simpleUserDetails,
-                                           @RequestBody CartItemRemoveRequestDto cartItemRemoveRequestDto) {
+                                           @RequestBody @Valid CartItemRemoveRequestDto cartItemRemoveRequestDto) {
         Long userId = simpleUserDetails.getUserId();
         Cart cart = userCartService.removeItemFromUserCart(userId, cartItemRemoveRequestDto);
         CartResponseDto cartResponseDto = cartMapper.toCartResponseDto(cart);
