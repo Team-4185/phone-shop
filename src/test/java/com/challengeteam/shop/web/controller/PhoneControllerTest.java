@@ -182,6 +182,42 @@ class PhoneControllerTest {
                     .andExpect(status().isBadRequest());
         }
 
+        @Test
+        void whenPageIsTooHigh_thenStatus400() throws Exception {
+            mockMvc.perform(get(URL)
+                            .param("page", "1000000000")
+                            .param("size", "1")
+                            .header(HttpHeaders.AUTHORIZATION, auth(token)))
+                    .andExpect(status().isBadRequest());
+        }
+
+        @Test
+        void whenSizeIsTooHigh_thenStatus400() throws Exception {
+            mockMvc.perform(get(URL)
+                            .param("page", "1")
+                            .param("size", "101")
+                            .header(HttpHeaders.AUTHORIZATION, auth(token)))
+                    .andExpect(status().isBadRequest());
+        }
+
+        @Test
+        void whenPageIsNotInteger_thenStatus400() throws Exception {
+            mockMvc.perform(get(URL)
+                            .param("page", "word")
+                            .param("size", "1")
+                            .header(HttpHeaders.AUTHORIZATION, auth(token)))
+                    .andExpect(status().isBadRequest());
+        }
+
+        @Test
+        void whenSizeIsNotInteger_thenStatus400() throws Exception {
+            mockMvc.perform(get(URL)
+                            .param("page", "1")
+                            .param("size", "word")
+                            .header(HttpHeaders.AUTHORIZATION, auth(token)))
+                    .andExpect(status().isBadRequest());
+        }
+
     }
 
     @Nested
