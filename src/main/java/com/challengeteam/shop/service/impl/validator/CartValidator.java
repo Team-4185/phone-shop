@@ -1,9 +1,11 @@
 package com.challengeteam.shop.service.impl.validator;
 
+import com.challengeteam.shop.entity.cart.Cart;
+
 public interface CartValidator {
 
-    void validateCartItemAmountToUpdate(Integer amount);
+    void validateItemAmount(Integer amount);
 
-    void validateCartItemTotalAmount(Integer amount);
+    void validateTotalAmount(Cart cart, Integer newAmount);
 
 }

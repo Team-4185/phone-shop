@@ -6,6 +6,7 @@ import jakarta.validation.constraints.NotNull;
 
 public record CartItemRemoveRequestDto(
         @NotNull(message = "Phone ID must be not null")
+        @Min(value = 1, message = "Phone ID must be at least {value}")
         Long phoneId,
         @NotNull(message = "Amount must be not null")
         @Min(value = 1, message = "Amount must be at least {value}")
