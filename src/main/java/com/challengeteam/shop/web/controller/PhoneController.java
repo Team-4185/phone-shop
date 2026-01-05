@@ -1,7 +1,7 @@
 package com.challengeteam.shop.web.controller;
 
-
 import com.challengeteam.shop.dto.image.ImageMetadataResponseDto;
+import com.challengeteam.shop.dto.pagination.PageRequestDto;
 import com.challengeteam.shop.dto.pagination.PageResponseDto;
 import com.challengeteam.shop.dto.phone.PhoneCreateRequestDto;
 import com.challengeteam.shop.dto.phone.PhoneResponseDto;
@@ -15,8 +15,7 @@ import com.challengeteam.shop.service.PhoneService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.Min;
-import lombok.RequiredArgsConstructor;
+import lombok.*;
 import org.springframework.data.domain.Page;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -39,22 +38,20 @@ public class PhoneController {
     private final PhoneMapper phoneMapper;
     private final ImageMapper imageMapper;
 
-
     @Operation(
             summary = "Get paginated list of phones",
             description = "Returns a paginated list of phones. " +
                           "Use 'page' and 'size' query parameters to control pagination."
     )
     @GetMapping
-    public ResponseEntity<PageResponseDto<PhoneResponseDto>> getAllPhones(
-            @RequestParam(defaultValue = "1") @Min(value = 1, message = "Page must be > 0") int page,
-            @RequestParam(defaultValue = "10") @Min(value = 1, message = "Size must be > 0") int size
-    ) {
-        Page<Phone> phones = phoneService.getPhones(page - 1, size);
+    public ResponseEntity<PageResponseDto<PhoneResponseDto>> getAllPhones(@Valid PageRequestDto pageRequestDto) {
+        int page = pageRequestDto.page() - 1;
+        int size = pageRequestDto.size();
+
+        Page<Phone> phones = phoneService.getPhones(page, size);
         Page<PhoneResponseDto> response = phones.map(phoneMapper::toResponse);
         return ResponseEntity.ok(PageResponseDto.of(response));
     }
-
 
     @Operation(
             summary = "Get phone by id",
