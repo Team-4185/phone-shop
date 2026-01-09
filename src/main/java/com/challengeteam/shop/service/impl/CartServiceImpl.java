@@ -68,9 +68,9 @@ public class CartServiceImpl implements CartService {
                     .amount(amount)
                     .build();
 
-            cartValidator.validateTotalAmount(cart, amount);
-
             cart.getCartItems().add(cartItem);
+
+            cartValidator.validateTotalAmount(cart);
             cartItemRepository.save(cartItem);
             log.debug("Added new phone {} to cart {}", phoneId, cart.getId());
         }
@@ -93,9 +93,8 @@ public class CartServiceImpl implements CartService {
         CartItem cartItem = cartItemRepository.findByCartIdAndPhoneId(cart.getId(), phoneId)
                         .orElseThrow(() -> new ResourceNotFoundException("Phone with id " + phoneId + " not found in cart"));
 
-        cartValidator.validateTotalAmount(cart, amount - cartItem.getAmount());
-
         cartItem.setAmount(amount);
+        cartValidator.validateTotalAmount(cart);
         cartItemRepository.save(cartItem);
 
         cart.setTotalPrice(CartUtility.countCartTotalPrice(cart));

@@ -6,6 +6,6 @@ public interface CartValidator {
 
     void validateItemAmount(Integer amount);
 
-    void validateTotalAmount(Cart cart, Integer newAmount);
+    void validateTotalAmount(Cart cart);
 
 }

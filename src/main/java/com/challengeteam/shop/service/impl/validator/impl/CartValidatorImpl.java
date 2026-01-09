@@ -23,12 +23,12 @@ public class CartValidatorImpl implements CartValidator {
     }
 
     @Override
-    public void validateTotalAmount(Cart cart, Integer newAmount) {
+    public void validateTotalAmount(Cart cart) {
         int totalAmountInCart = cart.getCartItems().stream()
                 .mapToInt(CartItem::getAmount)
                 .sum();
 
-        if (totalAmountInCart + newAmount > TOTAL_AMOUNT) {
+        if (totalAmountInCart > TOTAL_AMOUNT) {
             throw new InvalidCartItemAmountException("Cart items total amount must be less than " + TOTAL_AMOUNT);
         }
     }
