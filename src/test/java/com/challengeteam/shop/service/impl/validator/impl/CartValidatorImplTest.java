@@ -72,10 +72,8 @@ class CartValidatorImplTest {
             Cart cart = new Cart();
             cart.setCartItems(List.of(item1, item2));
 
-            Integer newAmount = 20; // 30 + 40 + 20 = 90
-
             // when + then
-            assertDoesNotThrow(() -> cartValidator.validateTotalAmount(cart, newAmount));
+            assertDoesNotThrow(() -> cartValidator.validateTotalAmount(cart));
         }
 
         @Test
@@ -85,17 +83,15 @@ class CartValidatorImplTest {
             item1.setAmount(60);
 
             CartItem item2 = new CartItem();
-            item2.setAmount(30);
+            item2.setAmount(50);
 
             Cart cart = new Cart();
             cart.setCartItems(List.of(item1, item2));
 
-            Integer newAmount = 20; // 60 + 30 + 20 = 110
-
             // when + then
             assertThrows(
                     InvalidCartItemAmountException.class,
-                    () -> cartValidator.validateTotalAmount(cart, newAmount)
+                    () -> cartValidator.validateTotalAmount(cart)
             );
         }
     }
