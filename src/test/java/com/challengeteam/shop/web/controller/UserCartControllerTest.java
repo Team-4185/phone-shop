@@ -93,7 +93,7 @@ class UserCartControllerTest {
 
         @Test
         void whenValidRequest_thenStatus200AndReturnCart() throws Exception {
-            userCartService.putItemToUserCart(userId, buildCartItemAddRequestDto(CART_ITEM_1, phoneId1));
+            userCartService.putItemToUserCart(userId, buildCartItemAddRequestDto(phoneId1, CART_ITEM_1.amount));
 
             mockMvc.perform(get(URL)
                             .header(HttpHeaders.AUTHORIZATION, auth(token)))
@@ -101,9 +101,9 @@ class UserCartControllerTest {
                     .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                     .andExpect(jsonPath("$.id").exists())
                     .andExpect(jsonPath("$.totalPrice").exists())
+                    .andExpect(jsonPath("$.totalAmount").exists())
                     .andExpect(jsonPath("$.cartItems").isArray())
                     .andExpect(jsonPath("$.cartItems", hasSize(1)))
-                    .andExpect(jsonPath("$.cartItems[0].id").exists())
                     .andExpect(jsonPath("$.cartItems[0].phoneId").value(phoneId1))
                     .andExpect(jsonPath("$.cartItems[0].amount").value(CART_ITEM_1.amount));
         }
@@ -116,22 +116,24 @@ class UserCartControllerTest {
                     .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                     .andExpect(jsonPath("$.id").exists())
                     .andExpect(jsonPath("$.totalPrice").exists())
+                    .andExpect(jsonPath("$.totalAmount").exists())
                     .andExpect(jsonPath("$.cartItems").isArray())
                     .andExpect(jsonPath("$.cartItems", hasSize(0)));
         }
 
         @Test
         void whenCartHasMultipleItems_thenReturnAllItems() throws Exception {
-            userCartService.putItemToUserCart(userId, buildCartItemAddRequestDto(CART_ITEM_1, phoneId1));
-            userCartService.putItemToUserCart(userId, buildCartItemAddRequestDto(CART_ITEM_2, phoneId2));
-            userCartService.putItemToUserCart(userId, buildCartItemAddRequestDto(CART_ITEM_3, phoneId3));
+            userCartService.putItemToUserCart(userId, buildCartItemAddRequestDto(phoneId1, CART_ITEM_1.amount));
+            userCartService.putItemToUserCart(userId, buildCartItemAddRequestDto(phoneId2, CART_ITEM_2.amount));
+            userCartService.putItemToUserCart(userId, buildCartItemAddRequestDto(phoneId3, CART_ITEM_3.amount));
 
             mockMvc.perform(get(URL)
                             .header(HttpHeaders.AUTHORIZATION, auth(token)))
                     .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.totalPrice").exists())
+                    .andExpect(jsonPath("$.totalAmount").exists())
                     .andExpect(jsonPath("$.cartItems").isArray())
-                    .andExpect(jsonPath("$.cartItems", hasSize(3)))
-                    .andExpect(jsonPath("$.totalPrice").exists());
+                    .andExpect(jsonPath("$.cartItems", hasSize(3)));
         }
 
         @Test
@@ -155,7 +157,7 @@ class UserCartControllerTest {
 
         @Test
         void whenValidRequest_thenStatus200AndAddItem() throws Exception {
-            CartItemAddRequestDto request = buildCartItemAddRequestDto(VALID_CART_ITEM, phoneId1);
+            CartItemAddRequestDto request = buildCartItemAddRequestDto(phoneId1, VALID_CART_ITEM.amount);
 
             mockMvc.perform(post(URL)
                             .header(HttpHeaders.AUTHORIZATION, auth(token))
@@ -163,6 +165,9 @@ class UserCartControllerTest {
                             .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isOk())
                     .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                    .andExpect(jsonPath("$.id").exists())
+                    .andExpect(jsonPath("$.totalPrice").exists())
+                    .andExpect(jsonPath("$.totalAmount").exists())
                     .andExpect(jsonPath("$.cartItems").isArray())
                     .andExpect(jsonPath("$.cartItems", hasSize(1)))
                     .andExpect(jsonPath("$.cartItems[0].phoneId").value(phoneId1))
@@ -171,15 +176,18 @@ class UserCartControllerTest {
 
         @Test
         void whenItemAlreadyExists_thenIncreaseAmount() throws Exception {
-            userCartService.putItemToUserCart(userId, buildCartItemAddRequestDto(CART_ITEM_1, phoneId1));
+            userCartService.putItemToUserCart(userId, buildCartItemAddRequestDto(phoneId1, CART_ITEM_1.amount));
 
-            CartItemAddRequestDto request = buildCartItemAddRequestDto(CART_ITEM_2, phoneId1);
+            CartItemAddRequestDto request = buildCartItemAddRequestDto(phoneId1, CART_ITEM_2.amount);
 
             mockMvc.perform(post(URL)
                             .header(HttpHeaders.AUTHORIZATION, auth(token))
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.id").exists())
+                    .andExpect(jsonPath("$.totalPrice").exists())
+                    .andExpect(jsonPath("$.totalAmount").exists())
                     .andExpect(jsonPath("$.cartItems").isArray())
                     .andExpect(jsonPath("$.cartItems", hasSize(1)))
                     .andExpect(jsonPath("$.cartItems[0].amount").value(CART_ITEM_1.amount + CART_ITEM_2.amount));
@@ -187,14 +195,17 @@ class UserCartControllerTest {
 
         @Test
         void whenAddMultipleProducts_thenAllAdded() throws Exception {
-            CartItemAddRequestDto request1 = buildCartItemAddRequestDto(CART_ITEM_1, phoneId1);
-            CartItemAddRequestDto request2 = buildCartItemAddRequestDto(CART_ITEM_2, phoneId2);
+            CartItemAddRequestDto request1 = buildCartItemAddRequestDto(phoneId1, CART_ITEM_1.amount);
+            CartItemAddRequestDto request2 = buildCartItemAddRequestDto(phoneId2, CART_ITEM_2.amount);
 
             mockMvc.perform(post(URL)
                             .header(HttpHeaders.AUTHORIZATION, auth(token))
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request1)))
                     .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.id").exists())
+                    .andExpect(jsonPath("$.totalPrice").exists())
+                    .andExpect(jsonPath("$.totalAmount").exists())
                     .andExpect(jsonPath("$.cartItems", hasSize(1)));
 
             mockMvc.perform(post(URL)
@@ -202,36 +213,45 @@ class UserCartControllerTest {
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request2)))
                     .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.id").exists())
+                    .andExpect(jsonPath("$.totalPrice").exists())
+                    .andExpect(jsonPath("$.totalAmount").exists())
                     .andExpect(jsonPath("$.cartItems", hasSize(2)));
         }
 
         @Test
         void whenValidRequestWithBoundaryMinValues_thenStatus200() throws Exception {
-            CartItemAddRequestDto request = buildCartItemAddRequestDto(VALID_CART_ITEM_BOUNDARY_MIN, phoneId1);
+            CartItemAddRequestDto request = buildCartItemAddRequestDto(phoneId1, VALID_CART_ITEM_BOUNDARY_MIN.amount);
 
             mockMvc.perform(post(URL)
                             .header(HttpHeaders.AUTHORIZATION, auth(token))
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.id").exists())
+                    .andExpect(jsonPath("$.totalPrice").exists())
+                    .andExpect(jsonPath("$.totalAmount").exists())
                     .andExpect(jsonPath("$.cartItems[0].amount").value(VALID_CART_ITEM_BOUNDARY_MIN.amount));
         }
 
         @Test
         void whenValidRequestWithBoundaryMaxValues_thenStatus200() throws Exception {
-            CartItemAddRequestDto request = buildCartItemAddRequestDto(VALID_CART_ITEM_BOUNDARY_MAX, phoneId1);
+            CartItemAddRequestDto request = buildCartItemAddRequestDto(phoneId1, VALID_CART_ITEM_BOUNDARY_MAX.amount);
 
             mockMvc.perform(post(URL)
                             .header(HttpHeaders.AUTHORIZATION, auth(token))
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.id").exists())
+                    .andExpect(jsonPath("$.totalPrice").exists())
+                    .andExpect(jsonPath("$.totalAmount").exists())
                     .andExpect(jsonPath("$.cartItems[0].amount").value(VALID_CART_ITEM_BOUNDARY_MAX.amount));
         }
 
         @Test
         void whenRequestMissingToken_thenStatus403() throws Exception {
-            CartItemAddRequestDto request = buildCartItemAddRequestDto(VALID_CART_ITEM, phoneId1);
+            CartItemAddRequestDto request = buildCartItemAddRequestDto(phoneId1, VALID_CART_ITEM.amount);
 
             mockMvc.perform(post(URL)
                             .contentType(MediaType.APPLICATION_JSON)
@@ -241,7 +261,7 @@ class UserCartControllerTest {
 
         @Test
         void whenRequestHasInvalidToken_thenStatus403() throws Exception {
-            CartItemAddRequestDto request = buildCartItemAddRequestDto(VALID_CART_ITEM, phoneId1);
+            CartItemAddRequestDto request = buildCartItemAddRequestDto(phoneId1, VALID_CART_ITEM.amount);
 
             mockMvc.perform(post(URL)
                             .header(HttpHeaders.AUTHORIZATION, auth("some_invalid_text"))
@@ -253,27 +273,27 @@ class UserCartControllerTest {
         // Validation tests
         @Test
         void whenPhoneIdIsNull_thenStatus400() throws Exception {
-            expect400WithInvalidBody(INVALID_PHONE_ID_NULL);
+            expect400WithInvalidBody(null, VALID_CART_ITEM.amount);
         }
 
         @Test
         void whenAmountIsNull_thenStatus400() throws Exception {
-            expect400WithInvalidBody(INVALID_AMOUNT_NULL);
+            expect400WithInvalidBody(phoneId1, INVALID_AMOUNT_NULL.amount);
         }
 
         @Test
         void whenAmountIsZero_thenStatus400() throws Exception {
-            expect400WithInvalidBody(INVALID_AMOUNT_ZERO);
+            expect400WithInvalidBody(phoneId1, INVALID_AMOUNT_ZERO.amount);
         }
 
         @Test
         void whenAmountIsNegative_thenStatus400() throws Exception {
-            expect400WithInvalidBody(INVALID_AMOUNT_NEGATIVE);
+            expect400WithInvalidBody(phoneId1, INVALID_AMOUNT_NEGATIVE.amount);
         }
 
         @Test
         void whenAmountExceedsMax_thenStatus400() throws Exception {
-            expect400WithInvalidBody(INVALID_AMOUNT_TOO_HIGH);
+            expect400WithInvalidBody(phoneId1, INVALID_AMOUNT_TOO_HIGH.amount);
         }
 
         @Test
@@ -287,11 +307,8 @@ class UserCartControllerTest {
                     .andExpect(status().isNotFound());
         }
 
-        private void expect400WithInvalidBody(TestCartItem cartItem) throws Exception {
-            CartItemAddRequestDto request = new CartItemAddRequestDto(
-                    cartItem.phoneId,
-                    cartItem.amount
-            );
+        private void expect400WithInvalidBody(Long phoneId, Integer amount) throws Exception {
+            CartItemAddRequestDto request = buildCartItemAddRequestDto(phoneId, amount);
 
             mockMvc.perform(post(URL)
                             .header(HttpHeaders.AUTHORIZATION, auth(token))
@@ -315,13 +332,16 @@ class UserCartControllerTest {
 
         @Test
         void whenValidRequest_thenStatus200AndDecreaseAmount() throws Exception {
-            CartItemRemoveRequestDto request = buildCartItemRemoveRequestDto(CART_ITEM_1, phoneId1);
+            CartItemRemoveRequestDto request = buildCartItemRemoveRequestDto(phoneId1, CART_ITEM_1.amount);
 
             mockMvc.perform(post(URL)
                             .header(HttpHeaders.AUTHORIZATION, auth(token))
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.id").exists())
+                    .andExpect(jsonPath("$.totalPrice").exists())
+                    .andExpect(jsonPath("$.totalAmount").exists())
                     .andExpect(jsonPath("$.cartItems").isArray())
                     .andExpect(jsonPath("$.cartItems", hasSize(2)))
                     .andExpect(jsonPath("$.cartItems[?(@.phoneId == " + phoneId1 + ")].amount").value(3));
@@ -336,6 +356,9 @@ class UserCartControllerTest {
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.id").exists())
+                    .andExpect(jsonPath("$.totalPrice").exists())
+                    .andExpect(jsonPath("$.totalAmount").exists())
                     .andExpect(jsonPath("$.cartItems").isArray())
                     .andExpect(jsonPath("$.cartItems", hasSize(1)))
                     .andExpect(jsonPath("$.cartItems[0].phoneId").value(phoneId1));
@@ -351,6 +374,9 @@ class UserCartControllerTest {
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request1)))
                     .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.id").exists())
+                    .andExpect(jsonPath("$.totalPrice").exists())
+                    .andExpect(jsonPath("$.totalAmount").exists())
                     .andExpect(jsonPath("$.cartItems", hasSize(1)));
 
             mockMvc.perform(post(URL)
@@ -358,24 +384,30 @@ class UserCartControllerTest {
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request2)))
                     .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.id").exists())
+                    .andExpect(jsonPath("$.totalPrice").exists())
+                    .andExpect(jsonPath("$.totalAmount").exists())
                     .andExpect(jsonPath("$.cartItems", hasSize(0)));
         }
 
         @Test
         void whenValidRequestWithBoundaryMinValues_thenStatus200() throws Exception {
-            CartItemRemoveRequestDto request = buildCartItemRemoveRequestDto(VALID_CART_ITEM_BOUNDARY_MIN, phoneId1);
+            CartItemRemoveRequestDto request = buildCartItemRemoveRequestDto(phoneId1, VALID_CART_ITEM_BOUNDARY_MIN.amount);
 
             mockMvc.perform(post(URL)
                             .header(HttpHeaders.AUTHORIZATION, auth(token))
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.id").exists())
+                    .andExpect(jsonPath("$.totalPrice").exists())
+                    .andExpect(jsonPath("$.totalAmount").exists())
                     .andExpect(jsonPath("$.cartItems[?(@.phoneId == " + phoneId1 + ")].amount").value(4));
         }
 
         @Test
         void whenRequestMissingToken_thenStatus403() throws Exception {
-            CartItemRemoveRequestDto request = buildCartItemRemoveRequestDto(VALID_CART_ITEM, phoneId1);
+            CartItemRemoveRequestDto request = buildCartItemRemoveRequestDto(phoneId1, VALID_CART_ITEM.amount);
 
             mockMvc.perform(post(URL)
                             .contentType(MediaType.APPLICATION_JSON)
@@ -385,7 +417,7 @@ class UserCartControllerTest {
 
         @Test
         void whenRequestHasInvalidToken_thenStatus403() throws Exception {
-            CartItemRemoveRequestDto request = buildCartItemRemoveRequestDto(VALID_CART_ITEM, phoneId1);
+            CartItemRemoveRequestDto request = buildCartItemRemoveRequestDto(phoneId1, VALID_CART_ITEM.amount);
 
             mockMvc.perform(post(URL)
                             .header(HttpHeaders.AUTHORIZATION, auth("some_invalid_text"))
@@ -397,27 +429,27 @@ class UserCartControllerTest {
         // Validation tests
         @Test
         void whenPhoneIdIsNull_thenStatus400() throws Exception {
-            expect400WithInvalidBody(INVALID_PHONE_ID_NULL);
+            expect400WithInvalidBody(null, VALID_CART_ITEM.amount);
         }
 
         @Test
         void whenAmountIsNull_thenStatus400() throws Exception {
-            expect400WithInvalidBody(INVALID_AMOUNT_NULL);
+            expect400WithInvalidBody(phoneId1, INVALID_AMOUNT_NULL.amount);
         }
 
         @Test
         void whenAmountIsZero_thenStatus400() throws Exception {
-            expect400WithInvalidBody(INVALID_AMOUNT_ZERO);
+            expect400WithInvalidBody(phoneId1, INVALID_AMOUNT_ZERO.amount);
         }
 
         @Test
         void whenAmountIsNegative_thenStatus400() throws Exception {
-            expect400WithInvalidBody(INVALID_AMOUNT_NEGATIVE);
+            expect400WithInvalidBody(phoneId1, INVALID_AMOUNT_NEGATIVE.amount);
         }
 
         @Test
         void whenAmountExceedsMax_thenStatus400() throws Exception {
-            expect400WithInvalidBody(INVALID_AMOUNT_TOO_HIGH);
+            expect400WithInvalidBody(phoneId1, INVALID_AMOUNT_TOO_HIGH.amount);
         }
 
         @Test
@@ -442,11 +474,8 @@ class UserCartControllerTest {
                     .andExpect(status().isNotFound());
         }
 
-        private void expect400WithInvalidBody(TestCartItem cartItem) throws Exception {
-            CartItemAddRequestDto request = new CartItemAddRequestDto(
-                    cartItem.phoneId,
-                    cartItem.amount
-            );
+        private void expect400WithInvalidBody(Long phoneId, Integer amount) throws Exception {
+            CartItemAddRequestDto request = new CartItemAddRequestDto(phoneId, amount);
 
             mockMvc.perform(post(URL)
                             .header(HttpHeaders.AUTHORIZATION, auth(token))
@@ -464,9 +493,9 @@ class UserCartControllerTest {
 
         @BeforeEach
         void addItemsToCart() {
-            userCartService.putItemToUserCart(userId, buildCartItemAddRequestDto(CART_ITEM_1, phoneId1));
-            userCartService.putItemToUserCart(userId, buildCartItemAddRequestDto(CART_ITEM_2, phoneId2));
-            userCartService.putItemToUserCart(userId, buildCartItemAddRequestDto(CART_ITEM_3, phoneId3));
+            userCartService.putItemToUserCart(userId, buildCartItemAddRequestDto(phoneId1, CART_ITEM_1.amount));
+            userCartService.putItemToUserCart(userId, buildCartItemAddRequestDto(phoneId2, CART_ITEM_2.amount));
+            userCartService.putItemToUserCart(userId, buildCartItemAddRequestDto(phoneId3, CART_ITEM_3.amount));
         }
 
         @Test
@@ -477,6 +506,7 @@ class UserCartControllerTest {
                     .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                     .andExpect(jsonPath("$.id").exists())
                     .andExpect(jsonPath("$.totalPrice").exists())
+                    .andExpect(jsonPath("$.totalAmount").exists())
                     .andExpect(jsonPath("$.cartItems").isArray())
                     .andExpect(jsonPath("$.cartItems", hasSize(0)));
         }
@@ -488,6 +518,9 @@ class UserCartControllerTest {
             mockMvc.perform(post(URL)
                             .header(HttpHeaders.AUTHORIZATION, auth(token)))
                     .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.id").exists())
+                    .andExpect(jsonPath("$.totalPrice").exists())
+                    .andExpect(jsonPath("$.totalAmount").exists())
                     .andExpect(jsonPath("$.cartItems", hasSize(0)));
         }
 
@@ -496,13 +529,18 @@ class UserCartControllerTest {
             mockMvc.perform(post(URL)
                             .header(HttpHeaders.AUTHORIZATION, auth(token)))
                     .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.id").exists())
+                    .andExpect(jsonPath("$.totalPrice").exists())
+                    .andExpect(jsonPath("$.totalAmount").exists())
                     .andExpect(jsonPath("$.cartItems", hasSize(0)));
 
             mockMvc.perform(get("/api/v1/me/cart")
                             .header(HttpHeaders.AUTHORIZATION, auth(token)))
                     .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.cartItems", hasSize(0)))
-                    .andExpect(jsonPath("$.totalPrice").exists());
+                    .andExpect(jsonPath("$.id").exists())
+                    .andExpect(jsonPath("$.totalPrice").exists())
+                    .andExpect(jsonPath("$.totalAmount").exists())
+                    .andExpect(jsonPath("$.cartItems", hasSize(0)));
         }
 
         @Test
@@ -526,12 +564,12 @@ class UserCartControllerTest {
             return "Bearer " + token;
         }
 
-        static CartItemAddRequestDto buildCartItemAddRequestDto(TestCartItem cartItem, Long phoneId) {
-            return new CartItemAddRequestDto(phoneId, cartItem.amount);
+        static CartItemAddRequestDto buildCartItemAddRequestDto(Long phoneId, Integer amount) {
+            return new CartItemAddRequestDto(phoneId, amount);
         }
 
-        static CartItemRemoveRequestDto buildCartItemRemoveRequestDto(TestCartItem cartItem, Long phoneId) {
-            return new CartItemRemoveRequestDto(phoneId, cartItem.amount);
+        static CartItemRemoveRequestDto buildCartItemRemoveRequestDto(Long phoneId, Integer amount) {
+            return new CartItemRemoveRequestDto(phoneId, amount);
         }
     }
 
@@ -557,26 +595,23 @@ class UserCartControllerTest {
 
     enum TestCartItem {
         // Valid cart items
-        CART_ITEM_1(1L, 2),
-        CART_ITEM_2(1L, 1),
-        CART_ITEM_3(1L, 3),
+        CART_ITEM_1(2),
+        CART_ITEM_2(1),
+        CART_ITEM_3(3),
 
-        VALID_CART_ITEM(1L, 3),
-        VALID_CART_ITEM_BOUNDARY_MIN(1L, 1),
-        VALID_CART_ITEM_BOUNDARY_MAX(1L, 20),
+        VALID_CART_ITEM(3),
+        VALID_CART_ITEM_BOUNDARY_MIN(1),
+        VALID_CART_ITEM_BOUNDARY_MAX(20),
 
         // Invalid cart items
-        INVALID_PHONE_ID_NULL(null, 1),
-        INVALID_AMOUNT_NULL(1L, null),
-        INVALID_AMOUNT_ZERO(1L, 0),
-        INVALID_AMOUNT_NEGATIVE(1L, -1),
-        INVALID_AMOUNT_TOO_HIGH(1L, 21);
+        INVALID_AMOUNT_NULL(null),
+        INVALID_AMOUNT_ZERO(0),
+        INVALID_AMOUNT_NEGATIVE(-1),
+        INVALID_AMOUNT_TOO_HIGH(21);
 
-        final Long phoneId;
         final Integer amount;
 
-        TestCartItem(Long phoneId, Integer amount) {
-            this.phoneId = phoneId;
+        TestCartItem(Integer amount) {
             this.amount = amount;
         }
     }

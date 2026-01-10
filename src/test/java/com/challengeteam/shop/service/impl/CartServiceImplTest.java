@@ -50,19 +50,16 @@ class CartServiceImplTest {
 
         @Test
         void whenCartExists_thenReturnCart() {
-            // given
-            Cart expectedCart = buildCart();
-
             // mockito
             Mockito.when(cartRepository.findById(CART_ID))
-                    .thenReturn(Optional.of(expectedCart));
+                    .thenReturn(Optional.of(buildCart()));
 
             // when
             Optional<Cart> result = cartService.getCart(CART_ID);
 
             // then
             assertThat(result).isPresent();
-            assertThat(result.get()).isEqualTo(expectedCart);
+            assertThat(result.get()).isEqualTo(buildCart());
             Mockito.verify(cartRepository).findById(CART_ID);
         }
 
@@ -96,11 +93,10 @@ class CartServiceImplTest {
             // given
             Cart cart = buildCart();
             CartItemAddRequestDto dto = buildCartItemAddRequestDto();
-            Phone phone = buildPhone();
 
             // mockito
             Mockito.when(phoneService.getById(PHONE_ID))
-                    .thenReturn(Optional.of(phone));
+                    .thenReturn(Optional.of(buildPhone()));
             Mockito.when(cartRepository.save(cart))
                     .thenReturn(cart);
 
@@ -122,11 +118,10 @@ class CartServiceImplTest {
             // given
             Cart cart = buildCartWithItem();
             CartItemAddRequestDto dto = buildCartItemAddRequestDto();
-            Phone phone = buildPhone();
 
             // mockito
             Mockito.when(phoneService.getById(PHONE_ID))
-                    .thenReturn(Optional.of(phone));
+                    .thenReturn(Optional.of(buildPhone()));
 
             // when + then
             assertThatThrownBy(() -> cartService.putItemToCart(cart, dto))
@@ -375,19 +370,16 @@ class CartServiceImplTest {
 
         @Test
         void whenCartExists_thenReturnCart() {
-            // given
-            Cart expectedCart = buildCart();
-
             // mockito
             Mockito.when(cartRepository.findByUserId(USER_ID))
-                    .thenReturn(Optional.of(expectedCart));
+                    .thenReturn(Optional.of(buildCart()));
 
             // when
             Optional<Cart> result = cartService.getCartByUserId(USER_ID);
 
             // then
             assertThat(result).isPresent();
-            assertThat(result.get()).isEqualTo(expectedCart);
+            assertThat(result.get()).isEqualTo(buildCart());
             Mockito.verify(cartRepository).findByUserId(USER_ID);
         }
 
