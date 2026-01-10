@@ -56,6 +56,45 @@ class CartUtilityTest {
     }
 
     @Nested
+    class CountTotalAmountTest {
+
+        @Test
+        void whenGivenCartWithItems_thenReturnTotalAmount() {
+            // when
+            Integer result = CartUtility.countTotalAmount(buildCartWithItems());
+
+            // then
+            assertThat(result).isEqualTo(TOTAL_AMOUNT);
+        }
+
+        @Test
+        void whenGivenEmptyCart_thenReturnZero() {
+            // when
+            Integer result = CartUtility.countTotalAmount(buildEmptyCart());
+
+            // then
+            assertThat(result).isEqualTo(0);
+        }
+
+        @Test
+        void whenGivenCartWithSingleItem_thenReturnCorrectPrice() {
+            // when
+            Integer result = CartUtility.countTotalAmount(buildCartWithSingleItem());
+
+            // then
+            assertThat(result).isEqualTo(1);
+        }
+
+        @Test
+        void whenParameterCartIsNull_thenThrowException() {
+            // when + then
+            assertThatThrownBy(() -> CartUtility.countCartTotalPrice(null))
+                    .isInstanceOf(NullPointerException.class);
+        }
+
+    }
+
+    @Nested
     class IsCartHasPhoneTest {
 
         @Test
@@ -151,6 +190,7 @@ class CartUtilityTest {
         static final Long PHONE_ID = 1L;
         static final Long UNKNOWN_PHONE_ID = 999L;
         static final Integer ITEM_AMOUNT = 2;
+        static final Integer TOTAL_AMOUNT = 3;
         static final BigDecimal PHONE_PRICE = new BigDecimal("500.00");
         static final BigDecimal SINGLE_ITEM_TOTAL_PRICE = new BigDecimal("500.00");
         static final BigDecimal TOTAL_PRICE = new BigDecimal("1500.00");
