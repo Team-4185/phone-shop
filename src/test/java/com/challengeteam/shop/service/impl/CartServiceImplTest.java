@@ -186,8 +186,6 @@ class CartServiceImplTest {
             int newAmount = 5;
 
             // mockito
-            Mockito.when(cartItemRepository.findByCartIdAndPhoneId(CART_ID, PHONE_ID))
-                    .thenReturn(Optional.of(item));
             Mockito.when(cartRepository.save(cart))
                     .thenReturn(cart);
 
@@ -199,7 +197,6 @@ class CartServiceImplTest {
             assertThat(item.getAmount()).isEqualTo(newAmount);
             assertThat(result.getTotalPrice()).isEqualTo(BigDecimal.valueOf(500)); // 5 * 100
             Mockito.verify(cartValidator).validateItemAmount(newAmount);
-            Mockito.verify(cartItemRepository).findByCartIdAndPhoneId(CART_ID, PHONE_ID);
             Mockito.verify(cartValidator).validateTotalAmount(cart);
             Mockito.verify(cartItemRepository).save(item);
             Mockito.verify(cartRepository).save(cart);
@@ -211,17 +208,12 @@ class CartServiceImplTest {
             Cart cart = buildCart();
             int newAmount = 5;
 
-            // mockito
-            Mockito.when(cartItemRepository.findByCartIdAndPhoneId(CART_ID, PHONE_ID))
-                    .thenReturn(Optional.empty());
-
             // when + then
             assertThatThrownBy(() -> cartService.updateAmountCartItem(cart, PHONE_ID, newAmount))
                     .isInstanceOf(ResourceNotFoundException.class)
                     .hasMessageContaining("Phone with id " + PHONE_ID + " not found in cart");
 
             Mockito.verify(cartValidator).validateItemAmount(newAmount);
-            Mockito.verify(cartItemRepository).findByCartIdAndPhoneId(CART_ID, PHONE_ID);
             Mockito.verify(cartItemRepository, never()).save(any());
             Mockito.verify(cartRepository, never()).save(any());
         }

@@ -90,8 +90,10 @@ public class CartServiceImpl implements CartService {
 
         cartValidator.validateItemAmount(amount);
 
-        CartItem cartItem = cartItemRepository.findByCartIdAndPhoneId(cart.getId(), phoneId)
-                        .orElseThrow(() -> new ResourceNotFoundException("Phone with id " + phoneId + " not found in cart"));
+        CartItem cartItem = cart.getCartItems().stream()
+                .filter(i -> i.getPhone().getId().equals(phoneId))
+                .findFirst()
+                .orElseThrow(() -> new ResourceNotFoundException("Phone with id " + phoneId + " not found in cart"));
 
         cartItem.setAmount(amount);
         cartValidator.validateTotalAmount(cart);
