@@ -76,7 +76,6 @@ public class UserCartServiceImpl implements UserCartService {
         if (currentAmount > amountToRemove) {
             Integer newAmount = currentAmount - amountToRemove;
             log.debug("Decreasing amount of phone {} from {} to {}", phoneId, currentAmount, newAmount);
-
             return cartService.updateAmountCartItem(cart, phoneId, newAmount);
         } else {
             log.debug("Removing phone {} from cart completely", phoneId);

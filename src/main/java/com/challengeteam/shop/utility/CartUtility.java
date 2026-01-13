@@ -16,6 +16,14 @@ public class CartUtility {
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
+    public static Integer countTotalAmount(Cart cart) {
+        Objects.requireNonNull(cart, "cart");
+
+        return cart.getCartItems().stream()
+                .mapToInt(CartItem::getAmount)
+                .sum();
+    }
+
     public static boolean isCartHasPhone(Cart cart, Long phoneId) {
         Objects.requireNonNull(cart, "cart");
         Objects.requireNonNull(phoneId, "phoneId");

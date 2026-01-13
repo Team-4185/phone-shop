@@ -10,6 +10,7 @@ import com.challengeteam.shop.persistence.repository.CartItemRepository;
 import com.challengeteam.shop.persistence.repository.CartRepository;
 import com.challengeteam.shop.service.CartService;
 import com.challengeteam.shop.service.PhoneService;
+import com.challengeteam.shop.service.impl.validator.CartValidator;
 import com.challengeteam.shop.utility.CartUtility;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -31,6 +32,8 @@ public class CartServiceImpl implements CartService {
 
     private final PhoneService phoneService;
 
+    private final CartValidator cartValidator;
+
     @Transactional(readOnly = true)
     @Override
     public Optional<Cart> getCart(Long id) {
@@ -49,6 +52,8 @@ public class CartServiceImpl implements CartService {
         Long phoneId = cartItemAddRequestDto.phoneId();
         Integer amount = cartItemAddRequestDto.amount();
 
+        cartValidator.validateItemAmount(cartItemAddRequestDto.amount());
+
         Phone phone = phoneService.getById(phoneId)
                 .orElseThrow(() -> new ResourceNotFoundException("Phone with id " + phoneId + " not found"));
 
@@ -63,6 +68,9 @@ public class CartServiceImpl implements CartService {
                     .amount(amount)
                     .build();
 
+            cart.getCartItems().add(cartItem);
+
+            cartValidator.validateTotalAmount(cart);
             cartItemRepository.save(cartItem);
             log.debug("Added new phone {} to cart {}", phoneId, cart.getId());
         }
@@ -80,10 +88,15 @@ public class CartServiceImpl implements CartService {
         Objects.requireNonNull(phoneId, "phoneId");
         Objects.requireNonNull(amount, "amount");
 
-        CartItem cartItem = cartItemRepository.findByCartIdAndPhoneId(cart.getId(), phoneId)
-                        .orElseThrow(() -> new ResourceNotFoundException("Phone with id " + phoneId + " not found in cart"));
+        cartValidator.validateItemAmount(amount);
+
+        CartItem cartItem = cart.getCartItems().stream()
+                .filter(i -> i.getPhone().getId().equals(phoneId))
+                .findFirst()
+                .orElseThrow(() -> new ResourceNotFoundException("Phone with id " + phoneId + " not found in cart"));
 
         cartItem.setAmount(amount);
+        cartValidator.validateTotalAmount(cart);
         cartItemRepository.save(cartItem);
 
         cart.setTotalPrice(CartUtility.countCartTotalPrice(cart));

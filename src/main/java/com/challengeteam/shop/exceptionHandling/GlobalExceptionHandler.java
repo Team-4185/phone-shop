@@ -388,4 +388,18 @@ public class GlobalExceptionHandler {
                 .body(problem);
     }
 
+    @ExceptionHandler(InvalidCartItemAmountException.class)
+    public ResponseEntity<ProblemDetail> handleInvalidCartItemAmountException(InvalidCartItemAmountException e) {
+        log.warn("400  {}", e.getMessage());
+
+        var problem = ProblemDetail.forStatus(HttpStatus.BAD_REQUEST.value());
+        problem.setTitle("Validation Failed");
+        problem.setDetail(e.getMessage());
+
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(problem);
+    }
+
 }
