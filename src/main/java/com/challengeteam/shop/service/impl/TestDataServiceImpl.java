@@ -171,7 +171,7 @@ public class TestDataServiceImpl implements TestDataService {
     private static class PhoneGenerator {
         public final static String DEFAULT_DESCRIPTION = "is a modern phone designed to make your life better.";
         public final static int PRICE_MIN = 3_000;
-        public final static int PRICE_MAX = 500_000;
+        public final static int PRICE_MAX = 50_000;
         public final static int RELEASE_YEAR_TOP = LocalDate.now().getYear();
         public final static int RELEASE_YEAR_FLOOR = 1990;
         public final static int DESCRIPTION_CHANCE = 80;
