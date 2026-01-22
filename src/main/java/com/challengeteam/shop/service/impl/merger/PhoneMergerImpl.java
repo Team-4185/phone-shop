@@ -39,6 +39,36 @@ public class PhoneMergerImpl implements PhoneMerger {
         if (newReleaseYear != null) {
             phone.setReleaseYear(newReleaseYear);
         }
+
+        String cpu = newPhone.cpu();
+        if (cpu != null) {
+            phone.getPhoneCharacteristics().setCpu(cpu.trim());
+        }
+
+        Integer coresNumber = newPhone.coresNumber();
+        if (coresNumber != null) {
+            phone.getPhoneCharacteristics().setCoresNumber(coresNumber);
+        }
+
+        String screenSize = newPhone.screenSize();
+        if (screenSize != null) {
+            phone.getPhoneCharacteristics().setScreenSize(screenSize.trim());
+        }
+
+        String frontCamera = newPhone.frontCamera();
+        if (frontCamera != null) {
+            phone.getPhoneCharacteristics().setFrontCamera(frontCamera.trim());
+        }
+
+        String mainCamera = newPhone.mainCamera();
+        if (mainCamera != null) {
+            phone.getPhoneCharacteristics().setMainCamera(mainCamera.trim());
+        }
+
+        String batteryCapacity = newPhone.batteryCapacity();
+        if (batteryCapacity != null) {
+            phone.getPhoneCharacteristics().setBatteryCapacity(batteryCapacity.trim());
+        }
     }
 
 }

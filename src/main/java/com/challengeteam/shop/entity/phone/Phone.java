@@ -2,10 +2,7 @@ package com.challengeteam.shop.entity.phone;
 
 import com.challengeteam.shop.entity.BaseEntity;
 import com.challengeteam.shop.entity.image.Image;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 
@@ -36,6 +33,9 @@ public class Phone extends BaseEntity {
     @Column(nullable = false)
     private Integer releaseYear;
 
+    @Embedded
+    private PhoneCharacteristics phoneCharacteristics;
+
     @OneToMany(mappedBy = "phone")
     private List<Image> images;
 
@@ -47,6 +47,7 @@ public class Phone extends BaseEntity {
                 ", price='" + price + '\'' +
                 ", brand='" + brand + '\'' +
                 ", releaseYear='" + releaseYear + '\'' +
+                ", phoneCharacteristics='" + phoneCharacteristics + '\'' +
                 "} " + super.toString();
     }
 }

@@ -23,7 +23,6 @@ import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.math.BigDecimal;
@@ -34,7 +33,6 @@ import static com.challengeteam.shop.web.controller.PhoneControllerTest.TestPhon
 import static com.challengeteam.shop.web.controller.PhoneControllerTest.TestPhone.VALID_PHONE_BOUNDARY_MIN;
 import static com.challengeteam.shop.web.controller.PhoneControllerTest.TestResources.*;
 import static org.hamcrest.Matchers.hasSize;
-import static org.hamcrest.Matchers.hasValue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -108,7 +106,13 @@ class PhoneControllerTest {
                     .andExpect(jsonPath("$.content[0].description").value(TestPhone.PHONE_1.description))
                     .andExpect(jsonPath("$.content[0].price").value(TestPhone.PHONE_1.price))
                     .andExpect(jsonPath("$.content[0].brand").value(TestPhone.PHONE_1.brand))
-                    .andExpect(jsonPath("$.content[0].releaseYear").value(TestPhone.PHONE_1.releaseYear));
+                    .andExpect(jsonPath("$.content[0].releaseYear").value(TestPhone.PHONE_1.releaseYear))
+                    .andExpect(jsonPath("$.content[0].cpu").value(TestPhone.PHONE_1.cpu))
+                    .andExpect(jsonPath("$.content[0].coresNumber").value(TestPhone.PHONE_1.coresNumber))
+                    .andExpect(jsonPath("$.content[0].screenSize").value(TestPhone.PHONE_1.screenSize))
+                    .andExpect(jsonPath("$.content[0].frontCamera").value(TestPhone.PHONE_1.frontCamera))
+                    .andExpect(jsonPath("$.content[0].mainCamera").value(TestPhone.PHONE_1.mainCamera))
+                    .andExpect(jsonPath("$.content[0].batteryCapacity").value(TestPhone.PHONE_1.batteryCapacity));
         }
 
         @Test
@@ -236,7 +240,13 @@ class PhoneControllerTest {
                     .andExpect(jsonPath("$.description").value(TestPhone.PHONE_1.description))
                     .andExpect(jsonPath("$.price").value(TestPhone.PHONE_1.price))
                     .andExpect(jsonPath("$.brand").value(TestPhone.PHONE_1.brand))
-                    .andExpect(jsonPath("$.releaseYear").value(TestPhone.PHONE_1.releaseYear));
+                    .andExpect(jsonPath("$.releaseYear").value(TestPhone.PHONE_1.releaseYear))
+                    .andExpect(jsonPath("$.cpu").value(TestPhone.PHONE_1.cpu))
+                    .andExpect(jsonPath("$.coresNumber").value(TestPhone.PHONE_1.coresNumber))
+                    .andExpect(jsonPath("$.screenSize").value(TestPhone.PHONE_1.screenSize))
+                    .andExpect(jsonPath("$.frontCamera").value(TestPhone.PHONE_1.frontCamera))
+                    .andExpect(jsonPath("$.mainCamera").value(TestPhone.PHONE_1.mainCamera))
+                    .andExpect(jsonPath("$.batteryCapacity").value(TestPhone.PHONE_1.batteryCapacity));
         }
 
         @Test
@@ -432,6 +442,121 @@ class PhoneControllerTest {
         @Test
         void whenReleaseYearInFuture_thenStatus400() throws Exception {
             expect400WithInvalidBody(TestPhone.INVALID_YEAR_FUTURE);
+        }
+
+        @Test
+        void whenCpuIsNull_thenStatus400() throws Exception {
+            expect400WithInvalidBody(TestPhone.INVALID_CPU_NULL);
+        }
+
+        @Test
+        void whenCpuIsBlank_thenStatus400() throws Exception {
+            expect400WithInvalidBody(TestPhone.INVALID_CPU_BLANK);
+        }
+
+        @Test
+        void whenCpuIsTooLong_thenStatus400() throws Exception {
+            expect400WithInvalidBody(TestPhone.INVALID_CPU_TOO_LONG);
+        }
+
+        @Test
+        void whenCoresNumberIsNull_thenStatus400() throws Exception {
+            expect400WithInvalidBody(TestPhone.INVALID_CORES_NULL);
+        }
+
+        @Test
+        void whenCoresNumberIsTooSmall_thenStatus400() throws Exception {
+            expect400WithInvalidBody(TestPhone.INVALID_CORES_TOO_SMALL);
+        }
+
+        @Test
+        void whenCoresNumberIsTooBig_thenStatus400() throws Exception {
+            expect400WithInvalidBody(TestPhone.INVALID_CORES_TOO_BIG);
+        }
+
+        @Test
+        void whenScreenSizeIsNull_thenStatus400() throws Exception {
+            expect400WithInvalidBody(TestPhone.INVALID_SCREEN_NULL);
+        }
+
+        @Test
+        void whenScreenSizeIsBlank_thenStatus400() throws Exception {
+            expect400WithInvalidBody(TestPhone.INVALID_SCREEN_BLANK);
+        }
+
+        @Test
+        void whenScreenSizeWithoutQuotes_thenStatus400() throws Exception {
+            expect400WithInvalidBody(TestPhone.INVALID_SCREEN_NO_QUOTES);
+        }
+
+        @Test
+        void whenScreenSizeWithText_thenStatus400() throws Exception {
+            expect400WithInvalidBody(TestPhone.INVALID_SCREEN_WITH_TEXT);
+        }
+
+        @Test
+        void whenFrontCameraIsNull_thenStatus400() throws Exception {
+            expect400WithInvalidBody(TestPhone.INVALID_FRONT_CAMERA_NULL);
+        }
+
+        @Test
+        void whenFrontCameraIsBlank_thenStatus400() throws Exception {
+            expect400WithInvalidBody(TestPhone.INVALID_FRONT_CAMERA_BLANK);
+        }
+
+        @Test
+        void whenFrontCameraIsDecimal_thenStatus400() throws Exception {
+            expect400WithInvalidBody(TestPhone.INVALID_FRONT_CAMERA_DECIMAL);
+        }
+
+        @Test
+        void whenFrontCameraWithoutUnit_thenStatus400() throws Exception {
+            expect400WithInvalidBody(TestPhone.INVALID_FRONT_CAMERA_NO_UNIT);
+        }
+
+        @Test
+        void whenMainCameraIsNull_thenStatus400() throws Exception {
+            expect400WithInvalidBody(TestPhone.INVALID_MAIN_CAMERA_NULL);
+        }
+
+        @Test
+        void whenMainCameraIsBlank_thenStatus400() throws Exception {
+            expect400WithInvalidBody(TestPhone.INVALID_MAIN_CAMERA_BLANK);
+        }
+
+        @Test
+        void whenMainCameraIsDecimal_thenStatus400() throws Exception {
+            expect400WithInvalidBody(TestPhone.INVALID_MAIN_CAMERA_DECIMAL);
+        }
+
+        @Test
+        void whenMainCameraWithoutUnit_thenStatus400() throws Exception {
+            expect400WithInvalidBody(TestPhone.INVALID_MAIN_CAMERA_NO_UNIT);
+        }
+
+        @Test
+        void whenMainCameraWithWrongFormat_thenStatus400() throws Exception {
+            expect400WithInvalidBody(TestPhone.INVALID_MAIN_CAMERA_WRONG_FORMAT);
+        }
+
+        @Test
+        void whenBatteryCapacityIsNull_thenStatus400() throws Exception {
+            expect400WithInvalidBody(TestPhone.INVALID_BATTERY_NULL);
+        }
+
+        @Test
+        void whenBatteryCapacityIsBlank_thenStatus400() throws Exception {
+            expect400WithInvalidBody(TestPhone.INVALID_BATTERY_BLANK);
+        }
+
+        @Test
+        void whenBatteryCapacityWithoutUnit_thenStatus400() throws Exception {
+            expect400WithInvalidBody(TestPhone.INVALID_BATTERY_NO_UNIT);
+        }
+
+        @Test
+        void whenBatteryCapacityWithWrongUnit_thenStatus400() throws Exception {
+            expect400WithInvalidBody(TestPhone.INVALID_BATTERY_WRONG_UNIT);
         }
 
         @Test
@@ -980,9 +1105,16 @@ class PhoneControllerTest {
                     testPhone.description,
                     testPhone.price,
                     testPhone.brand,
-                    testPhone.releaseYear
+                    testPhone.releaseYear,
+                    testPhone.cpu,
+                    testPhone.coresNumber,
+                    testPhone.screenSize,
+                    testPhone.frontCamera,
+                    testPhone.mainCamera,
+                    testPhone.batteryCapacity
             );
         }
+
 
         static PhoneUpdateRequestDto buildPhoneUpdateRequestDto(TestPhone testPhone) {
             return new PhoneUpdateRequestDto(
@@ -990,9 +1122,16 @@ class PhoneControllerTest {
                     testPhone.description,
                     testPhone.price,
                     testPhone.brand,
-                    testPhone.releaseYear
+                    testPhone.releaseYear,
+                    testPhone.cpu,
+                    testPhone.coresNumber,
+                    testPhone.screenSize,
+                    testPhone.frontCamera,
+                    testPhone.mainCamera,
+                    testPhone.batteryCapacity
             );
         }
+
 
         static MultipartFile buildMultipartFile(String name) {
             return new MockMultipartFile(
@@ -1025,52 +1164,244 @@ class PhoneControllerTest {
 
     enum TestPhone {
         // Valid phones
-        PHONE_1("iPhone 15", "Latest Apple smartphone", new BigDecimal("999.99"), "Apple", 2024),
-        PHONE_2("Samsung Galaxy S24", "Flagship Samsung phone", new BigDecimal("899.99"), "Samsung", 2024),
-        PHONE_3("Google Pixel 8", "Pure Android experience", new BigDecimal("699.99"), "Google", 2023),
+        PHONE_1(
+                "iPhone 15", "Latest Apple smartphone", new BigDecimal("999.99"), "Apple", 2024,
+                "Apple A16 Bionic", 6, "6.1\"", "12 MP", "48 MP", "3349 mAh"),
 
-        VALID_PHONE("Valid Phone", "Valid description", new BigDecimal("500.00"), "ValidBrand", 2020),
-        VALID_PHONE_NULL_DESCRIPTION("Valid Phone", null, new BigDecimal("500.00"), "ValidBrand", 2020),
-        VALID_PHONE_BOUNDARY_MIN("Abc", "", new BigDecimal("0.00"), "Abc", 1970),
-        VALID_PHONE_BOUNDARY_MAX("N".repeat(255), "D".repeat(1000), new BigDecimal("99999.99"), "B".repeat(255), 2026),
+        PHONE_2(
+                "Samsung Galaxy S24", "Flagship Samsung phone", new BigDecimal("899.99"), "Samsung", 2024,
+                "Exynos 2400", 10, "6.2\"", "12 MP", "50 MP", "4000 mAh"),
+
+        PHONE_3(
+                "Google Pixel 8", "Pure Android experience", new BigDecimal("699.99"), "Google", 2023,
+                "Google Tensor G3", 8, "6.2\"", "10 MP", "50 MP", "4575 mAh"),
+
+        VALID_PHONE(
+                "Valid Phone", "Valid description", new BigDecimal("500.00"), "ValidBrand", 2020,
+                "Snapdragon 8 Gen 2", 8, "6.5\"", "12 MP", "50-12 MP", "4500 mAh"),
+
+        VALID_PHONE_NULL_DESCRIPTION(
+                "Valid Phone", null, new BigDecimal("500.00"), "ValidBrand", 2020,
+                "Snapdragon 8 Gen 2", 8, "6.5\"", "12 MP", "50-12 MP", "4500 mAh"),
+
+        VALID_PHONE_BOUNDARY_MIN(
+                "Abc", "", new BigDecimal("0.00"), "Abc", 1970,
+                "A", 1, "5\"", "1 MP", "1 MP", "1000 mAh"),
+
+        VALID_PHONE_BOUNDARY_MAX(
+                "N".repeat(255), "D".repeat(1000), new BigDecimal("99999.99"), "B".repeat(255), 2026,
+                "C".repeat(50), 32, "7.9\"", "50 MP", "200-50-12 MP", "9000 mAh"),
+
 
         // Invalid name
-        INVALID_NAME_NULL(null, "description", new BigDecimal("100.00"), "Brand", 2020),
-        INVALID_NAME_BLANK("", "description", new BigDecimal("100.00"), "Brand", 2020),
-        INVALID_NAME_TOO_SHORT("Ab", "description", new BigDecimal("100.00"), "Brand", 2020),
-        INVALID_NAME_TOO_LONG("N".repeat(256), "description", new BigDecimal("100.00"), "Brand", 2020),
+        INVALID_NAME_NULL(
+                null, "description", new BigDecimal("100.00"), "Brand", 2020,
+                "Snapdragon 8 Gen 3", 8, "6.7\"", "12 MP", "50-12 MP", "5000 mAh"),
+
+        INVALID_NAME_BLANK(
+                "", "description", new BigDecimal("100.00"), "Brand", 2020,
+                "Snapdragon 8 Gen 3", 8, "6.7\"", "12 MP", "50-12 MP", "5000 mAh"),
+
+        INVALID_NAME_TOO_SHORT(
+                "Ab", "description", new BigDecimal("100.00"), "Brand", 2020,
+                "Snapdragon 8 Gen 3", 8, "6.7\"", "12 MP", "50-12 MP", "5000 mAh"),
+
+        INVALID_NAME_TOO_LONG(
+                "N".repeat(256), "description", new BigDecimal("100.00"), "Brand", 2020,
+                "Snapdragon 8 Gen 3", 8, "6.7\"", "12 MP", "50-12 MP", "5000 mAh"),
+
 
         // Invalid description
-        INVALID_DESCRIPTION_TOO_LONG("Phone", "D".repeat(1001), new BigDecimal("100.00"), "Brand", 2020),
+        INVALID_DESCRIPTION_TOO_LONG(
+                "Phone", "D".repeat(1001), new BigDecimal("100.00"), "Brand", 2020,
+                "Snapdragon 8 Gen 3", 8, "6.7\"", "12 MP", "50-12 MP", "5000 mAh"),
+
 
         // Invalid price
-        INVALID_PRICE_NULL("Phone", "description", null, "Brand", 2020),
-        INVALID_PRICE_NEGATIVE("Phone", "description", new BigDecimal("-0.01"), "Brand", 2020),
+        INVALID_PRICE_NULL(
+                "Phone", "description", null, "Brand", 2020,
+                "Snapdragon 8 Gen 3", 8, "6.7\"", "12 MP", "50-12 MP", "5000 mAh"),
+
+        INVALID_PRICE_NEGATIVE(
+                "Phone", "description", new BigDecimal("-0.01"), "Brand", 2020,
+                "Snapdragon 8 Gen 3", 8, "6.7\"", "12 MP", "50-12 MP", "5000 mAh"),
+
 
         // Invalid brand
-        INVALID_BRAND_NULL("Phone", "description", new BigDecimal("100.00"), null, 2020),
-        INVALID_BRAND_BLANK("Phone", "description", new BigDecimal("100.00"), "", 2020),
-        INVALID_BRAND_TOO_SHORT("Phone", "description", new BigDecimal("100.00"), "Ab", 2020),
-        INVALID_BRAND_TOO_LONG("Phone", "description", new BigDecimal("100.00"), "B".repeat(256), 2020),
+        INVALID_BRAND_NULL(
+                "Phone", "description", new BigDecimal("100.00"), null, 2020,
+                "Snapdragon 8 Gen 3", 8, "6.7\"", "12 MP", "50-12 MP", "5000 mAh"),
+
+        INVALID_BRAND_BLANK(
+                "Phone", "description", new BigDecimal("100.00"), "", 2020,
+                "Snapdragon 8 Gen 3", 8, "6.7\"", "12 MP", "50-12 MP", "5000 mAh"),
+
+        INVALID_BRAND_TOO_SHORT(
+                "Phone", "description", new BigDecimal("100.00"), "Ab", 2020,
+                "Snapdragon 8 Gen 3", 8, "6.7\"", "12 MP", "50-12 MP", "5000 mAh"),
+
+        INVALID_BRAND_TOO_LONG(
+                "Phone", "description", new BigDecimal("100.00"), "B".repeat(256), 2020,
+                "Snapdragon 8 Gen 3", 8, "6.7\"", "12 MP", "50-12 MP", "5000 mAh"),
+
 
         // Invalid releaseYear
-        INVALID_YEAR_NULL("Phone", "description", new BigDecimal("100.00"), "Brand", null),
-        INVALID_YEAR_TOO_EARLY("Phone", "description", new BigDecimal("100.00"), "Brand", 1969),
-        INVALID_YEAR_FUTURE("Phone", "description", new BigDecimal("100.00"), "Brand", 2027);
+        INVALID_YEAR_NULL(
+                "Phone", "description", new BigDecimal("100.00"), "Brand", null,
+                "Snapdragon 8 Gen 3", 8, "6.7\"", "12 MP", "50-12 MP", "5000 mAh"),
+
+        INVALID_YEAR_TOO_EARLY(
+                "Phone", "description", new BigDecimal("100.00"), "Brand", 1969,
+                "Snapdragon 8 Gen 3", 8, "6.7\"", "12 MP", "50-12 MP", "5000 mAh"),
+
+        INVALID_YEAR_FUTURE(
+                "Phone", "description", new BigDecimal("100.00"), "Brand", 2027,
+                "Snapdragon 8 Gen 3", 8, "6.7\"", "12 MP", "50-12 MP", "5000 mAh"),
+
+
+        // Invalid cpu
+        INVALID_CPU_NULL(
+        "Phone", "description", new BigDecimal("100.00"), "Brand", 2020,
+                null, 8, "6.7\"", "12 MP", "50-12 MP", "5000 mAh"),
+
+        INVALID_CPU_BLANK(
+        "Phone", "description", new BigDecimal("100.00"), "Brand", 2020,
+                "", 8, "6.7\"", "12 MP", "50-12 MP", "5000 mAh"),
+
+        INVALID_CPU_TOO_LONG(
+        "Phone", "description", new BigDecimal("100.00"), "Brand", 2020,
+                "C".repeat(101), 8, "6.7\"", "12 MP", "50-12 MP", "5000 mAh"),
+
+
+        // Invalid coresNumber
+        INVALID_CORES_NULL(
+                "Phone", "description", new BigDecimal("100.00"), "Brand", 2020,
+                "Snapdragon 8 Gen 3", null, "6.7\"", "12 MP", "50-12 MP", "5000 mAh"),
+
+        INVALID_CORES_TOO_SMALL(
+                "Phone", "description", new BigDecimal("100.00"), "Brand", 2020,
+                "Snapdragon 8 Gen 3", 0, "6.7\"", "12 MP", "50-12 MP", "5000 mAh"),
+
+        INVALID_CORES_TOO_BIG(
+                "Phone", "description", new BigDecimal("100.00"), "Brand", 2020,
+                "Snapdragon 8 Gen 3", 33, "6.7\"", "12 MP", "50-12 MP", "5000 mAh"),
+
+
+        // Invalid screenSize
+        INVALID_SCREEN_NULL(
+                "Phone", "description", new BigDecimal("100.00"), "Brand", 2020,
+                "Snapdragon 8 Gen 3", 8, null, "12 MP", "50-12 MP", "5000 mAh"),
+
+        INVALID_SCREEN_BLANK(
+                "Phone", "description", new BigDecimal("100.00"), "Brand", 2020,
+                "Snapdragon 8 Gen 3", 8, "", "12 MP", "50-12 MP", "5000 mAh"),
+
+        INVALID_SCREEN_NO_QUOTES(
+                "Phone", "description", new BigDecimal("100.00"), "Brand", 2020,
+                "Snapdragon 8 Gen 3", 8, "6.7", "12 MP", "50-12 MP", "5000 mAh"),
+
+        INVALID_SCREEN_WITH_TEXT(
+                "Phone", "description", new BigDecimal("100.00"), "Brand", 2020,
+                "Snapdragon 8 Gen 3", 8, "6.7 inch", "12 MP", "50-12 MP", "5000 mAh"),
+
+
+        // Invalid frontCamera
+        INVALID_FRONT_CAMERA_NULL(
+                "Phone", "description", new BigDecimal("100.00"), "Brand", 2020,
+                "Snapdragon 8 Gen 3", 8, "6.7\"", null, "50-12 MP", "5000 mAh"),
+
+        INVALID_FRONT_CAMERA_BLANK(
+                "Phone", "description", new BigDecimal("100.00"), "Brand", 2020,
+                "Snapdragon 8 Gen 3", 8, "6.7\"", "", "50-12 MP", "5000 mAh"),
+
+        INVALID_FRONT_CAMERA_DECIMAL(
+                "Phone", "description", new BigDecimal("100.00"), "Brand", 2020,
+                "Snapdragon 8 Gen 3", 8, "6.7\"", "10.5 MP", "50-12 MP", "5000 mAh"),
+
+        INVALID_FRONT_CAMERA_NO_UNIT(
+                "Phone", "description", new BigDecimal("100.00"), "Brand", 2020,
+                "Snapdragon 8 Gen 3", 8, "6.7\"", "12", "50-12 MP", "5000 mAh"),
+
+
+        // Invalid mainCamera
+        INVALID_MAIN_CAMERA_NULL(
+                "Phone", "description", new BigDecimal("100.00"), "Brand", 2020,
+                "Snapdragon 8 Gen 3", 8, "6.7\"", "12 MP", null, "5000 mAh"),
+
+        INVALID_MAIN_CAMERA_BLANK(
+                "Phone", "description", new BigDecimal("100.00"), "Brand", 2020,
+                "Snapdragon 8 Gen 3", 8, "6.7\"", "12 MP", "", "5000 mAh"),
+
+        INVALID_MAIN_CAMERA_DECIMAL(
+                "Phone", "description", new BigDecimal("100.00"), "Brand", 2020,
+                "Snapdragon 8 Gen 3", 8, "6.7\"", "10.5 MP", "50-12 MP", "5000 mAh"),
+
+        INVALID_MAIN_CAMERA_NO_UNIT(
+                "Phone", "description", new BigDecimal("100.00"), "Brand", 2020,
+                "Snapdragon 8 Gen 3", 8, "6.7\"", "12", "50-12 MP", "5000 mAh"),
+
+
+        INVALID_MAIN_CAMERA_WRONG_FORMAT(
+                "Phone", "description", new BigDecimal("100.00"), "Brand", 2020,
+                "Snapdragon 8 Gen 3", 8, "6.7\"", "12 MP", "50,12 MP", "5000 mAh"),
+
+
+        // Invalid batteryCapacity
+        INVALID_BATTERY_NULL(
+                "Phone", "description", new BigDecimal("100.00"), "Brand", 2020,
+                "Snapdragon 8 Gen 3", 8, "6.7\"", "12 MP", "50-12 MP", null),
+
+        INVALID_BATTERY_BLANK(
+                "Phone", "description", new BigDecimal("100.00"), "Brand", 2020,
+                "Snapdragon 8 Gen 3", 8, "6.7\"", "12 MP", "50-12 MP", ""),
+
+        INVALID_BATTERY_NO_UNIT(
+                "Phone", "description", new BigDecimal("100.00"), "Brand", 2020,
+                "Snapdragon 8 Gen 3", 8, "6.7\"", "12 MP", "50-12 MP", "5000"),
+
+        INVALID_BATTERY_WRONG_UNIT(
+                "Phone", "description", new BigDecimal("100.00"), "Brand", 2020,
+                "Snapdragon 8 Gen 3", 8, "6.7\"", "12 MP", "50-12 MP", "5000 mah");
+
+
 
         private final String name;
         private final String description;
         private final BigDecimal price;
         private final String brand;
         private final Integer releaseYear;
+        private final String cpu;
+        private final Integer coresNumber;
+        private final String screenSize;
+        private final String frontCamera;
+        private final String mainCamera;
+        private final String batteryCapacity;
 
 
-        TestPhone(String name, String description, BigDecimal price, String brand, Integer releaseYear) {
+        TestPhone(
+                String name,
+                String description,
+                BigDecimal price,
+                String brand,
+                Integer releaseYear,
+                String cpu,
+                Integer coresNumber,
+                String screenSize,
+                String frontCamera,
+                String mainCamera,
+                String batteryCapacity
+        ) {
             this.name = name;
             this.description = description;
             this.price = price;
             this.brand = brand;
             this.releaseYear = releaseYear;
+            this.cpu = cpu;
+            this.coresNumber = coresNumber;
+            this.screenSize = screenSize;
+            this.frontCamera = frontCamera;
+            this.mainCamera = mainCamera;
+            this.batteryCapacity = batteryCapacity;
         }
 
     }

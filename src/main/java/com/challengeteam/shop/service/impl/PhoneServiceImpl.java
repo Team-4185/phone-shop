@@ -4,6 +4,7 @@ import com.challengeteam.shop.dto.phone.PhoneCreateRequestDto;
 import com.challengeteam.shop.dto.phone.PhoneUpdateRequestDto;
 import com.challengeteam.shop.entity.image.Image;
 import com.challengeteam.shop.entity.phone.Phone;
+import com.challengeteam.shop.entity.phone.PhoneCharacteristics;
 import com.challengeteam.shop.exceptionHandling.exception.CriticalSystemException;
 import com.challengeteam.shop.exceptionHandling.exception.ResourceNotFoundException;
 import com.challengeteam.shop.persistence.repository.ImageRepository;
@@ -57,6 +58,16 @@ public class PhoneServiceImpl implements PhoneService {
         Objects.requireNonNull(phoneCreateRequestDto, "phoneCreateRequestDto");
         Objects.requireNonNull(images, "images");
 
+        // create phone characteristics
+        PhoneCharacteristics phoneCharacteristics = PhoneCharacteristics.builder()
+                .cpu(phoneCreateRequestDto.cpu())
+                .coresNumber(phoneCreateRequestDto.coresNumber())
+                .screenSize(phoneCreateRequestDto.screenSize())
+                .frontCamera(phoneCreateRequestDto.frontCamera())
+                .mainCamera(phoneCreateRequestDto.mainCamera())
+                .batteryCapacity(phoneCreateRequestDto.batteryCapacity())
+                .build();
+
         // create phone
         var phone = Phone.builder()
                 .name(phoneCreateRequestDto.name().trim())
@@ -64,6 +75,7 @@ public class PhoneServiceImpl implements PhoneService {
                 .price(phoneCreateRequestDto.price())
                 .brand(phoneCreateRequestDto.brand().trim())
                 .releaseYear(phoneCreateRequestDto.releaseYear())
+                .phoneCharacteristics(phoneCharacteristics)
                 .build();
 
         phone = phoneRepository.save(phone);
@@ -98,7 +110,7 @@ public class PhoneServiceImpl implements PhoneService {
     public void delete(Long id) {
         Objects.requireNonNull(id, "id");
 
-        if(!phoneRepository.existsById(id)) {
+        if (!phoneRepository.existsById(id)) {
             throw new ResourceNotFoundException("Not found phone with id: " + id);
         }
 
