@@ -5,6 +5,7 @@ import com.challengeteam.shop.dto.phone.PhoneUpdateRequestDto;
 import com.challengeteam.shop.entity.image.Image;
 import com.challengeteam.shop.entity.image.MIMEType;
 import com.challengeteam.shop.entity.phone.Phone;
+import com.challengeteam.shop.entity.phone.PhoneCharacteristics;
 import com.challengeteam.shop.exceptionHandling.exception.CriticalSystemException;
 import com.challengeteam.shop.exceptionHandling.exception.ResourceNotFoundException;
 import com.challengeteam.shop.persistence.repository.ImageRepository;
@@ -547,12 +548,24 @@ class PhoneServiceImplTest {
         public static final BigDecimal PHONE_PRICE = new BigDecimal("1000.0");
         public static final String PHONE_BRAND = "phone_brand";
         public static final int PHONE_RELEASE_YEAR = 2020;
+        public static final String PHONE_CPU = "Snapdragon 8 Gen 2";
+        public static final Integer PHONE_CORES_NUMBER = 8;
+        public static final String PHONE_SCREEN_SIZE = "6.5\"";
+        public static final String PHONE_FRONT_CAMERA = "12 MP";
+        public static final String PHONE_MAIN_CAMERA = "50-12 MP";
+        public static final String PHONE_BATTERY_CAPACITY = "4500 mAh";
 
         public static final String NEW_PHONE_NAME = "new_phone_name";
         public static final String NEW_PHONE_DESCRIPTION = "New phone description.";
         public static final BigDecimal NEW_PHONE_PRICE = new BigDecimal("2000.0");
         public static final String NEW_PHONE_BRAND = "new_phone_brand";
         public static final int NEW_PHONE_RELEASE_YEAR = 2021;
+        public static final String NEW_PHONE_CPU = "Snapdragon 8 Gen 3";
+        public static final Integer NEW_PHONE_CORES_NUMBER = 12;
+        public static final String NEW_PHONE_SCREEN_SIZE = "6.7\"";
+        public static final String NEW_PHONE_FRONT_CAMERA = "16 MP";
+        public static final String NEW_PHONE_MAIN_CAMERA = "50-50-12 MP";
+        public static final String NEW_PHONE_BATTERY_CAPACITY = "5000 mAh";
 
 
         static List<Phone> buildPhonesFromTo(long from, long to) {
@@ -568,11 +581,22 @@ class PhoneServiceImplTest {
                     .price(PHONE_PRICE.add(new BigDecimal(id)))
                     .brand(PHONE_BRAND + id)
                     .releaseYear(PHONE_RELEASE_YEAR)
+                    .phoneCharacteristics(
+                            PhoneCharacteristics.builder()
+                                    .cpu(PHONE_CPU)
+                                    .coresNumber(PHONE_CORES_NUMBER)
+                                    .screenSize(PHONE_SCREEN_SIZE)
+                                    .frontCamera(PHONE_FRONT_CAMERA)
+                                    .mainCamera(PHONE_MAIN_CAMERA)
+                                    .batteryCapacity(PHONE_BATTERY_CAPACITY)
+                                    .build()
+                    )
                     .build();
             phone.setId(id);
             phone.setCreatedAt(Instant.now());
             return phone;
         }
+
 
         static PhoneCreateRequestDto buildPhoneCreateRequestDto() {
             return new PhoneCreateRequestDto(
@@ -580,7 +604,13 @@ class PhoneServiceImplTest {
                     PHONE_DESCRIPTION,
                     PHONE_PRICE,
                     PHONE_BRAND,
-                    PHONE_RELEASE_YEAR
+                    PHONE_RELEASE_YEAR,
+                    PHONE_CPU,
+                    PHONE_CORES_NUMBER,
+                    PHONE_SCREEN_SIZE,
+                    PHONE_FRONT_CAMERA,
+                    PHONE_MAIN_CAMERA,
+                    PHONE_BATTERY_CAPACITY
             );
         }
 
@@ -590,7 +620,13 @@ class PhoneServiceImplTest {
                     "  " + PHONE_DESCRIPTION + "  ",
                     PHONE_PRICE,
                     "  " + PHONE_BRAND + "  ",
-                    PHONE_RELEASE_YEAR
+                    PHONE_RELEASE_YEAR,
+                    "  " + PHONE_CPU + "  ",
+                    PHONE_CORES_NUMBER,
+                    "  " + PHONE_SCREEN_SIZE + "  ",
+                    "  " + PHONE_FRONT_CAMERA + "  ",
+                    "  " + PHONE_MAIN_CAMERA + "  ",
+                    "  " + PHONE_BATTERY_CAPACITY + "  "
             );
         }
 
@@ -600,9 +636,16 @@ class PhoneServiceImplTest {
                     NEW_PHONE_DESCRIPTION,
                     NEW_PHONE_PRICE,
                     NEW_PHONE_BRAND,
-                    NEW_PHONE_RELEASE_YEAR
+                    NEW_PHONE_RELEASE_YEAR,
+                    NEW_PHONE_CPU,
+                    NEW_PHONE_CORES_NUMBER,
+                    NEW_PHONE_SCREEN_SIZE,
+                    NEW_PHONE_FRONT_CAMERA,
+                    NEW_PHONE_MAIN_CAMERA,
+                    NEW_PHONE_BATTERY_CAPACITY
             );
         }
+
 
         static MultipartFile buildMultipartFile() {
             return new MockMultipartFile(

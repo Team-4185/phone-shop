@@ -171,11 +171,40 @@ public class TestDataServiceImpl implements TestDataService {
     private static class PhoneGenerator {
         public final static String DEFAULT_DESCRIPTION = "is a modern phone designed to make your life better.";
         public final static int PRICE_MIN = 3_000;
-        public final static int PRICE_MAX = 500_000;
+        public final static int PRICE_MAX = 50_000;
         public final static int RELEASE_YEAR_TOP = LocalDate.now().getYear();
         public final static int RELEASE_YEAR_FLOOR = 1990;
         public final static int DESCRIPTION_CHANCE = 80;
         private final Random random = new Random();
+
+        // Popular CPU models
+        private final String[] cpuModels = {
+                "Apple A16", "Apple A15", "Apple A14",
+                "Snapdragon 8 Gen 2", "Snapdragon 8 Gen 1", "Snapdragon 888",
+                "MediaTek Dimensity 9200", "MediaTek Dimensity 8100",
+                "Exynos 2200", "Google Tensor G2"
+        };
+
+        private final int[] coreNumbers = {4, 6, 8};
+
+        private final String[] screenSizes = {
+                "5.8\"", "6.1\"", "6.3\"", "6.5\"", "6.7\"", "6.8\"", "7.0\"", "5.5\"", "6.4\"", "6.6\""
+        };
+
+        private final String[] mainCameras = {
+                "48-12-12 MP", "50-12-10 MP", "64-12-12 MP",
+                "108-12-12 MP", "50-50-12 MP", "48-8-2 MP",
+                "64-8-5 MP", "50-8-2 MP", "12-12-12 MP"
+        };
+
+        private final String[] frontCameras = {
+                "8 MP", "10 MP", "12 MP", "16 MP", "20 MP", "32 MP"
+        };
+
+        private final String[] batteryCapacities = {
+                "3000 mAh", "3500 mAh", "4000 mAh", "4200 mAh",
+                "4500 mAh", "4800 mAh", "5000 mAh", "5200 mAh"
+        };
 
 
         public List<PhoneCreateRequestDto> generatePhones(int amount) {
@@ -187,18 +216,54 @@ public class TestDataServiceImpl implements TestDataService {
                 String description = getRandomDescription(name);
                 BigDecimal price = getRandomPrice();
                 int releaseYear = getRandomReleaseYear();
+                String cpu = getRandomCpu();
+                int coresNumber = getRandomCoresNumber();
+                String screenSize = getRandomScreenSize();
+                String frontCamera = getRandomFrontCamera();
+                String mainCamera = getRandomMainCamera();
+                String batteryCapacity = getRandomBatteryCapacity();
 
                 var phone = new PhoneCreateRequestDto(
                         name,
                         description,
                         price,
                         brand.name(),
-                        releaseYear
+                        releaseYear,
+                        cpu,
+                        coresNumber,
+                        screenSize,
+                        frontCamera,
+                        mainCamera,
+                        batteryCapacity
                 );
                 result.add(phone);
             }
 
             return result;
+        }
+
+        private String getRandomBatteryCapacity() {
+            return batteryCapacities[random.nextInt(batteryCapacities.length)];
+        }
+
+        private String getRandomMainCamera() {
+            return mainCameras[random.nextInt(mainCameras.length)];
+        }
+
+        private String getRandomFrontCamera() {
+            return frontCameras[random.nextInt(frontCameras.length)];
+        }
+
+        private String getRandomScreenSize() {
+            return screenSizes[random.nextInt(screenSizes.length)];
+        }
+
+        private int getRandomCoresNumber() {
+            return coreNumbers[random.nextInt(coreNumbers.length)];
+        }
+
+        private String getRandomCpu() {
+            return cpuModels[random.nextInt(cpuModels.length)];
         }
 
         private int getRandomReleaseYear() {

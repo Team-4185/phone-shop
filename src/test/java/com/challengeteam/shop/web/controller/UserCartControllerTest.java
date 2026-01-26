@@ -3,6 +3,7 @@ package com.challengeteam.shop.web.controller;
 import com.challengeteam.shop.dto.cart.CartItemAddRequestDto;
 import com.challengeteam.shop.dto.cart.CartItemRemoveRequestDto;
 import com.challengeteam.shop.entity.phone.Phone;
+import com.challengeteam.shop.entity.phone.PhoneCharacteristics;
 import com.challengeteam.shop.persistence.repository.CartRepository;
 import com.challengeteam.shop.persistence.repository.PhoneRepository;
 import com.challengeteam.shop.service.UserCartService;
@@ -28,8 +29,9 @@ import java.math.BigDecimal;
 
 import static com.challengeteam.shop.web.controller.UserCartControllerTest.TestCartItem.*;
 import static com.challengeteam.shop.web.controller.UserCartControllerTest.TestResources.*;
-import static org.hamcrest.Matchers.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.hamcrest.Matchers.hasSize;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @SpringBootTest
@@ -83,6 +85,16 @@ class UserCartControllerTest {
         phone.setPrice(testPhone.price);
         phone.setBrand(testPhone.brand);
         phone.setReleaseYear(testPhone.releaseYear);
+        phone.setPhoneCharacteristics(
+                PhoneCharacteristics.builder()
+                        .cpu(testPhone.cpu)
+                        .coresNumber(testPhone.coresNumber)
+                        .screenSize(testPhone.screenSize)
+                        .frontCamera(testPhone.frontCamera)
+                        .mainCamera(testPhone.mainCamera)
+                        .batteryCapacity(testPhone.batteryCapacity)
+                        .build()
+        );
         return phoneRepository.save(phone).getId();
     }
 
@@ -596,22 +608,55 @@ class UserCartControllerTest {
     }
 
     enum TestPhone {
-        PHONE_1("iPhone 15", "Latest Apple smartphone", new BigDecimal("999.99"), "Apple", 2024),
-        PHONE_2("Samsung Galaxy S24", "Flagship Samsung phone", new BigDecimal("899.99"), "Samsung", 2024),
-        PHONE_3("Google Pixel 8", "Pure Android experience", new BigDecimal("699.99"), "Google", 2023);
+        PHONE_1(
+                "iPhone 15", "Latest Apple smartphone", new BigDecimal("999.99"), "Apple", 2024,
+                "Apple A16 Bionic", 6, "6.1\"", "12 MP", "48 MP", "3349 mAh"),
 
-        final String name;
-        final String description;
-        final BigDecimal price;
-        final String brand;
-        final Integer releaseYear;
+        PHONE_2(
+                "Samsung Galaxy S24", "Flagship Samsung phone", new BigDecimal("899.99"), "Samsung", 2024,
+                "Exynos 2400", 10, "6.2\"", "12 MP", "50 MP", "4000 mAh"),
 
-        TestPhone(String name, String description, BigDecimal price, String brand, Integer releaseYear) {
+        PHONE_3(
+                "Google Pixel 8", "Pure Android experience", new BigDecimal("699.99"), "Google", 2023,
+                "Google Tensor G3", 8, "6.2\"", "10 MP", "50 MP", "4575 mAh");
+
+        private final String name;
+        private final String description;
+        private final BigDecimal price;
+        private final String brand;
+        private final Integer releaseYear;
+        private final String cpu;
+        private final Integer coresNumber;
+        private final String screenSize;
+        private final String frontCamera;
+        private final String mainCamera;
+        private final String batteryCapacity;
+
+
+        TestPhone(
+                String name,
+                String description,
+                BigDecimal price,
+                String brand,
+                Integer releaseYear,
+                String cpu,
+                Integer coresNumber,
+                String screenSize,
+                String frontCamera,
+                String mainCamera,
+                String batteryCapacity
+        ) {
             this.name = name;
             this.description = description;
             this.price = price;
             this.brand = brand;
             this.releaseYear = releaseYear;
+            this.cpu = cpu;
+            this.coresNumber = coresNumber;
+            this.screenSize = screenSize;
+            this.frontCamera = frontCamera;
+            this.mainCamera = mainCamera;
+            this.batteryCapacity = batteryCapacity;
         }
     }
 

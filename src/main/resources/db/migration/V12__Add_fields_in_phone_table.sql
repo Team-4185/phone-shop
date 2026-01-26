@@ -1,0 +1,7 @@
+ALTER TABLE phones
+    ADD COLUMN cpu VARCHAR(50) NOT NULL,
+    ADD COLUMN cores_number INT NOT NULL,
+    ADD COLUMN screen_size VARCHAR(5) NOT NULL,
+    ADD COLUMN front_camera VARCHAR(10) NOT NULL,
+    ADD COLUMN main_camera VARCHAR(20) NOT NULL,
+    ADD COLUMN battery_capacity VARCHAR(10) NOT NULL;

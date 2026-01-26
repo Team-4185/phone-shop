@@ -8,6 +8,12 @@ public record PhoneResponseDto(
         String description,
         BigDecimal price,
         String brand,
-        Integer releaseYear
+        Integer releaseYear,
+        String cpu,
+        Integer coresNumber,
+        String screenSize,
+        String frontCamera,
+        String mainCamera,
+        String batteryCapacity
 ) {
 }

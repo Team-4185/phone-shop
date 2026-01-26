@@ -3,14 +3,17 @@ package com.challengeteam.shop.mapper;
 import com.challengeteam.shop.dto.phone.PhoneResponseDto;
 import com.challengeteam.shop.entity.phone.Phone;
 import org.mapstruct.Mapper;
-
-import java.util.List;
+import org.mapstruct.Mapping;
 
 @Mapper(componentModel = "spring")
 public interface PhoneMapper {
 
+    @Mapping(source = "phoneCharacteristics.cpu", target = "cpu")
+    @Mapping(source = "phoneCharacteristics.coresNumber", target = "coresNumber")
+    @Mapping(source = "phoneCharacteristics.screenSize", target = "screenSize")
+    @Mapping(source = "phoneCharacteristics.frontCamera", target = "frontCamera")
+    @Mapping(source = "phoneCharacteristics.mainCamera", target = "mainCamera")
+    @Mapping(source = "phoneCharacteristics.batteryCapacity", target = "batteryCapacity")
     PhoneResponseDto toResponse(Phone phone);
-
-    List<PhoneResponseDto> toResponses(List<Phone> phones);
 
 }
