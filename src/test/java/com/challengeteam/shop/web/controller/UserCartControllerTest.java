@@ -309,6 +309,17 @@ class UserCartControllerTest {
         }
 
         @Test
+        void whenAmountIsFloat_thenStatus400() throws Exception {
+            String jsonWithFloat = "{\"phoneId\": " + phoneId1 + ", \"amount\": 1.5}";
+
+            mockMvc.perform(post(URL)
+                            .header(HttpHeaders.AUTHORIZATION, auth(token))
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(jsonWithFloat))
+                    .andExpect(status().isBadRequest());
+        }
+
+        @Test
         void whenPhoneDoesntExist_thenStatus404() throws Exception {
             CartItemAddRequestDto request = new CartItemAddRequestDto(NON_EXISTING_PHONE_ID, 1);
 
@@ -462,6 +473,17 @@ class UserCartControllerTest {
         @Test
         void whenAmountExceedsMax_thenStatus400() throws Exception {
             expect400WithInvalidBody(phoneId1, INVALID_AMOUNT_TOO_HIGH.amount);
+        }
+
+        @Test
+        void whenAmountIsFloat_thenStatus400() throws Exception {
+            String jsonWithFloat = "{\"phoneId\": " + phoneId1 + ", \"amount\": 1.5}";
+
+            mockMvc.perform(post(URL)
+                            .header(HttpHeaders.AUTHORIZATION, auth(token))
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(jsonWithFloat))
+                    .andExpect(status().isBadRequest());
         }
 
         @Test
