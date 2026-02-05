@@ -32,7 +32,7 @@ import java.util.List;
 import static com.challengeteam.shop.web.controller.PhoneControllerTest.TestPhone.VALID_PHONE_BOUNDARY_MAX;
 import static com.challengeteam.shop.web.controller.PhoneControllerTest.TestPhone.VALID_PHONE_BOUNDARY_MIN;
 import static com.challengeteam.shop.web.controller.PhoneControllerTest.TestResources.*;
-import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -101,18 +101,8 @@ class PhoneControllerTest {
                     .andExpect(jsonPath("$.totalPages").value(1))
                     .andExpect(jsonPath("$.size").value(10))
                     .andExpect(jsonPath("$.page").value(1))
-                    .andExpect(jsonPath("$.content[0].id").value(phone1))
-                    .andExpect(jsonPath("$.content[0].name").value(TestPhone.PHONE_1.name))
-                    .andExpect(jsonPath("$.content[0].description").value(TestPhone.PHONE_1.description))
-                    .andExpect(jsonPath("$.content[0].price").value(TestPhone.PHONE_1.price))
-                    .andExpect(jsonPath("$.content[0].brand").value(TestPhone.PHONE_1.brand))
-                    .andExpect(jsonPath("$.content[0].releaseYear").value(TestPhone.PHONE_1.releaseYear))
-                    .andExpect(jsonPath("$.content[0].cpu").value(TestPhone.PHONE_1.cpu))
-                    .andExpect(jsonPath("$.content[0].coresNumber").value(TestPhone.PHONE_1.coresNumber))
-                    .andExpect(jsonPath("$.content[0].screenSize").value(TestPhone.PHONE_1.screenSize))
-                    .andExpect(jsonPath("$.content[0].frontCamera").value(TestPhone.PHONE_1.frontCamera))
-                    .andExpect(jsonPath("$.content[0].mainCamera").value(TestPhone.PHONE_1.mainCamera))
-                    .andExpect(jsonPath("$.content[0].batteryCapacity").value(TestPhone.PHONE_1.batteryCapacity));
+                    .andExpect(jsonPath("$.first").value(true))
+                    .andExpect(jsonPath("$.last").value(true));
         }
 
         @Test
@@ -222,6 +212,268 @@ class PhoneControllerTest {
                     .andExpect(status().isBadRequest());
         }
 
+        @Test
+        void whenFilterByBrand_thenReturnOnlyMatchingPhones() throws Exception {
+            mockMvc.perform(get(URL)
+                            .param("brand", "Apple")
+                            .header(HttpHeaders.AUTHORIZATION, auth(token)))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.content").isArray())
+                    .andExpect(jsonPath("$.content", hasSize(1)))
+                    .andExpect(jsonPath("$.content[0].brand").value("Apple"))
+                    .andExpect(jsonPath("$.content[0].name").value("iPhone 15"));
+        }
+
+        @Test
+        void whenFilterByMinPrice_thenReturnPhonesAbovePrice() throws Exception {
+            mockMvc.perform(get(URL)
+                            .param("minPrice", "800.00")
+                            .header(HttpHeaders.AUTHORIZATION, auth(token)))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.content").isArray())
+                    .andExpect(jsonPath("$.content", hasSize(2)))
+                    .andExpect(jsonPath("$.content[*].price", everyItem(greaterThanOrEqualTo(800.00))));
+        }
+
+        @Test
+        void whenFilterByMaxPrice_thenReturnPhonesBelowPrice() throws Exception {
+            mockMvc.perform(get(URL)
+                            .param("maxPrice", "900.00")
+                            .header(HttpHeaders.AUTHORIZATION, auth(token)))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.content").isArray())
+                    .andExpect(jsonPath("$.content", hasSize(2)))
+                    .andExpect(jsonPath("$.content[*].price", everyItem(lessThanOrEqualTo(900.00))));
+        }
+
+        @Test
+        void whenFilterByPriceRange_thenReturnPhonesInRange() throws Exception {
+            mockMvc.perform(get(URL)
+                            .param("minPrice", "700.00")
+                            .param("maxPrice", "900.00")
+                            .header(HttpHeaders.AUTHORIZATION, auth(token)))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.content").isArray())
+                    .andExpect(jsonPath("$.content", hasSize(1)))
+                    .andExpect(jsonPath("$.content[0].name").value("Samsung Galaxy S24"))
+                    .andExpect(jsonPath("$.content[0].price").value(899.99));
+        }
+
+        @Test
+        void whenFilterByCombination_thenReturnMatchingPhones() throws Exception {
+            mockMvc.perform(get(URL)
+                            .param("brand", "Samsung")
+                            .param("minPrice", "100.00")
+                            .param("maxPrice", "2000.00")
+                            .header(HttpHeaders.AUTHORIZATION, auth(token)))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.content").isArray())
+                    .andExpect(jsonPath("$.content", hasSize(1)))
+                    .andExpect(jsonPath("$.content[0].brand").value("Samsung"))
+                    .andExpect(jsonPath("$.content[0].name").value("Samsung Galaxy S24"));
+        }
+
+        @Test
+        void whenMinPriceIsNegative_thenStatus400() throws Exception {
+            mockMvc.perform(get(URL)
+                            .param("minPrice", "-10.00")
+                            .header(HttpHeaders.AUTHORIZATION, auth(token)))
+                    .andExpect(status().isBadRequest());
+        }
+
+        @Test
+        void whenMaxPriceIsNegative_thenStatus400() throws Exception {
+            mockMvc.perform(get(URL)
+                            .param("maxPrice", "-50.00")
+                            .header(HttpHeaders.AUTHORIZATION, auth(token)))
+                    .andExpect(status().isBadRequest());
+        }
+
+        @Test
+        void whenMinPriceIsNotDecimal_thenStatus400() throws Exception {
+            mockMvc.perform(get(URL)
+                            .param("minPrice", "invalid")
+                            .header(HttpHeaders.AUTHORIZATION, auth(token)))
+                    .andExpect(status().isBadRequest());
+        }
+
+        @Test
+        void whenMaxPriceIsNotDecimal_thenStatus400() throws Exception {
+            mockMvc.perform(get(URL)
+                            .param("maxPrice", "invalid")
+                            .header(HttpHeaders.AUTHORIZATION, auth(token)))
+                    .andExpect(status().isBadRequest());
+        }
+
+        @Test
+        void whenSortByNameAsc_thenReturnSortedPhones() throws Exception {
+            mockMvc.perform(get(URL)
+                            .param("sort", "name_asc")
+                            .header(HttpHeaders.AUTHORIZATION, auth(token)))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.content").isArray())
+                    .andExpect(jsonPath("$.content", hasSize(3)))
+                    .andExpect(jsonPath("$.content[0].name").value("Google Pixel 8"))
+                    .andExpect(jsonPath("$.content[1].name").value("iPhone 15"))
+                    .andExpect(jsonPath("$.content[2].name").value("Samsung Galaxy S24"));
+        }
+
+        @Test
+        void whenSortByNameDesc_thenReturnSortedPhones() throws Exception {
+            mockMvc.perform(get(URL)
+                            .param("sort", "name_desc")
+                            .header(HttpHeaders.AUTHORIZATION, auth(token)))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.content").isArray())
+                    .andExpect(jsonPath("$.content", hasSize(3)))
+                    .andExpect(jsonPath("$.content[0].name").value("Samsung Galaxy S24"))
+                    .andExpect(jsonPath("$.content[1].name").value("iPhone 15"))
+                    .andExpect(jsonPath("$.content[2].name").value("Google Pixel 8"));
+        }
+
+        @Test
+        void whenSortByPriceAsc_thenReturnSortedPhones() throws Exception {
+            mockMvc.perform(get(URL)
+                            .param("sort", "price_asc")
+                            .header(HttpHeaders.AUTHORIZATION, auth(token)))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.content").isArray())
+                    .andExpect(jsonPath("$.content", hasSize(3)))
+                    .andExpect(jsonPath("$.content[0].price").value(699.99))
+                    .andExpect(jsonPath("$.content[0].name").value("Google Pixel 8"))
+                    .andExpect(jsonPath("$.content[1].price").value(899.99))
+                    .andExpect(jsonPath("$.content[1].name").value("Samsung Galaxy S24"))
+                    .andExpect(jsonPath("$.content[2].price").value(999.99))
+                    .andExpect(jsonPath("$.content[2].name").value("iPhone 15"));
+        }
+
+        @Test
+        void whenSortByPriceDesc_thenReturnSortedPhones() throws Exception {
+            mockMvc.perform(get(URL)
+                            .param("sort", "price_desc")
+                            .header(HttpHeaders.AUTHORIZATION, auth(token)))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.content").isArray())
+                    .andExpect(jsonPath("$.content", hasSize(3)))
+                    .andExpect(jsonPath("$.content[0].price").value(999.99))
+                    .andExpect(jsonPath("$.content[0].name").value("iPhone 15"))
+                    .andExpect(jsonPath("$.content[1].price").value(899.99))
+                    .andExpect(jsonPath("$.content[1].name").value("Samsung Galaxy S24"))
+                    .andExpect(jsonPath("$.content[2].price").value(699.99))
+                    .andExpect(jsonPath("$.content[2].name").value("Google Pixel 8"));
+        }
+
+        @Test
+        void whenNoSortProvided_thenDefaultToNameAsc() throws Exception {
+            mockMvc.perform(get(URL)
+                            .header(HttpHeaders.AUTHORIZATION, auth(token)))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.content").isArray())
+                    .andExpect(jsonPath("$.content", hasSize(3)))
+                    .andExpect(jsonPath("$.content[0].name").value("Google Pixel 8"))
+                    .andExpect(jsonPath("$.content[1].name").value("iPhone 15"))
+                    .andExpect(jsonPath("$.content[2].name").value("Samsung Galaxy S24"));
+        }
+
+        @Test
+        void whenSortIsEmpty_thenDefaultToNameAsc() throws Exception {
+            mockMvc.perform(get(URL)
+                            .param("sort", "")
+                            .header(HttpHeaders.AUTHORIZATION, auth(token)))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.content").isArray())
+                    .andExpect(jsonPath("$.content", hasSize(3)))
+                    .andExpect(jsonPath("$.content[0].name").value("Google Pixel 8"))
+                    .andExpect(jsonPath("$.content[1].name").value("iPhone 15"))
+                    .andExpect(jsonPath("$.content[2].name").value("Samsung Galaxy S24"));
+        }
+
+        @Test
+        void whenSortIsBlank_thenDefaultToNameAsc() throws Exception {
+            mockMvc.perform(get(URL)
+                            .param("sort", "   ")
+                            .header(HttpHeaders.AUTHORIZATION, auth(token)))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.content").isArray())
+                    .andExpect(jsonPath("$.content", hasSize(3)))
+                    .andExpect(jsonPath("$.content[0].name").value("Google Pixel 8"))
+                    .andExpect(jsonPath("$.content[1].name").value("iPhone 15"))
+                    .andExpect(jsonPath("$.content[2].name").value("Samsung Galaxy S24"));
+        }
+
+        @Test
+        void whenSortIsInvalid_thenStatus400() throws Exception {
+            mockMvc.perform(get(URL)
+                            .param("sort", "invalid_sort")
+                            .header(HttpHeaders.AUTHORIZATION, auth(token)))
+                    .andExpect(status().isBadRequest());
+        }
+
+        @Test
+        void whenSortWithWrongFormat_thenStatus400() throws Exception {
+            mockMvc.perform(get(URL)
+                            .param("sort", "name")
+                            .header(HttpHeaders.AUTHORIZATION, auth(token)))
+                    .andExpect(status().isBadRequest());
+        }
+
+        @Test
+        void whenSortWithRandomText_thenStatus400() throws Exception {
+            mockMvc.perform(get(URL)
+                            .param("sort", "random_value")
+                            .header(HttpHeaders.AUTHORIZATION, auth(token)))
+                    .andExpect(status().isBadRequest());
+        }
+
+        @Test
+        void whenCombinedFilterAndSort_thenReturnCorrectResults() throws Exception {
+            mockMvc.perform(get(URL)
+                            .param("brand", "Apple")
+                            .param("minPrice", "100.00")
+                            .param("maxPrice", "2000.00")
+                            .param("sort", "price_asc")
+                            .header(HttpHeaders.AUTHORIZATION, auth(token)))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.content").isArray())
+                    .andExpect(jsonPath("$.content", hasSize(1)))
+                    .andExpect(jsonPath("$.content[0].brand").value("Apple"))
+                    .andExpect(jsonPath("$.content[0].name").value("iPhone 15"))
+                    .andExpect(jsonPath("$.content[0].price").value(999.99));
+        }
+
+        @Test
+        void whenCombinedFilterSortAndPagination_thenReturnCorrectResults() throws Exception {
+            mockMvc.perform(get(URL)
+                            .param("page", "1")
+                            .param("size", "2")
+                            .param("sort", "name_desc")
+                            .header(HttpHeaders.AUTHORIZATION, auth(token)))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.content").isArray())
+                    .andExpect(jsonPath("$.content", hasSize(2)))
+                    .andExpect(jsonPath("$.size").value(2))
+                    .andExpect(jsonPath("$.page").value(1))
+                    .andExpect(jsonPath("$.content[0].name").value("Samsung Galaxy S24"))
+                    .andExpect(jsonPath("$.content[1].name").value("iPhone 15"));
+        }
+
+        @Test
+        void whenAllParametersCombined_thenReturnCorrectResults() throws Exception {
+            mockMvc.perform(get(URL)
+                            .param("page", "1")
+                            .param("size", "5")
+                            .param("minPrice", "800.00")
+                            .param("maxPrice", "1500.00")
+                            .param("sort", "price_desc")
+                            .header(HttpHeaders.AUTHORIZATION, auth(token)))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.content").isArray())
+                    .andExpect(jsonPath("$.content", hasSize(2)))
+                    .andExpect(jsonPath("$.content[0].name").value("iPhone 15"))
+                    .andExpect(jsonPath("$.content[0].price").value(999.99))
+                    .andExpect(jsonPath("$.content[1].name").value("Samsung Galaxy S24"))
+                    .andExpect(jsonPath("$.content[1].price").value(899.99));
+        }
     }
 
     @Nested

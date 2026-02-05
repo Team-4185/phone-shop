@@ -1,5 +1,6 @@
 package com.challengeteam.shop.service.impl;
 
+import com.challengeteam.shop.dto.pagination.PhoneFilterDto;
 import com.challengeteam.shop.dto.phone.PhoneCreateRequestDto;
 import com.challengeteam.shop.dto.phone.PhoneUpdateRequestDto;
 import com.challengeteam.shop.entity.image.Image;
@@ -9,6 +10,7 @@ import com.challengeteam.shop.exceptionHandling.exception.CriticalSystemExceptio
 import com.challengeteam.shop.exceptionHandling.exception.ResourceNotFoundException;
 import com.challengeteam.shop.persistence.repository.ImageRepository;
 import com.challengeteam.shop.persistence.repository.PhoneRepository;
+import com.challengeteam.shop.persistence.specification.PhoneSpecification;
 import com.challengeteam.shop.service.ImageService;
 import com.challengeteam.shop.service.PhoneService;
 import com.challengeteam.shop.service.impl.merger.PhoneMerger;
@@ -17,6 +19,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -46,10 +50,21 @@ public class PhoneServiceImpl implements PhoneService {
 
     @Transactional(readOnly = true)
     @Override
-    public Page<Phone> getPhones(int page, int size) {
-        log.debug("Get phones page={}, size={}", page, size);
-        Pageable pageable = PageRequest.of(page, size);
-        return phoneRepository.findAll(pageable);
+    public Page<Phone> getPhones(int page, int size, PhoneFilterDto filterDto) {
+        log.debug("Get phones page={}, size={}, filters={}", page, size, filterDto);
+
+        Pageable pageable = PageRequest.of(page, size, buildSort(filterDto.sort()));
+        Specification<Phone> spec = PhoneSpecification.buildSpecification(filterDto);
+        return phoneRepository.findAll(spec, pageable);
+    }
+
+    private Sort buildSort(String sortParam) {
+        return switch (sortParam) {
+            case "name_desc" -> Sort.by("name").descending();
+            case "price_asc" -> Sort.by("price").ascending();
+            case "price_desc" -> Sort.by("price").descending();
+            default -> Sort.by("name").ascending();
+        };
     }
 
     @Transactional

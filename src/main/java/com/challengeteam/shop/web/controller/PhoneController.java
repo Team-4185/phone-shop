@@ -3,6 +3,7 @@ package com.challengeteam.shop.web.controller;
 import com.challengeteam.shop.dto.image.ImageMetadataResponseDto;
 import com.challengeteam.shop.dto.pagination.PageRequestDto;
 import com.challengeteam.shop.dto.pagination.PageResponseDto;
+import com.challengeteam.shop.dto.pagination.PhoneFilterDto;
 import com.challengeteam.shop.dto.phone.PhoneCreateRequestDto;
 import com.challengeteam.shop.dto.phone.PhoneResponseDto;
 import com.challengeteam.shop.dto.phone.PhoneUpdateRequestDto;
@@ -44,12 +45,17 @@ public class PhoneController {
                           "Use 'page' and 'size' query parameters to control pagination."
     )
     @GetMapping
-    public ResponseEntity<PageResponseDto<PhoneResponseDto>> getAllPhones(@Valid PageRequestDto pageRequestDto) {
+    public ResponseEntity<PageResponseDto<PhoneResponseDto>> getAllPhones(
+            @Valid PageRequestDto pageRequestDto,
+            @Valid PhoneFilterDto filterDto
+    ) {
+
         int page = pageRequestDto.page() - 1;
         int size = pageRequestDto.size();
 
-        Page<Phone> phones = phoneService.getPhones(page, size);
+        Page<Phone> phones = phoneService.getPhones(page, size, filterDto);
         Page<PhoneResponseDto> response = phones.map(phoneMapper::toResponse);
+
         return ResponseEntity.ok(PageResponseDto.of(response));
     }
 
