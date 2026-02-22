@@ -2,12 +2,13 @@ package com.challengeteam.shop.persistence.repository;
 
 import com.challengeteam.shop.entity.phone.Phone;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface PhoneRepository extends JpaRepository<Phone, Long> {
+public interface PhoneRepository extends JpaRepository<Phone, Long>, JpaSpecificationExecutor<Phone> {
 
     @Query(value = """
             SELECT EXISTS(
