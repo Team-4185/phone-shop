@@ -26,7 +26,7 @@ public class PhoneSpecification {
                 criteriaBuilder.lessThanOrEqualTo(root.get("price"), maxPrice);
     }
 
-    public static Specification<Phone> buildSpecification(PhoneFilterDto requestDto) {
+    public static Specification<Phone> build(PhoneFilterDto requestDto) {
         Specification<Phone> spec = (root, query, cb) -> cb.conjunction();
 
         if (requestDto.brand() != null && !requestDto.brand().isBlank()) {

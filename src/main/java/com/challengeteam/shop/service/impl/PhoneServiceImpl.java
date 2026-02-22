@@ -54,7 +54,7 @@ public class PhoneServiceImpl implements PhoneService {
         log.debug("Get phones page={}, size={}, filters={}", page, size, filterDto);
 
         Pageable pageable = PageRequest.of(page, size, buildSort(filterDto.sort()));
-        Specification<Phone> spec = PhoneSpecification.buildSpecification(filterDto);
+        Specification<Phone> spec = PhoneSpecification.build(filterDto);
         return phoneRepository.findAll(spec, pageable);
     }
 
