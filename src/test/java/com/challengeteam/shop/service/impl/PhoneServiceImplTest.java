@@ -36,6 +36,7 @@ import java.util.stream.LongStream;
 import static com.challengeteam.shop.service.impl.PhoneServiceImplTest.TestResources.*;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
 
 @ExtendWith(MockitoExtension.class)
 class PhoneServiceImplTest {
@@ -487,7 +488,7 @@ class PhoneServiceImplTest {
             Phone phone = buildPhone(PHONE_ID);
 
             // mockito
-            Mockito.when(phoneRepository.findById(PHONE_ID))
+            Mockito.when(phoneRepository.findByIdWithImages(PHONE_ID))
                     .thenReturn(Optional.of(phone));
 
             // when
@@ -496,20 +497,20 @@ class PhoneServiceImplTest {
             // then
             assertThat(result).isPresent();
             assertThat(result.get()).isEqualTo(phone);
-            Mockito.verify(phoneRepository).findById(PHONE_ID);
+            Mockito.verify(phoneRepository).findByIdWithImages(PHONE_ID);
         }
 
         @Test
         void whenPhoneDoesNotExist_thenReturnEmptyOptional() {
             // mockito
-            Mockito.when(phoneRepository.findById(PHONE_ID)).thenReturn(Optional.empty());
+            Mockito.when(phoneRepository.findByIdWithImages(PHONE_ID)).thenReturn(Optional.empty());
 
             // when
             Optional<Phone> result = phoneService.getById(PHONE_ID);
 
             // then
             assertThat(result).isNotPresent();
-            Mockito.verify(phoneRepository).findById(PHONE_ID);
+            Mockito.verify(phoneRepository).findByIdWithImages(PHONE_ID);
         }
 
         @Test

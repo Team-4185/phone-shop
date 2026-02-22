@@ -16,10 +16,7 @@ import com.challengeteam.shop.service.PhoneService;
 import com.challengeteam.shop.service.impl.merger.PhoneMerger;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.*;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -45,7 +42,7 @@ public class PhoneServiceImpl implements PhoneService {
         Objects.requireNonNull(id, "id");
 
         log.debug("Get phone by id: {}", id);
-        return phoneRepository.findById(id);
+        return phoneRepository.findByIdWithImages(id);
     }
 
     @Transactional(readOnly = true)

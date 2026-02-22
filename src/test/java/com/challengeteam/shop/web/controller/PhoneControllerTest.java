@@ -498,7 +498,23 @@ class PhoneControllerTest {
                     .andExpect(jsonPath("$.screenSize").value(TestPhone.PHONE_1.screenSize))
                     .andExpect(jsonPath("$.frontCamera").value(TestPhone.PHONE_1.frontCamera))
                     .andExpect(jsonPath("$.mainCamera").value(TestPhone.PHONE_1.mainCamera))
-                    .andExpect(jsonPath("$.batteryCapacity").value(TestPhone.PHONE_1.batteryCapacity));
+                    .andExpect(jsonPath("$.batteryCapacity").value(TestPhone.PHONE_1.batteryCapacity))
+                    .andExpect(jsonPath("$.images").isArray())
+                    .andExpect(jsonPath("$.images", hasSize(0)));
+        }
+
+        @Test
+        void whenPhoneHasImages_thenReturnPhoneWithImages() throws Exception {
+            mockMvc.perform(get(URL, phone2)
+                            .header(HttpHeaders.AUTHORIZATION, auth(token)))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.images").isArray())
+                    .andExpect(jsonPath("$.images", hasSize(2)))
+                    .andExpect(jsonPath("$.images[0].id").exists())
+                    .andExpect(jsonPath("$.images[0].name").exists())
+                    .andExpect(jsonPath("$.images[0].url").exists())
+                    .andExpect(jsonPath("$.images[0].size").exists())
+                    .andExpect(jsonPath("$.images[0].mimeType").exists());
         }
 
         @Test
