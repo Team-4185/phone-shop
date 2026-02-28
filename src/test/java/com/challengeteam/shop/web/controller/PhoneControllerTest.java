@@ -97,6 +97,7 @@ class PhoneControllerTest {
                     .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                     .andExpect(jsonPath("$.content").isArray())
                     .andExpect(jsonPath("$.content", hasSize(3)))
+                    .andExpect(jsonPath("$.content[*].images").exists())
                     .andExpect(jsonPath("$.totalElements").value(3))
                     .andExpect(jsonPath("$.totalPages").value(1))
                     .andExpect(jsonPath("$.size").value(10))
@@ -113,6 +114,7 @@ class PhoneControllerTest {
                             .header(HttpHeaders.AUTHORIZATION, auth(token)))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.content", hasSize(2)))
+                    .andExpect(jsonPath("$.content[*].images").exists())
                     .andExpect(jsonPath("$.totalElements").value(3))
                     .andExpect(jsonPath("$.totalPages").value(2))
                     .andExpect(jsonPath("$.size").value(2))
@@ -127,6 +129,7 @@ class PhoneControllerTest {
                             .header(HttpHeaders.AUTHORIZATION, auth(token)))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.content", hasSize(1)))
+                    .andExpect(jsonPath("$.content[*].images").exists())
                     .andExpect(jsonPath("$.totalElements").value(3))
                     .andExpect(jsonPath("$.totalPages").value(2))
                     .andExpect(jsonPath("$.size").value(2))
@@ -221,7 +224,8 @@ class PhoneControllerTest {
                     .andExpect(jsonPath("$.content").isArray())
                     .andExpect(jsonPath("$.content", hasSize(1)))
                     .andExpect(jsonPath("$.content[0].brand").value("Apple"))
-                    .andExpect(jsonPath("$.content[0].name").value("iPhone 15"));
+                    .andExpect(jsonPath("$.content[0].name").value("iPhone 15"))
+                    .andExpect(jsonPath("$.content[*].images").exists());
         }
 
         @Test
@@ -232,7 +236,8 @@ class PhoneControllerTest {
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.content").isArray())
                     .andExpect(jsonPath("$.content", hasSize(2)))
-                    .andExpect(jsonPath("$.content[*].price", everyItem(greaterThanOrEqualTo(800.00))));
+                    .andExpect(jsonPath("$.content[*].price", everyItem(greaterThanOrEqualTo(800.00))))
+                    .andExpect(jsonPath("$.content[*].images").exists());
         }
 
         @Test
@@ -243,7 +248,8 @@ class PhoneControllerTest {
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.content").isArray())
                     .andExpect(jsonPath("$.content", hasSize(2)))
-                    .andExpect(jsonPath("$.content[*].price", everyItem(lessThanOrEqualTo(900.00))));
+                    .andExpect(jsonPath("$.content[*].price", everyItem(lessThanOrEqualTo(900.00))))
+                    .andExpect(jsonPath("$.content[*].images").exists());
         }
 
         @Test
@@ -256,7 +262,8 @@ class PhoneControllerTest {
                     .andExpect(jsonPath("$.content").isArray())
                     .andExpect(jsonPath("$.content", hasSize(1)))
                     .andExpect(jsonPath("$.content[0].name").value("Samsung Galaxy S24"))
-                    .andExpect(jsonPath("$.content[0].price").value(899.99));
+                    .andExpect(jsonPath("$.content[0].price").value(899.99))
+                    .andExpect(jsonPath("$.content[*].images").exists());
         }
 
         @Test
@@ -270,7 +277,8 @@ class PhoneControllerTest {
                     .andExpect(jsonPath("$.content").isArray())
                     .andExpect(jsonPath("$.content", hasSize(1)))
                     .andExpect(jsonPath("$.content[0].brand").value("Samsung"))
-                    .andExpect(jsonPath("$.content[0].name").value("Samsung Galaxy S24"));
+                    .andExpect(jsonPath("$.content[0].name").value("Samsung Galaxy S24"))
+                    .andExpect(jsonPath("$.content[*].images").exists());
         }
 
         @Test
@@ -315,7 +323,8 @@ class PhoneControllerTest {
                     .andExpect(jsonPath("$.content", hasSize(3)))
                     .andExpect(jsonPath("$.content[0].name").value("Google Pixel 8"))
                     .andExpect(jsonPath("$.content[1].name").value("iPhone 15"))
-                    .andExpect(jsonPath("$.content[2].name").value("Samsung Galaxy S24"));
+                    .andExpect(jsonPath("$.content[2].name").value("Samsung Galaxy S24"))
+                    .andExpect(jsonPath("$.content[*].images").exists());
         }
 
         @Test
@@ -328,7 +337,8 @@ class PhoneControllerTest {
                     .andExpect(jsonPath("$.content", hasSize(3)))
                     .andExpect(jsonPath("$.content[0].name").value("Samsung Galaxy S24"))
                     .andExpect(jsonPath("$.content[1].name").value("iPhone 15"))
-                    .andExpect(jsonPath("$.content[2].name").value("Google Pixel 8"));
+                    .andExpect(jsonPath("$.content[2].name").value("Google Pixel 8"))
+                    .andExpect(jsonPath("$.content[*].images").exists());
         }
 
         @Test
@@ -344,7 +354,8 @@ class PhoneControllerTest {
                     .andExpect(jsonPath("$.content[1].price").value(899.99))
                     .andExpect(jsonPath("$.content[1].name").value("Samsung Galaxy S24"))
                     .andExpect(jsonPath("$.content[2].price").value(999.99))
-                    .andExpect(jsonPath("$.content[2].name").value("iPhone 15"));
+                    .andExpect(jsonPath("$.content[2].name").value("iPhone 15"))
+                    .andExpect(jsonPath("$.content[*].images").exists());
         }
 
         @Test
@@ -360,7 +371,8 @@ class PhoneControllerTest {
                     .andExpect(jsonPath("$.content[1].price").value(899.99))
                     .andExpect(jsonPath("$.content[1].name").value("Samsung Galaxy S24"))
                     .andExpect(jsonPath("$.content[2].price").value(699.99))
-                    .andExpect(jsonPath("$.content[2].name").value("Google Pixel 8"));
+                    .andExpect(jsonPath("$.content[2].name").value("Google Pixel 8"))
+                    .andExpect(jsonPath("$.content[*].images").exists());
         }
 
         @Test
@@ -372,7 +384,8 @@ class PhoneControllerTest {
                     .andExpect(jsonPath("$.content", hasSize(3)))
                     .andExpect(jsonPath("$.content[0].name").value("Google Pixel 8"))
                     .andExpect(jsonPath("$.content[1].name").value("iPhone 15"))
-                    .andExpect(jsonPath("$.content[2].name").value("Samsung Galaxy S24"));
+                    .andExpect(jsonPath("$.content[2].name").value("Samsung Galaxy S24"))
+                    .andExpect(jsonPath("$.content[*].images").exists());
         }
 
         @Test
@@ -385,7 +398,8 @@ class PhoneControllerTest {
                     .andExpect(jsonPath("$.content", hasSize(3)))
                     .andExpect(jsonPath("$.content[0].name").value("Google Pixel 8"))
                     .andExpect(jsonPath("$.content[1].name").value("iPhone 15"))
-                    .andExpect(jsonPath("$.content[2].name").value("Samsung Galaxy S24"));
+                    .andExpect(jsonPath("$.content[2].name").value("Samsung Galaxy S24"))
+                    .andExpect(jsonPath("$.content[*].images").exists());
         }
 
         @Test
@@ -398,7 +412,8 @@ class PhoneControllerTest {
                     .andExpect(jsonPath("$.content", hasSize(3)))
                     .andExpect(jsonPath("$.content[0].name").value("Google Pixel 8"))
                     .andExpect(jsonPath("$.content[1].name").value("iPhone 15"))
-                    .andExpect(jsonPath("$.content[2].name").value("Samsung Galaxy S24"));
+                    .andExpect(jsonPath("$.content[2].name").value("Samsung Galaxy S24"))
+                    .andExpect(jsonPath("$.content[*].images").exists());
         }
 
         @Test
@@ -438,7 +453,8 @@ class PhoneControllerTest {
                     .andExpect(jsonPath("$.content", hasSize(1)))
                     .andExpect(jsonPath("$.content[0].brand").value("Apple"))
                     .andExpect(jsonPath("$.content[0].name").value("iPhone 15"))
-                    .andExpect(jsonPath("$.content[0].price").value(999.99));
+                    .andExpect(jsonPath("$.content[0].price").value(999.99))
+                    .andExpect(jsonPath("$.content[*].images").exists());
         }
 
         @Test
@@ -454,7 +470,8 @@ class PhoneControllerTest {
                     .andExpect(jsonPath("$.size").value(2))
                     .andExpect(jsonPath("$.page").value(1))
                     .andExpect(jsonPath("$.content[0].name").value("Samsung Galaxy S24"))
-                    .andExpect(jsonPath("$.content[1].name").value("iPhone 15"));
+                    .andExpect(jsonPath("$.content[1].name").value("iPhone 15"))
+                    .andExpect(jsonPath("$.content[*].images").exists());
         }
 
         @Test
@@ -472,7 +489,8 @@ class PhoneControllerTest {
                     .andExpect(jsonPath("$.content[0].name").value("iPhone 15"))
                     .andExpect(jsonPath("$.content[0].price").value(999.99))
                     .andExpect(jsonPath("$.content[1].name").value("Samsung Galaxy S24"))
-                    .andExpect(jsonPath("$.content[1].price").value(899.99));
+                    .andExpect(jsonPath("$.content[1].price").value(899.99))
+                    .andExpect(jsonPath("$.content[*].images").exists());
         }
     }
 
@@ -498,7 +516,23 @@ class PhoneControllerTest {
                     .andExpect(jsonPath("$.screenSize").value(TestPhone.PHONE_1.screenSize))
                     .andExpect(jsonPath("$.frontCamera").value(TestPhone.PHONE_1.frontCamera))
                     .andExpect(jsonPath("$.mainCamera").value(TestPhone.PHONE_1.mainCamera))
-                    .andExpect(jsonPath("$.batteryCapacity").value(TestPhone.PHONE_1.batteryCapacity));
+                    .andExpect(jsonPath("$.batteryCapacity").value(TestPhone.PHONE_1.batteryCapacity))
+                    .andExpect(jsonPath("$.images").isArray())
+                    .andExpect(jsonPath("$.images", hasSize(0)));
+        }
+
+        @Test
+        void whenPhoneHasImages_thenReturnPhoneWithImages() throws Exception {
+            mockMvc.perform(get(URL, phone2)
+                            .header(HttpHeaders.AUTHORIZATION, auth(token)))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.images").isArray())
+                    .andExpect(jsonPath("$.images", hasSize(2)))
+                    .andExpect(jsonPath("$.images[0].id").exists())
+                    .andExpect(jsonPath("$.images[0].name").exists())
+                    .andExpect(jsonPath("$.images[0].url").exists())
+                    .andExpect(jsonPath("$.images[0].size").exists())
+                    .andExpect(jsonPath("$.images[0].mimeType").exists());
         }
 
         @Test

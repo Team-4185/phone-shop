@@ -36,6 +36,7 @@ import java.util.stream.LongStream;
 import static com.challengeteam.shop.service.impl.PhoneServiceImplTest.TestResources.*;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
 
 @ExtendWith(MockitoExtension.class)
 class PhoneServiceImplTest {
@@ -482,12 +483,14 @@ class PhoneServiceImplTest {
     class GetByIdTest {
 
         @Test
-        void whenPhoneExists_thenReturnOptionalWithPhone() {
+        void whenPhoneExistsWithImages_thenReturnOptionalWithPhone() {
             // given
             Phone phone = buildPhone(PHONE_ID);
+            phone.setImages(new ArrayList<>(List.of(buildImage())));
+            List<Image> expectedImages = List.copyOf(phone.getImages());
 
             // mockito
-            Mockito.when(phoneRepository.findById(PHONE_ID))
+            Mockito.when(phoneRepository.findByIdWithImages(PHONE_ID))
                     .thenReturn(Optional.of(phone));
 
             // when
@@ -496,20 +499,42 @@ class PhoneServiceImplTest {
             // then
             assertThat(result).isPresent();
             assertThat(result.get()).isEqualTo(phone);
-            Mockito.verify(phoneRepository).findById(PHONE_ID);
+            assertThat(result.get().getImages()).isNotNull().hasSize(expectedImages.size())
+                    .containsExactlyElementsOf(expectedImages);
+            Mockito.verify(phoneRepository).findByIdWithImages(PHONE_ID);
+        }
+
+        @Test
+        void whenPhoneExistsWithNoImages_thenReturnPhoneWithEmptyImageList() {
+            // given
+            Phone phone = buildPhone(PHONE_ID);
+            phone.setImages(new ArrayList<>());
+
+            // mockito
+            Mockito.when(phoneRepository.findByIdWithImages(PHONE_ID))
+                    .thenReturn(Optional.of(phone));
+
+            // when
+            Optional<Phone> result = phoneService.getById(PHONE_ID);
+
+            // then
+            assertThat(result).isPresent();
+            assertThat(result.get()).isEqualTo(phone);
+            assertThat(result.get().getImages()).isNotNull().isEmpty();
+            Mockito.verify(phoneRepository).findByIdWithImages(PHONE_ID);
         }
 
         @Test
         void whenPhoneDoesNotExist_thenReturnEmptyOptional() {
             // mockito
-            Mockito.when(phoneRepository.findById(PHONE_ID)).thenReturn(Optional.empty());
+            Mockito.when(phoneRepository.findByIdWithImages(PHONE_ID)).thenReturn(Optional.empty());
 
             // when
             Optional<Phone> result = phoneService.getById(PHONE_ID);
 
             // then
             assertThat(result).isNotPresent();
-            Mockito.verify(phoneRepository).findById(PHONE_ID);
+            Mockito.verify(phoneRepository).findByIdWithImages(PHONE_ID);
         }
 
         @Test
