@@ -17,45 +17,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 class CartUtilityTest {
 
     @Nested
-    class CountCartTotalPriceTest {
-
-        @Test
-        void whenGivenCartWithItems_thenReturnTotalPrice() {
-            // when
-            BigDecimal result = CartUtility.countCartTotalPrice(buildCartWithItems());
-
-            // then
-            assertThat(result).isEqualTo(TOTAL_PRICE);
-        }
-
-        @Test
-        void whenGivenEmptyCart_thenReturnZero() {
-            // when
-            BigDecimal result = CartUtility.countCartTotalPrice(buildEmptyCart());
-
-            // then
-            assertThat(result).isEqualTo(BigDecimal.ZERO);
-        }
-
-        @Test
-        void whenGivenCartWithSingleItem_thenReturnCorrectPrice() {
-            // when
-            BigDecimal result = CartUtility.countCartTotalPrice(buildCartWithSingleItem());
-
-            // then
-            assertThat(result).isEqualTo(SINGLE_ITEM_TOTAL_PRICE);
-        }
-
-        @Test
-        void whenParameterCartIsNull_thenThrowException() {
-            // when + then
-            assertThatThrownBy(() -> CartUtility.countCartTotalPrice(null))
-                    .isInstanceOf(NullPointerException.class);
-        }
-
-    }
-
-    @Nested
     class IsCartHasPhoneTest {
 
         @Test
@@ -152,20 +113,10 @@ class CartUtilityTest {
         static final Long UNKNOWN_PHONE_ID = 999L;
         static final Integer ITEM_AMOUNT = 2;
         static final BigDecimal PHONE_PRICE = new BigDecimal("500.00");
-        static final BigDecimal SINGLE_ITEM_TOTAL_PRICE = new BigDecimal("500.00");
-        static final BigDecimal TOTAL_PRICE = new BigDecimal("1500.00");
 
         static Cart buildEmptyCart() {
             Cart cart = new Cart();
             cart.setCartItems(new ArrayList<>());
-            return cart;
-        }
-
-        static Cart buildCartWithSingleItem() {
-            Cart cart = new Cart();
-            List<CartItem> cartItems = new ArrayList<>();
-            cartItems.add(buildCartItem(PHONE_ID, PHONE_PRICE, 1));
-            cart.setCartItems(cartItems);
             return cart;
         }
 

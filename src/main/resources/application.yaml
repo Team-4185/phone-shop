@@ -20,6 +20,9 @@ spring:
     open-in-view: false
     hibernate:
       ddl-auto: none
+  jackson:
+    deserialization:
+      read-unknown-enum-values-as-null: true
   servlet:
     multipart:
       max-file-size: 5MB
@@ -53,3 +56,11 @@ minio:
 logging:
   level:
     root: ${LOG_LEVEL:INFO}
+
+payment:
+  stripe:
+    public-key: ${STRIPE_PUBLIC_KEY}
+    private-key: ${STRIPE_PRIVATE_KEY}
+    payment-success-url: ${STRIPE_PAYMENT_SUCCESS_URL}
+    webhook-secret: ${STRIPE_WEBHOOK_SECRET}
+    checkout-expiration-time: ${STRIPE_EXPIRATION_TIME}         # seconds

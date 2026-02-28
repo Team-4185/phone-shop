@@ -27,13 +27,11 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
     public static final String DEFAULT_ROLE_NAME_FOR_CREATED_USER = "USER";
-
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
     private final UserMerger userMerger;
     private final UserValidator userValidator;
-
 
     @Transactional(readOnly = true)
     @Override
@@ -125,6 +123,14 @@ public class UserServiceImpl implements UserService {
 
         log.debug("Called method 'existsByEmail' with email: {}", email);
         return userRepository.existsByEmail(email);
+    }
+
+    @Override
+    public boolean existsById(Long id) {
+        Objects.requireNonNull(id, "id");
+
+        log.debug("Called method 'existsById' with id: {}", id);
+        return userRepository.existsById(id);
     }
 
 }

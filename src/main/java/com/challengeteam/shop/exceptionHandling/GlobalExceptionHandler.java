@@ -388,4 +388,32 @@ public class GlobalExceptionHandler {
                 .body(problem);
     }
 
+    @ExceptionHandler(UnsupportedPaymentMethodException.class)
+    public ResponseEntity<ProblemDetail> handleUnsupportedPaymentMethodException(UnsupportedPaymentMethodException e) {
+        log.warn("400  {}", e.getMessage());
+
+        var problem = ProblemDetail.forStatus(HttpStatus.BAD_REQUEST.value());
+        problem.setTitle("Payment Method Unsupported");
+        problem.setDetail("Unsupported payment method '%s' for processing order".formatted(e.getPaymentMethod()));
+
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(problem);
+    }
+
+    @ExceptionHandler(ValidationException.class)
+    public ResponseEntity<ProblemDetail>  handleValidationException(ValidationException e) {
+        log.warn("400  {}", e.getMessage());
+
+        var problem = ProblemDetail.forStatus(HttpStatus.BAD_REQUEST.value());
+        problem.setTitle("Validation Failed");
+        problem.setDetail(e.getMessage());
+
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(problem);
+    }
+
 }

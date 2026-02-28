@@ -19,21 +19,23 @@ public interface ImageMapper {
     }
 
     default ImageMetadataResponseDto toMetadata(Image image) {
-        URI uri = ServletUriComponentsBuilder
-                .fromCurrentContextPath()
-                .path("/api/v1/images/{id}")
-                .buildAndExpand(image.getId())
-                .toUri();
-
         return new ImageMetadataResponseDto(
                 image.getId(),
                 image.getName(),
-                uri.toString(),
+                mapImageUrl(image),
                 image.getSize(),
                 image.getMimeType().getType()
         );
     }
 
-    List<ImageMetadataResponseDto> toListOfMetadata(List<Image> images);
+    default String mapImageUrl(Image image) {
+        return ServletUriComponentsBuilder
+                .fromCurrentContextPath()
+                .path("/api/v1/images/{id}")
+                .buildAndExpand(image.getId())
+                .toUri()
+                .toString();
+    }
 
+    List<ImageMetadataResponseDto> toListOfMetadata(List<Image> images);
 }

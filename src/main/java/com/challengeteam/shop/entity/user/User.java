@@ -2,11 +2,13 @@ package com.challengeteam.shop.entity.user;
 
 import com.challengeteam.shop.entity.BaseEntity;
 import com.challengeteam.shop.entity.cart.Cart;
+import com.challengeteam.shop.entity.order.Order;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 
 import java.time.Instant;
+import java.util.List;
 
 @Getter
 @Setter
@@ -41,6 +43,9 @@ public class User extends BaseEntity {
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
     private Cart cart;
 
+    @OneToMany(mappedBy = "user", cascade = CascadeType.DETACH)
+    private List<Order> orders;
+
     @Override
     public String toString() {
         return "User{" +
@@ -48,10 +53,11 @@ public class User extends BaseEntity {
                ", password='" + password + '\'' +
                ", firstName='" + firstName + '\'' +
                ", lastName='" + lastName + '\'' +
-               ", newCity='" + city + '\'' +
+               ", city='" + city + '\'' +
                ", phoneNumber='" + phoneNumber + '\'' +
                ", role=" + role +
+               ", cart=" + cart +
+               ", order=" + orders +
                "} " + super.toString();
     }
-
 }

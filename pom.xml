@@ -26,6 +26,7 @@
 		<minio.version>8.5.17</minio.version>
 		<testcontainers.minio.version>2.0.1</testcontainers.minio.version>
 		<testcontainers.postgres.version>2.0.1</testcontainers.postgres.version>
+		<stripe.version>31.1.0</stripe.version>
 	</properties>
 	
 	<parent>
@@ -105,6 +106,13 @@
 			<artifactId>testcontainers-postgresql</artifactId>
 			<version>${testcontainers.postgres.version}</version>
 			<scope>test</scope>
+		</dependency>
+		
+		<!-- INTEGRATIONS -->
+		<dependency>
+			<groupId>com.stripe</groupId>
+			<artifactId>stripe-java</artifactId>
+			<version>${stripe.version}</version>
 		</dependency>
 		
 		<!-- TOOLS -->

@@ -22,38 +22,27 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.LongStream;
 
-import static com.challengeteam.shop.service.impl.PhoneServiceImplTest.TestResources.IMAGE_ID;
-import static com.challengeteam.shop.service.impl.PhoneServiceImplTest.TestResources.PHONE_ID;
+import static com.challengeteam.shop.service.impl.UserServiceImplTest.TestResources.*;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 
 @ExtendWith(MockitoExtension.class)
 public class UserServiceImplTest {
-
-    @Mock
-    private UserRepository userRepository;
-
-    @Mock
-    private RoleRepository roleRepository;
-
-    @Mock
-    private UserMerger userMerger;
-
-    @Mock
-    private UserValidator userValidator;
-
+    @Mock private UserRepository userRepository;
+    @Mock private RoleRepository roleRepository;
+    @Mock private UserMerger userMerger;
+    @Mock private UserValidator userValidator;
     private final PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
-
     private UserServiceImpl userService;
 
-
     @BeforeEach
-    public void initBeforeEach() {
+    public void setup() {
         userService = new UserServiceImpl(userRepository, roleRepository, passwordEncoder, userMerger, userValidator);
     }
 
@@ -62,40 +51,29 @@ public class UserServiceImplTest {
 
         @Test
         void whenUsersExist_returnAllUsers() {
-            // given
-            List<User> users = buildUserFromTo(1, 11);
-            List<User> expected = buildUserFromTo(1, 11);
-
             // mockito
             Mockito.when(userRepository.findAll())
-                    .thenReturn(users);
+                    .thenReturn(buildUsersList());
 
             // when
             List<User> result = userService.getAll();
 
             // then
-            assertNotNull(result);
-            assertEquals(expected, result);
+            assertThat(result).isEqualTo(buildUsersList());
         }
 
         @Test
         void whenNoOneUser_thenReturnEmptyList() {
-            // given
-            List<User> users = List.of();
-            List<User> expected = List.of();
-
             // mockito
             Mockito.when(userRepository.findAll())
-                    .thenReturn(users);
+                    .thenReturn(Collections.emptyList());
 
             // when
             List<User> result = userService.getAll();
 
             // then
-            assertNotNull(result);
-            assertEquals(expected, result);
+            assertThat(result).isEmpty();
         }
-
     }
 
     @Nested
@@ -103,52 +81,36 @@ public class UserServiceImplTest {
 
         @Test
         void whenUserExists_thenReturnOptionalWithUser() {
-            // given
-            User user = buildUser(10L);
-            User expected = buildUser(10L);
-
             // mockito
-            Mockito.when(userRepository.findById(10L))
-                    .thenReturn(Optional.of(user));
+            Mockito.when(userRepository.findById(ID_1))
+                    .thenReturn(Optional.of(buildUser(ID_1)));
 
             // when
-            Optional<User> result = userService.getById(10L);
+            Optional<User> result = userService.getById(ID_1);
 
             // then
-            assertNotNull(result);
-            assertTrue(result.isPresent());
-            assertEquals(expected, result.get());
+            assertThat(result).isPresent();
+            assertThat(result.get()).isEqualTo(buildUser(ID_1));
         }
 
         @Test
         void whenUserDoesntExist_thenReturnEmptyOptional() {
-            // given
-            // ...
-
             // mockito
-            Mockito.when(userRepository.findById(10L))
+            Mockito.when(userRepository.findById(ID_1))
                     .thenReturn(Optional.empty());
 
             // when
-            Optional<User> result = userService.getById(10L);
+            Optional<User> result = userService.getById(ID_1);
 
             // then
-            assertNotNull(result);
-            assertFalse(result.isPresent());
+            assertThat(result).isEmpty();
         }
 
         @Test
         void whenParameterIdIsNull_whenThrowException() {
-            // given
-            Long id = null;
-
-            // mockito
-            // ...
-
             // when + then
-            assertThrows(NullPointerException.class, () -> userService.getById(id));
+            assertThatThrownBy(() -> userService.getById(null)).isInstanceOf(NullPointerException.class);
         }
-
     }
 
     @Nested
@@ -156,53 +118,36 @@ public class UserServiceImplTest {
 
         @Test
         void whenUserExists_thenReturnOptionalWithUser() throws Exception {
-            // given
-            User user = buildUser(10L);
-            String email = "user" + 10L + "@gmail.com";
-            User expected = buildUser(10L);
-
             // mockito
-            Mockito.when(userRepository.findByEmail(email))
-                    .thenReturn(Optional.of(user));
+            Mockito.when(userRepository.findByEmail(buildEmailForUserWithId(ID_1)))
+                    .thenReturn(Optional.of(buildUser(ID_1)));
 
             // when
-            Optional<User> result = userService.getByEmail(email);
+            Optional<User> result = userService.getByEmail(buildEmailForUserWithId(ID_1));
 
             // then
-            assertNotNull(result);
-            assertTrue(result.isPresent());
-            assertEquals(expected, result.get());
+            assertThat(result).isPresent();
+            assertThat(result.get()).isEqualTo(buildUser(ID_1));
         }
 
         @Test
         void whenUserDoesntExist_thenReturnEmptyOptional() throws Exception {
-            // given
-            String email = "user" + 10L + "@gmail.com";
-
             // mockito
-            Mockito.when(userRepository.findByEmail(email))
+            Mockito.when(userRepository.findByEmail(buildEmailForUserWithId(ID_1)))
                     .thenReturn(Optional.empty());
 
             // when
-            Optional<User> result = userService.getByEmail(email);
+            Optional<User> result = userService.getByEmail(buildEmailForUserWithId(ID_1));
 
             // then
-            assertNotNull(result);
-            assertFalse(result.isPresent());
+            assertThat(result).isEmpty();
         }
 
         @Test
         void whenParameterEmailIsNull_thenThrowException() throws Exception {
-            // given
-            String email = null;
-
-            // mockito
-            // ...
-
             // when + then
-            assertThrows(NullPointerException.class, () -> userService.getByEmail(email));
+            assertThatThrownBy(() -> userService.getByEmail(null)).isInstanceOf(NullPointerException.class);
         }
-
     }
 
     @Nested
@@ -210,76 +155,56 @@ public class UserServiceImplTest {
 
         @Test
         void whenEmailIsFree_thenCreateAndReturnId() throws Exception {
-            // given
-            String email = "user" + 10L + "@gmail.com";
-            String password = "secure1234";
-            var createUserDto = new CreateUserDto(email, password);
-
             // mockito
-            Mockito.when(roleRepository.findByName(UserServiceImpl.DEFAULT_ROLE_NAME_FOR_CREATED_USER))
-                    .thenReturn(Optional.of(getDefaultRole()));
+            Mockito.when(roleRepository.findByName(DEFAULT_ROLE.getName()))
+                    .thenReturn(Optional.of(DEFAULT_ROLE));
             Mockito.when(userRepository.save(any()))
-                    .thenReturn(buildUser(10L));
+                    .thenReturn(buildUser(ID_1));
 
             // when
-            Long result = userService.createDefaultUser(createUserDto);
-
-            // then
-            assertNotNull(result);
-            assertEquals(10L, result);
+            Long result = userService.createDefaultUser(buildCreateUserDto());
 
             // captor
             ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
             Mockito.verify(userRepository).save(captor.capture());
             User beforeSave = captor.getValue();
 
-            assertTrue(passwordEncoder.matches(password, beforeSave.getPassword()));
-            assertEquals(email, beforeSave.getEmail());
-            assertEquals(getDefaultRole(), beforeSave.getRole());
+            assertThat(result).isEqualTo(ID_1);
+            assertThat(beforeSave.getEmail()).isEqualTo(buildEmailForUserWithId(ID_1));
+            assertThat(beforeSave.getRole()).isEqualTo(DEFAULT_ROLE);
+            assertThat(beforeSave.getCart()).isNotNull();
+            assertThat(passwordEncoder.matches(buildPasswordForUserWithId(ID_1), beforeSave.getPassword())).isTrue();
+            Mockito.verify(userValidator).validateEmailIsUnique(buildEmailForUserWithId(ID_1));
         }
 
         @Test
         void whenEmailIsNotFree_thenThrowException() throws Exception {
-            // given
-            String email = "user" + 10L + "@gmail.com";
-            String password = "secure1234";
-            var createUserDto = new CreateUserDto(email, password);
-
             // mockito
             Mockito.doThrow(new EmailAlreadyExistsException())
-                    .when(userValidator).validateEmailIsUnique(email);
+                    .when(userValidator).validateEmailIsUnique(buildEmailForUserWithId(ID_1));
 
             // when + then
-            assertThrows(EmailAlreadyExistsException.class, () -> userService.createDefaultUser(createUserDto));
+            assertThatThrownBy(() -> userService.createDefaultUser(buildCreateUserDto()))
+                    .isInstanceOf(EmailAlreadyExistsException.class);
         }
 
         @Test
         void whenDefaultRoleDoesntExist_thenThrowException() throws Exception {
-            // given
-            String email = "user" + 10L + "@gmail.com";
-            String password = "secure1234";
-            var createUserDto = new CreateUserDto(email, password);
-
             // mockito
-            Mockito.when(roleRepository.findByName(any()))
+            Mockito.when(roleRepository.findByName(DEFAULT_ROLE.getName()))
                     .thenReturn(Optional.empty());
 
             // when + then
-            assertThrows(ResourceNotFoundException.class, () -> userService.createDefaultUser(createUserDto));
+            assertThatThrownBy(() -> userService.createDefaultUser(buildCreateUserDto()))
+                    .isInstanceOf(ResourceNotFoundException.class);
         }
 
         @Test
         void whenParameterCreateUserDtoIsNull_thenThrowException() throws Exception {
-            // given
-            CreateUserDto createUserDto = null;
-
-            // mockito
-            // ...
-
             // when + then
-            assertThrows(NullPointerException.class, () -> userService.createDefaultUser(createUserDto));
+            assertThatThrownBy(() -> userService.createDefaultUser(null))
+                    .isInstanceOf(NullPointerException.class);
         }
-
     }
 
     @Nested
@@ -287,80 +212,43 @@ public class UserServiceImplTest {
 
         @Test
         void whenUserExists_thenUpdateProfile() throws Exception {
-            // given
-            Long id = 10L;
-            User user = buildUser(id);
-            var updateProfileDto = new UpdateProfileDto(
-                    "newFirstname",
-                    "newLastname",
-                    "newCity",
-                    "newPhoneNumber"
-            );
-
             // mockito
-            Mockito.when(userRepository.findById(id))
-                    .thenReturn(Optional.of(user));
+            Mockito.when(userRepository.findById(ID_1))
+                    .thenReturn(Optional.of(buildUser(ID_1)));
 
             // when
-            userService.updateProfile(id, updateProfileDto);
+            userService.updateProfile(ID_1, buildUpdateProfileDto(ID_1));
 
             // then
-            Mockito.verify(userRepository).findById(id);
-            Mockito.verify(userMerger).mergeProfile(user, updateProfileDto);
-            Mockito.verify(userRepository).save(user);
+            Mockito.verify(userMerger).mergeProfile(buildUser(ID_1), buildUpdateProfileDto(ID_1));
+            Mockito.verify(userRepository).save(buildUser(ID_1));
             Mockito.verifyNoMoreInteractions(userRepository, userMerger);
         }
 
         @Test
         void whenUserDoesntExists_thenThrowException() throws Exception {
-            // given
-            Long id = 10L;
-            var updateProfileDto = new UpdateProfileDto(
-                    "newFirstname",
-                    "newLastname",
-                    "newCity",
-                    "newPhoneNumber"
-            );
-
             // mockito
-            Mockito.when(userRepository.findById(id))
+            Mockito.when(userRepository.findById(ID_1))
                     .thenReturn(Optional.empty());
 
             // when + then
-            assertThrows(ResourceNotFoundException.class, () -> userService.updateProfile(id, updateProfileDto));
+            assertThatThrownBy(() -> userService.updateProfile(ID_1, buildUpdateProfileDto(ID_1)))
+                    .isInstanceOf(ResourceNotFoundException.class);
         }
 
         @Test
         void whenParameterIdIsNull_thenThrowException() throws Exception {
-            // given
-            Long id = null;
-            var updateProfileDto = new UpdateProfileDto(
-                    "newFirstname",
-                    "newLastname",
-                    "newCity",
-                    "newPhoneNumber"
-            );
-
-            // mockito
-            // ..
-
             // when + then
-            assertThrows(NullPointerException.class, () -> userService.updateProfile(id, updateProfileDto));
+            assertThatThrownBy(() -> userService.updateProfile(null, buildUpdateProfileDto(ID_1)))
+                    .isInstanceOf(NullPointerException.class);
         }
 
         @Test
         void whenParameterUpdateProfileDtoIsNull_thenThrowException() throws Exception {
-            // given
-            Long id = 10L;
-            UpdateProfileDto updateProfileDto = null;
-
-            // mockito
-            // ..
-
             // when + then
-            assertThrows(NullPointerException.class, () -> userService.updateProfile(id, updateProfileDto));
+            assertThatThrownBy(() -> userService.updateProfile(ID_1, null))
+                    .isInstanceOf(NullPointerException.class);
         }
-
     }
 
     @Nested
@@ -368,46 +256,32 @@ public class UserServiceImplTest {
 
         @Test
         void whenExist_thenDelete() {
-            // given
-            Long id = 10L;
-
             // mockito
-            Mockito.when(userRepository.existsById(id))
+            Mockito.when(userRepository.existsById(ID_1))
                     .thenReturn(true);
 
             // when
-            userService.delete(id);
+            userService.delete(ID_1);
 
             // then
-            Mockito.verify(userRepository).deleteById(id);
+            Mockito.verify(userRepository).deleteById(ID_1);
         }
 
         @Test
         void whenDoesntExist_thenThrowException() {
-            // given
-            Long id = 10L;
-
             // mockito
-            Mockito.when(userRepository.existsById(id))
+            Mockito.when(userRepository.existsById(ID_1))
                     .thenReturn(false);
 
             // when + then
-            assertThatThrownBy(() -> userService.delete(id))
-                    .isInstanceOf(ResourceNotFoundException.class);
+            assertThatThrownBy(() -> userService.delete(ID_1)).isInstanceOf(ResourceNotFoundException.class);
         }
 
         @Test
         void whenParameterIdIsNull_thenThrowException() throws Exception {
-            // given
-            Long id = null;
-
-            // mockito
-            // ..
-
             // when + then
-            assertThrows(NullPointerException.class, () -> userService.delete(id));
+            assertThatThrownBy(() -> userService.delete(null)).isInstanceOf(NullPointerException.class);
         }
-
     }
 
     @Nested
@@ -415,61 +289,137 @@ public class UserServiceImplTest {
 
         @Test
         void whenUserExists_thenReturnTrue() throws Exception {
-            // given
-            String email = "user" + 10L + "@gmail.com";
-
             // mockito
-            Mockito.when(userRepository.existsByEmail(email))
+            Mockito.when(userRepository.existsByEmail(buildEmailForUserWithId(ID_1)))
                     .thenReturn(true);
 
             // when
-            boolean result = userService.existsByEmail(email);
+            boolean result = userService.existsByEmail(buildEmailForUserWithId(ID_1));
 
             // then
-            assertTrue(result);
+            assertThat(result).isTrue();
+        }
+
+        @Test
+        void whenUserDoesntExist_thenReturnFalse() throws Exception {
+            // mockito
+            Mockito.when(userRepository.existsByEmail(buildEmailForUserWithId(ID_1)))
+                    .thenReturn(false);
+
+            // when
+            boolean result = userService.existsByEmail(buildEmailForUserWithId(ID_1));
+
+            // then
+            assertThat(result).isFalse();
         }
 
         @Test
         void whenParameterEmailIsNull_thenThrowException() throws Exception {
-            // given
-            String email = null;
-
-            // mockito
-            // ..
-
             // when + then
-            assertThrows(NullPointerException.class, () -> userService.existsByEmail(email));
+            assertThatThrownBy(() -> userService.existsByEmail(null)).isInstanceOf(NullPointerException.class);
+        }
+    }
+
+    @Nested
+    class ExistsByIdTest {
+
+        @Test
+        void whenUserExistsById_thenReturnTrue() throws Exception {
+            // mockito
+            Mockito.when(userRepository.existsById(ID_1))
+                    .thenReturn(true);
+
+            // when
+            boolean result = userService.existsById(ID_1);
+
+            // then
+            assertThat(result).isTrue();
         }
 
+        @Test
+        void whenUserDoesntExistById_thenReturnFalse() throws Exception {
+            // mockito
+            Mockito.when(userRepository.existsById(ID_1))
+                    .thenReturn(false);
+
+            // when
+            boolean result = userService.existsById(ID_1);
+
+            // then
+            assertThat(result).isFalse();
+        }
+
+        @Test
+        void whenParameterIdIsNull_thenThrowException() throws Exception {
+            // when + then
+            assertThatThrownBy(() -> userService.existsById(null)).isInstanceOf(NullPointerException.class);
+        }
     }
 
-    private List<User> buildUserFromTo(long from, long to) {
-        return LongStream.range(from, to)
-                .mapToObj(this::buildUser)
-                .toList();
+    static class TestResources {
+        public final static Role DEFAULT_ROLE = buildDefaultRole();
+        public final static long ID_1 = 1L;
+        public final static long ID_2 = 2L;
+
+        public final static String USER_EMAIL_TEMPLATE = "user%s@gmail.com";
+        public final static String USER_PASSWORD_TEMPLATE = "Password12%s!";
+        public final static String USER_FIRSTNAME_TEMPLATE = "name%s";
+        public final static String USER_LASTNAME_TEMPLATE = "lastname%s";
+        public final static String USER_CITY_TEMPLATE = "city%s";
+        public final static String USER_PHONE_TEMPLATE = "0980000%s";
+
+        private static Role buildDefaultRole() {
+            return Role.builder()
+                    .id(1L)
+                    .name(UserServiceImpl.DEFAULT_ROLE_NAME_FOR_CREATED_USER)
+                    .build();
+        }
+
+        public static User buildUser(long id) {
+            return User.builder()
+                    .id(id)
+                    .createdAt(Instant.now())
+                    .email(USER_EMAIL_TEMPLATE.formatted(id))
+                    .firstName(USER_FIRSTNAME_TEMPLATE.formatted(id))
+                    .lastName(USER_LASTNAME_TEMPLATE.formatted(id))
+                    .city(USER_CITY_TEMPLATE.formatted(id))
+                    .phoneNumber(USER_PHONE_TEMPLATE.formatted(id))
+                    .role(DEFAULT_ROLE)
+                    .build();
+        }
+
+        public static List<User> buildUsersList() {
+            List<User> result = new ArrayList<>();
+            var u1 = buildUser(ID_1);
+            var u2 = buildUser(ID_2);
+            result.add(u1);
+            result.add(u2);
+
+            return result;
+        }
+
+        public static String buildEmailForUserWithId(long id) {
+            return USER_EMAIL_TEMPLATE.formatted(id);
+        }
+
+        public static String buildPasswordForUserWithId(long id) {
+            return USER_PASSWORD_TEMPLATE.formatted(id);
+        }
+
+        public static CreateUserDto buildCreateUserDto() {
+            return new CreateUserDto(
+                    buildEmailForUserWithId(ID_1),
+                    buildPasswordForUserWithId(ID_1)
+            );
+        }
+
+        public static UpdateProfileDto buildUpdateProfileDto(long id) {
+            return new UpdateProfileDto(
+                    USER_FIRSTNAME_TEMPLATE.formatted(id),
+                    USER_LASTNAME_TEMPLATE.formatted(id),
+                    USER_CITY_TEMPLATE.formatted(id),
+                    USER_PHONE_TEMPLATE.formatted(id)
+            );
+        }
     }
-
-    private User buildUser(Long id) {
-        var user = User.builder()
-                .email("user" + id + "@gmail.com")
-                .firstName("name" + id)
-                .lastName("lastname" + id)
-                .city("city" + id)
-                .phoneNumber("0999999" + id)
-                .role(getDefaultRole())
-                .build();
-        user.setId(id);
-        user.setCreatedAt(Instant.now());
-
-        return user;
-    }
-
-    private Role getDefaultRole() {
-        var role = new Role();
-        role.setId(1L);
-        role.setName(UserServiceImpl.DEFAULT_ROLE_NAME_FOR_CREATED_USER);
-
-        return role;
-    }
-
 }

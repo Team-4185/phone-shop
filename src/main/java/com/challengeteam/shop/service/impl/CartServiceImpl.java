@@ -6,10 +6,12 @@ import com.challengeteam.shop.entity.cart.CartItem;
 import com.challengeteam.shop.entity.phone.Phone;
 import com.challengeteam.shop.exceptionHandling.exception.PhoneAlreadyInCartException;
 import com.challengeteam.shop.exceptionHandling.exception.ResourceNotFoundException;
+import com.challengeteam.shop.mapper.CartItemMapper;
 import com.challengeteam.shop.persistence.repository.CartItemRepository;
 import com.challengeteam.shop.persistence.repository.CartRepository;
 import com.challengeteam.shop.service.CartService;
 import com.challengeteam.shop.service.PhoneService;
+import com.challengeteam.shop.service.PriceService;
 import com.challengeteam.shop.utility.CartUtility;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -17,6 +19,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -30,6 +33,10 @@ public class CartServiceImpl implements CartService {
     private final CartItemRepository cartItemRepository;
 
     private final PhoneService phoneService;
+
+    private final PriceService priceService;
+
+    private final CartItemMapper cartItemMapper;
 
     @Transactional(readOnly = true)
     @Override
@@ -67,7 +74,10 @@ public class CartServiceImpl implements CartService {
             log.debug("Added new phone {} to cart {}", phoneId, cart.getId());
         }
 
-        cart.setTotalPrice(CartUtility.countCartTotalPrice(cart));
+        // count total
+        Map<Phone, Integer> products = cartItemMapper.productsAsMap(cart.getCartItems());
+        BigDecimal price = priceService.calculateTotalPrice(products);
+        cart.setTotalPrice(price);
         cartRepository.save(cart);
 
         return cart;
@@ -86,7 +96,10 @@ public class CartServiceImpl implements CartService {
         cartItem.setAmount(amount);
         cartItemRepository.save(cartItem);
 
-        cart.setTotalPrice(CartUtility.countCartTotalPrice(cart));
+        // count total
+        Map<Phone, Integer> products = cartItemMapper.productsAsMap(cart.getCartItems());
+        BigDecimal price = priceService.calculateTotalPrice(products);
+        cart.setTotalPrice(price);
         cartRepository.save(cart);
 
         log.debug("Updated phone in cart: {}", cartItem);
@@ -105,7 +118,10 @@ public class CartServiceImpl implements CartService {
         cart.getCartItems().remove(cartItem);
         cartItemRepository.delete(cartItem);
 
-        cart.setTotalPrice(CartUtility.countCartTotalPrice(cart));
+        // count total
+        Map<Phone, Integer> products = cartItemMapper.productsAsMap(cart.getCartItems());
+        BigDecimal price = priceService.calculateTotalPrice(products);
+        cart.setTotalPrice(price);
         cartRepository.save(cart);
 
         log.debug("Removed phone in cart: {}", cartItem);

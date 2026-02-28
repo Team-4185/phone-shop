@@ -26,6 +26,11 @@ services:
       CORS_MAX_CACHE_AGE: 3600
       CORS_ALLOW_CREDENTIALS: true
       LOG_LEVEL: ${LOG_LEVEL}
+      STRIPE_PUBLIC_KEY: ${STRIPE_PUBLIC_KEY}
+      STRIPE_PRIVATE_KEY: ${STRIPE_PRIVATE_KEY}
+      STRIPE_PAYMENT_SUCCESS_URL: ${STRIPE_PAYMENT_SUCCESS_URL}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET}
+      STRIPE_EXPIRATION_TIME: ${STRIPE_EXPIRATION_TIME}
     networks:
       - gadget-room-network
 
@@ -55,6 +60,21 @@ services:
     command: server /data --console-address ":9001"
     volumes:
       - gadget-room-minio-volume:/data
+    networks:
+      - gadget-room-network
+
+  stripe:
+    image: stripe/stripe-cli
+    container_name: gadget-room-stripe
+    depends_on:
+      - shop
+    command:
+      listen
+      --api-key ${STRIPE_PRIVATE_KEY}
+      --device-name TEST_DOCKER_CONTAINER
+      --events payment_intent.succeeded,checkout.session.expired
+      --forward-to http://shop:8080/api/webhook/stripe
+      --skip-verify
     networks:
       - gadget-room-network
 

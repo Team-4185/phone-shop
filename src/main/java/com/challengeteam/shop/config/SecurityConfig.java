@@ -69,6 +69,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/docs/**", "/swagger-ui/**").permitAll()
                         .requestMatchers("/api/v1/test-data/**").permitAll()
+                        .requestMatchers("/api/webhook/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtTokenFilter, UsernamePasswordAuthenticationFilter.class)

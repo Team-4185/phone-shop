@@ -6,9 +6,11 @@ import com.challengeteam.shop.entity.cart.CartItem;
 import com.challengeteam.shop.entity.phone.Phone;
 import com.challengeteam.shop.exceptionHandling.exception.PhoneAlreadyInCartException;
 import com.challengeteam.shop.exceptionHandling.exception.ResourceNotFoundException;
+import com.challengeteam.shop.mapper.CartItemMapper;
 import com.challengeteam.shop.persistence.repository.CartItemRepository;
 import com.challengeteam.shop.persistence.repository.CartRepository;
 import com.challengeteam.shop.service.PhoneService;
+import com.challengeteam.shop.service.PriceService;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -19,6 +21,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Map;
 import java.util.Optional;
 
 import static com.challengeteam.shop.service.impl.CartServiceImplTest.TestResources.*;
@@ -27,18 +30,12 @@ import static org.mockito.ArgumentMatchers.any;
 
 @ExtendWith(MockitoExtension.class)
 class CartServiceImplTest {
-
-    @Mock
-    private CartRepository cartRepository;
-
-    @Mock
-    private CartItemRepository cartItemRepository;
-
-    @Mock
-    private PhoneService phoneService;
-
-    @InjectMocks
-    private CartServiceImpl cartService;
+    @Mock private CartRepository cartRepository;
+    @Mock private CartItemRepository cartItemRepository;
+    @Mock private PhoneService phoneService;
+    @Mock private PriceService priceService;
+    @Mock private CartItemMapper cartItemMapper;
+    @InjectMocks private CartServiceImpl cartService;
 
     @Nested
     class GetCartByIdTest {
@@ -98,6 +95,10 @@ class CartServiceImplTest {
                     .thenReturn(cartItem);
             Mockito.when(cartRepository.save(cart))
                     .thenReturn(cart);
+            Mockito.when(cartItemMapper.productsAsMap(cart.getCartItems()))
+                    .thenReturn(buildProductsMap());
+            Mockito.when(priceService.calculateTotalPrice(buildProductsMap()))
+                    .thenReturn(TOTAL_PRICE);
 
             // when
             Cart result = cartService.putItemToCart(cart, dto);
@@ -178,6 +179,10 @@ class CartServiceImplTest {
                     .thenReturn(item);
             Mockito.when(cartRepository.save(cart))
                     .thenReturn(cart);
+            Mockito.when(cartItemMapper.productsAsMap(cart.getCartItems()))
+                    .thenReturn(buildProductsMap());
+            Mockito.when(priceService.calculateTotalPrice(buildProductsMap()))
+                    .thenReturn(TOTAL_PRICE);
 
             // when
             Cart result = cartService.updateAmountCartItem(cart, PHONE_ID, newAmount);
@@ -246,6 +251,10 @@ class CartServiceImplTest {
                     .thenReturn(Optional.of(item));
             Mockito.when(cartRepository.save(cart))
                     .thenReturn(cart);
+            Mockito.when(cartItemMapper.productsAsMap(cart.getCartItems()))
+                    .thenReturn(buildProductsMap());
+            Mockito.when(priceService.calculateTotalPrice(buildProductsMap()))
+                    .thenReturn(TOTAL_PRICE);
 
             // when
             Cart result = cartService.removeItemFromCart(cart, PHONE_ID);
@@ -365,6 +374,12 @@ class CartServiceImplTest {
         static final Long CART_ID = 1L;
         static final Long PHONE_ID = 2L;
         static final Long USER_ID = 3L;
+
+        static final BigDecimal TOTAL_PRICE = new BigDecimal("150.0");
+
+        static Map<Phone, Integer> buildProductsMap() {
+            return Map.of(buildPhone(), 3);
+        }
 
         static Cart buildCart() {
             return Cart.builder()
