@@ -13,6 +13,7 @@ import org.springframework.validation.ObjectError;
 import org.springframework.web.HttpMediaTypeNotSupportedException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingRequestCookieException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
@@ -395,6 +396,20 @@ public class GlobalExceptionHandler {
         var problem = ProblemDetail.forStatus(HttpStatus.BAD_REQUEST.value());
         problem.setTitle("Validation Failed");
         problem.setDetail(e.getMessage());
+
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(problem);
+    }
+
+    @ExceptionHandler(MissingRequestCookieException.class)
+    public ResponseEntity<ProblemDetail> handleMissingRequestCookieException(MissingRequestCookieException e) {
+        log.warn("400  Missing cookie: {}", e.getMessage());
+
+        var problem = ProblemDetail.forStatus(HttpStatus.BAD_REQUEST.value());
+        problem.setTitle("Missing Cookie");
+        problem.setDetail("Required cookie '%s' is missing".formatted(e.getCookieName()));
 
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
