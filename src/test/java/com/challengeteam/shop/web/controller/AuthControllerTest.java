@@ -1,6 +1,5 @@
 package com.challengeteam.shop.web.controller;
 
-import com.challengeteam.shop.dto.jwt.JwtRefreshRequestDto;
 import com.challengeteam.shop.dto.jwt.JwtResponseDto;
 import com.challengeteam.shop.dto.user.CreateUserDto;
 import com.challengeteam.shop.dto.user.UserLoginRequestDto;
@@ -16,6 +15,7 @@ import com.challengeteam.shop.testContainer.ContainerExtension;
 import com.challengeteam.shop.testContainer.TestContextConfigurator;
 import com.challengeteam.shop.web.TestAuthHelper;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -31,8 +31,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import static com.challengeteam.shop.web.controller.AuthControllerTest.TestResources.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @ExtendWith(ContainerExtension.class)
 @AutoConfigureMockMvc
@@ -83,7 +82,7 @@ public class AuthControllerTest {
                     .andExpect(jsonPath("$.userId").isNotEmpty())
                     .andExpect(jsonPath("$.email").value(TestUserCredentials.NOT_EXISTING_CREDENTIALS.email))
                     .andExpect(jsonPath("$.accessToken").isNotEmpty())
-                    .andExpect(jsonPath("$.refreshToken").isNotEmpty());
+                    .andExpect(cookie().exists("refreshToken"));
         }
 
         @Test
@@ -282,7 +281,7 @@ public class AuthControllerTest {
                     .andExpect(jsonPath("$.userId").isNotEmpty())
                     .andExpect(jsonPath("$.email").value(TestUserCredentials.EXISTING_CREDENTIALS.email))
                     .andExpect(jsonPath("$.accessToken").isNotEmpty())
-                    .andExpect(jsonPath("$.refreshToken").isNotEmpty());
+                    .andExpect(cookie().exists("refreshToken"));
         }
 
         @Test
@@ -419,11 +418,8 @@ public class AuthControllerTest {
 
         @Test
         void whenRefreshTokenIsValid_thenReturnNewTokens() throws Exception {
-            var body = buildJwtRefreshRequestDto(token.refreshToken());
-
             var request = post(URL)
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content(objectMapper.writeValueAsString(body))
+                    .cookie(new Cookie("refreshToken", token.refreshToken()))
                     .accept(MediaType.APPLICATION_JSON);
 
             mockMvc.perform(request)
@@ -431,7 +427,16 @@ public class AuthControllerTest {
                     .andExpect(jsonPath("$.userId").isNotEmpty())
                     .andExpect(jsonPath("$.email").isNotEmpty())
                     .andExpect(jsonPath("$.accessToken").isNotEmpty())
-                    .andExpect(jsonPath("$.refreshToken").isNotEmpty());
+                    .andExpect(cookie().exists("refreshToken"));
+        }
+
+        @Test
+        void whenRefreshTokenCookieIsMissing_thenReturn400() throws Exception {
+            var request = post(URL)
+                    .accept(MediaType.APPLICATION_JSON);
+
+            mockMvc.perform(request)
+                    .andExpect(status().isBadRequest());
         }
 
         @Test
@@ -471,55 +476,33 @@ public class AuthControllerTest {
         }
 
         @Test
-        void whenRefreshTokenIsNull_thenReturn400() throws Exception {
-            expect400WithInvalidBody(null);
-        }
-
-        @Test
         void whenRefreshTokenIsBlank_thenReturn400() throws Exception {
-            expect400WithInvalidBody("          ");
+            expect401WhenTokenIsNotRight("          ");
         }
 
         @Test
         void whenRefreshTokenIsInvalid_thenReturn400() throws Exception {
-            expect400WithInvalidBody("1. unfortunately it doesn't look like token");
+            expect401WhenTokenIsNotRight("1. unfortunately it doesn't look like token");
         }
 
         @Test
         void whenRefreshTokenHasWhitespaces_thenReturn400() throws Exception {
             String[] parts = token.refreshToken().split("\\.");
-            expect400WithInvalidBody(String.join(". ", parts));
+            expect401WhenTokenIsNotRight(String.join(". ", parts));
         }
 
         @Test
         void whenRefreshTokenHasNotEnglishSymbols_thenReturn400() throws Exception {
-            expect400WithInvalidBody(token.refreshToken() + "українськіЛітери");
+            expect401WhenTokenIsNotRight(token.refreshToken() + "українськіЛітери");
         }
 
         private void expect401WhenTokenIsNotRight(String token) throws Exception {
-            var body = buildJwtRefreshRequestDto(token);
-
             var request = post(URL)
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content(objectMapper.writeValueAsString(body))
+                    .cookie(new Cookie("refreshToken", token))
                     .accept(MediaType.APPLICATION_JSON);
 
             mockMvc.perform(request)
                     .andExpect(status().isUnauthorized());
-        }
-
-        private void expect400WithInvalidBody(String token) throws Exception {
-            var body = buildJwtRefreshRequestDto(token);
-
-            var request = post(URL)
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content(objectMapper.writeValueAsString(body))
-                    .accept(MediaType.APPLICATION_JSON);
-
-            mockMvc.perform(request)
-                    .andExpect(status().isBadRequest())
-                    .andExpect(jsonPath("$.validationDetails.parameter").value("jwtRefreshRequestDto"))
-                    .andExpect(jsonPath("$.validationDetails.validationProblems").isArray());
         }
 
     }
@@ -546,10 +529,6 @@ public class AuthControllerTest {
                     credentials.email,
                     credentials.password
             );
-        }
-
-        public static JwtRefreshRequestDto buildJwtRefreshRequestDto(String refreshToken) {
-            return new JwtRefreshRequestDto(refreshToken);
         }
 
     }
