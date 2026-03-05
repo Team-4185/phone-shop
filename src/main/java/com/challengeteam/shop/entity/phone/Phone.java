@@ -1,20 +1,19 @@
 package com.challengeteam.shop.entity.phone;
 
 import com.challengeteam.shop.entity.BaseEntity;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Table;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
+import com.challengeteam.shop.entity.image.Image;
+import jakarta.persistence.*;
+import lombok.*;
+import lombok.experimental.SuperBuilder;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 @Getter
 @Setter
-@Builder
 @AllArgsConstructor
+@NoArgsConstructor
+@SuperBuilder
 @Entity
 @Table(name = "phones")
 public class Phone extends BaseEntity {
@@ -34,7 +33,11 @@ public class Phone extends BaseEntity {
     @Column(nullable = false)
     private Integer releaseYear;
 
-    public Phone() { super(); }
+    @Embedded
+    private PhoneCharacteristics phoneCharacteristics;
+
+    @OneToMany(mappedBy = "phone")
+    private List<Image> images;
 
     @Override
     public String toString() {
@@ -44,6 +47,7 @@ public class Phone extends BaseEntity {
                 ", price='" + price + '\'' +
                 ", brand='" + brand + '\'' +
                 ", releaseYear='" + releaseYear + '\'' +
+                ", phoneCharacteristics='" + phoneCharacteristics + '\'' +
                 "} " + super.toString();
     }
 }

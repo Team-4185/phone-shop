@@ -1,5 +1,6 @@
 package com.challengeteam.shop.web;
 
+import com.challengeteam.shop.dto.jwt.JwtResponseDto;
 import com.challengeteam.shop.dto.user.UserLoginRequestDto;
 import com.challengeteam.shop.dto.user.UserRegisterRequestDto;
 import com.challengeteam.shop.exceptionHandling.exception.EmailAlreadyExistsException;
@@ -26,17 +27,17 @@ public class TestAuthHelper {
 
 
     public String authorizeLikeTestUser() {
+        return authorizeAndReturnTokens().accessToken();
+    }
+
+    public JwtResponseDto authorizeAndReturnTokens() {
         try {
             // register
-            return authService
-                    .register(registerRequest)
-                    .accessToken();
+            return authService.register(registerRequest);
         } catch (EmailAlreadyExistsException e) {
             // if already registered,
             // then try to log in
-            return authService
-                    .login(loginRequest)
-                    .accessToken();
+            return authService.login(loginRequest);
         }
     }
 

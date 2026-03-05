@@ -26,6 +26,9 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.LongStream;
 
+import static com.challengeteam.shop.service.impl.PhoneServiceImplTest.TestResources.IMAGE_ID;
+import static com.challengeteam.shop.service.impl.PhoneServiceImplTest.TestResources.PHONE_ID;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 
@@ -364,19 +367,33 @@ public class UserServiceImplTest {
     class DeleteTest {
 
         @Test
-        void whenCalled_thenReturnNothing() throws Exception {
+        void whenExist_thenDelete() {
             // given
             Long id = 10L;
 
             // mockito
-            // ..
+            Mockito.when(userRepository.existsById(id))
+                    .thenReturn(true);
 
             // when
             userService.delete(id);
 
             // then
             Mockito.verify(userRepository).deleteById(id);
-            Mockito.verifyNoMoreInteractions(userRepository);
+        }
+
+        @Test
+        void whenDoesntExist_thenThrowException() {
+            // given
+            Long id = 10L;
+
+            // mockito
+            Mockito.when(userRepository.existsById(id))
+                    .thenReturn(false);
+
+            // when + then
+            assertThatThrownBy(() -> userService.delete(id))
+                    .isInstanceOf(ResourceNotFoundException.class);
         }
 
         @Test

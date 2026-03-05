@@ -5,10 +5,8 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.Entity;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
+import lombok.experimental.SuperBuilder;
 
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -16,7 +14,8 @@ import java.util.stream.Collectors;
 @Getter
 @Setter
 @AllArgsConstructor
-@Builder
+@NoArgsConstructor
+@SuperBuilder
 @Entity
 @Table(name = "roles")
 public class Role extends BaseEntity {
@@ -24,10 +23,6 @@ public class Role extends BaseEntity {
 
     @OneToMany(mappedBy = "role")
     private Set<User> users;
-
-    public Role() {
-        super();
-    }
 
     @Override
     public String toString() {
