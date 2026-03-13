@@ -7,7 +7,7 @@ public interface JwtService {
 
     String createAccessToken(User user);
 
-    String createRefreshToken(User user);
+    String createRefreshToken(User user, boolean rememberMe);
 
     JwtResponseDto refreshTokens(String refreshToken, User user);
 

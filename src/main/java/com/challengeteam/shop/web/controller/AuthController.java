@@ -4,6 +4,7 @@ import com.challengeteam.shop.dto.jwt.JwtPublicResponseDto;
 import com.challengeteam.shop.dto.jwt.JwtResponseDto;
 import com.challengeteam.shop.dto.user.UserLoginRequestDto;
 import com.challengeteam.shop.dto.user.UserRegisterRequestDto;
+import com.challengeteam.shop.properties.JwtProperties;
 import com.challengeteam.shop.service.JwtAuthorizationService;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.servlet.http.Cookie;
@@ -17,8 +18,10 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
 public class AuthController {
+
     private final JwtAuthorizationService jwtAuthorizationService;
 
+    private final JwtProperties jwtProperties;
 
     @Operation(
             summary = "Endpoint for user sign up",
@@ -29,12 +32,7 @@ public class AuthController {
                                                          HttpServletResponse httpServletResponse) {
         JwtResponseDto jwtResponseDto = jwtAuthorizationService.register(userRegisterRequestDto);
 
-        Cookie cookie = new Cookie("refreshToken", jwtResponseDto.refreshToken());
-        cookie.setHttpOnly(true);
-        cookie.setSecure(false);
-        cookie.setPath("/api/auth");
-        cookie.setMaxAge(7 * 24 * 60 * 60);
-        httpServletResponse.addCookie(cookie);
+        addRefreshTokenCookie(httpServletResponse, jwtResponseDto.refreshToken(), jwtResponseDto.rememberMe());
 
         return ResponseEntity.ok(
                 new JwtPublicResponseDto(
@@ -51,15 +49,10 @@ public class AuthController {
     )
     @PostMapping("/login")
     public ResponseEntity<JwtPublicResponseDto> login(@RequestBody @Valid UserLoginRequestDto userLoginRequestDto,
-                                                HttpServletResponse httpServletResponse) {
+                                                      HttpServletResponse httpServletResponse) {
         JwtResponseDto jwtResponseDto = jwtAuthorizationService.login(userLoginRequestDto);
 
-        Cookie cookie = new Cookie("refreshToken", jwtResponseDto.refreshToken());
-        cookie.setHttpOnly(true);
-        cookie.setSecure(false);
-        cookie.setPath("/api/auth");
-        cookie.setMaxAge(7 * 24 * 60 * 60);
-        httpServletResponse.addCookie(cookie);
+        addRefreshTokenCookie(httpServletResponse, jwtResponseDto.refreshToken(), jwtResponseDto.rememberMe());
 
         return ResponseEntity.ok(
                 new JwtPublicResponseDto(
@@ -79,12 +72,7 @@ public class AuthController {
                                                              HttpServletResponse httpServletResponse) {
         JwtResponseDto jwtResponseDto = jwtAuthorizationService.refresh(refreshToken);
 
-        Cookie cookie = new Cookie("refreshToken", jwtResponseDto.refreshToken());
-        cookie.setHttpOnly(true);
-        cookie.setSecure(false);
-        cookie.setPath("/api/auth");
-        cookie.setMaxAge(7 * 24 * 60 * 60);
-        httpServletResponse.addCookie(cookie);
+        addRefreshTokenCookie(httpServletResponse, jwtResponseDto.refreshToken(), jwtResponseDto.rememberMe());
 
         return ResponseEntity.ok(
                 new JwtPublicResponseDto(
@@ -93,6 +81,19 @@ public class AuthController {
                         jwtResponseDto.accessToken()
                 )
         );
+    }
+
+    private void addRefreshTokenCookie(HttpServletResponse httpServletResponse, String refreshToken, boolean rememberMe) {
+        int maxAge = rememberMe
+                ? (int) jwtProperties.getRememberMeRefreshTokenExpiration().toSeconds()
+                : (int) jwtProperties.getRefreshTokenExpiration().toSeconds();
+
+        Cookie cookie = new Cookie("refreshToken", refreshToken);
+        cookie.setHttpOnly(true);
+        cookie.setSecure(false);
+        cookie.setPath("/api/auth");
+        cookie.setMaxAge(maxAge);
+        httpServletResponse.addCookie(cookie);
     }
 
 }
