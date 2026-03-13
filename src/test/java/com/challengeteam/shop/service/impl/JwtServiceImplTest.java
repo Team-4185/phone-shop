@@ -2,24 +2,25 @@ package com.challengeteam.shop.service.impl;
 
 import com.challengeteam.shop.dto.jwt.JwtResponseDto;
 import com.challengeteam.shop.entity.user.User;
+import com.challengeteam.shop.exceptionHandling.exception.InvalidTokenException;
 import com.challengeteam.shop.properties.JwtProperties;
 import com.challengeteam.shop.testData.user.UserTestData;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
+import java.time.Duration;
 import java.util.Base64;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static com.challengeteam.shop.service.impl.JwtServiceImplTest.TestResources.*;
+import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 class JwtServiceImplTest {
-
-    private JwtServiceImpl jwtTokenService;
-
-    private final User jeremy = UserTestData.getJeremy();
-
+    private JwtProperties jwtProperties;
+    private JwtServiceImpl jwtService;
 
     @BeforeEach
     void setUp() throws Exception {
@@ -30,52 +31,197 @@ class JwtServiceImplTest {
         String privateKeyBase64 = Base64.getEncoder().encodeToString(keyPair.getPrivate().getEncoded());
         String publicKeyBase64 = Base64.getEncoder().encodeToString(keyPair.getPublic().getEncoded());
 
-        JwtProperties jwtProperties = mock(JwtProperties.class);
+        jwtProperties = mock(JwtProperties.class);
         when(jwtProperties.getPrivateKey()).thenReturn(privateKeyBase64);
         when(jwtProperties.getPublicKey()).thenReturn(publicKeyBase64);
-        when(jwtProperties.getAccessTokenExpiration()).thenReturn(1L);
-        when(jwtProperties.getRefreshTokenExpiration()).thenReturn(24L);
+        when(jwtProperties.getAccessTokenExpiration()).thenReturn(Duration.ofMinutes(60));
+        when(jwtProperties.getRefreshTokenExpiration()).thenReturn(Duration.ofDays(10));
+        when(jwtProperties.getRememberMeRefreshTokenExpiration()).thenReturn(Duration.ofDays(30));
 
-        jwtTokenService = new JwtServiceImpl(jwtProperties);
-        jwtTokenService.init();
+        jwtService = new JwtServiceImpl(jwtProperties);
+        jwtService.init();
     }
 
-    @Test
-    void testCreateAccessToken() {
-        String token = jwtTokenService.createAccessToken(jeremy);
+    @Nested
+    class CreateAccessTokenTest {
 
-        assertNotNull(token);
-        assertTrue(jwtTokenService.isValid(token));
-        assertEquals(jeremy.getEmail(), jwtTokenService.getEmailFromToken(token));
+        @Test
+        void whenUserIsValid_thenReturnAccessToken() {
+            // when
+            String token = jwtService.createAccessToken(buildUser());
+
+            // then
+            assertThat(token).isNotNull();
+            assertThat(jwtService.isValid(token)).isTrue();
+            assertThat(jwtService.getEmailFromToken(token)).isEqualTo(USER_EMAIL);
+            assertThat(jwtService.isAccessToken(token)).isTrue();
+            verify(jwtProperties).getAccessTokenExpiration();
+        }
+
+        @Test
+        void whenUserIsNull_thenThrowException() {
+            // when + then
+            assertThatThrownBy(() -> jwtService.createAccessToken(null))
+                    .isInstanceOf(NullPointerException.class);
+        }
     }
 
-    @Test
-    void testCreateRefreshToken() {
-        String token = jwtTokenService.createRefreshToken(jeremy);
+    @Nested
+    class CreateRefreshTokenTest {
 
-        assertNotNull(token);
-        assertTrue(jwtTokenService.isValid(token));
-        assertEquals(jeremy.getEmail(), jwtTokenService.getEmailFromToken(token));
+        @Test
+        void whenRememberMeIsFalse_thenReturnRefreshTokenWithShorterMaxAge() {
+            // when
+            String token = jwtService.createRefreshToken(buildUser(), false);
+
+            // then
+            assertThat(token).isNotNull();
+            assertThat(jwtService.isValid(token)).isTrue();
+            assertThat(jwtService.getEmailFromToken(token)).isEqualTo(USER_EMAIL);
+            assertThat(jwtService.isRefreshToken(token)).isTrue();
+            verify(jwtProperties).getRefreshTokenExpiration();
+        }
+
+        @Test
+        void whenRememberMeIsTrue_thenReturnRefreshTokenWithLongerMaxAge() {
+            // when
+            String token = jwtService.createRefreshToken(buildUser(), true);
+
+            // then
+            assertThat(token).isNotNull();
+            assertThat(jwtService.isValid(token)).isTrue();
+            assertThat(jwtService.getEmailFromToken(token)).isEqualTo(USER_EMAIL);
+            assertThat(jwtService.isRefreshToken(token)).isTrue();
+            verify(jwtProperties).getRememberMeRefreshTokenExpiration();
+        }
+
+        @Test
+        void whenUserIsNull_thenThrowException() {
+            // when + then
+            assertThatThrownBy(() -> jwtService.createRefreshToken(null, false))
+                    .isInstanceOf(NullPointerException.class);
+        }
     }
 
-    @Test
-    void testRefreshTokens() {
-        String refreshToken = jwtTokenService.createRefreshToken(jeremy);
+    @Nested
+    class RefreshTokensTest {
 
-        JwtResponseDto response = jwtTokenService.refreshTokens(refreshToken, jeremy);
+        @Test
+        void whenRefreshTokenWithRememberMeIsFalse_thenReturnValidResponse() {
+            // given
+            String refreshToken = jwtService.createRefreshToken(buildUser(), false);
 
-        assertNotNull(response);
-        assertEquals(jeremy.getId(), response.userId());
-        assertEquals(jeremy.getEmail(), response.email());
-        assertNotNull(response.accessToken());
-        assertNotNull(response.refreshToken());
+            // when
+            JwtResponseDto response = jwtService.refreshTokens(refreshToken, buildUser());
+
+            // then
+            assertThat(response).isNotNull();
+            assertThat(response.userId()).isEqualTo(USER_ID);
+            assertThat(response.email()).isEqualTo(USER_EMAIL);
+            assertThat(response.accessToken()).isNotNull();
+            assertThat(jwtService.isValid(response.accessToken())).isTrue();
+            assertThat(response.refreshToken()).isNotNull();
+            assertThat(jwtService.isValid(response.refreshToken())).isTrue();
+            assertThat(response.rememberMe()).isFalse();
+        }
+
+        @Test
+        void whenRefreshTokenWithRememberMeIsTrue_thenReturnValidResponse() {
+            // given
+            String refreshToken = jwtService.createRefreshToken(buildUser(), false);
+
+            // when
+            JwtResponseDto response = jwtService.refreshTokens(refreshToken, buildUser());
+
+            // then
+            assertThat(response).isNotNull();
+            assertThat(response.userId()).isEqualTo(USER_ID);
+            assertThat(response.email()).isEqualTo(USER_EMAIL);
+            assertThat(response.accessToken()).isNotNull();
+            assertThat(jwtService.isValid(response.accessToken())).isTrue();
+            assertThat(response.refreshToken()).isNotNull();
+            assertThat(jwtService.isValid(response.refreshToken())).isTrue();
+            assertThat(response.rememberMe()).isFalse();
+        }
+
+
+        @Test
+        void whenTokenIsInvalid_thenThrowException() {
+            // when + then
+            assertThatThrownBy(() -> jwtService.refreshTokens(INVALID_TOKEN, buildUser()))
+                    .isInstanceOf(InvalidTokenException.class);
+        }
     }
 
-    @Test
-    void testGetEmailFromToken() {
-        String token = jwtTokenService.createAccessToken(jeremy);
+    @Nested
+    class IsValidTest {
 
-        String extracted = jwtTokenService.getEmailFromToken(token);
-        assertEquals(jeremy.getEmail(), extracted);
+        @Test
+        void whenTokenIsValid_thenReturnTrue() {
+            // given
+            String accessToken = jwtService.createAccessToken(buildUser());
+
+            // then
+            assertThat(jwtService.isValid(accessToken)).isTrue();
+        }
+
+        @Test
+        void whenTokenIsGarbage_thenReturnFalse() {
+            // when + then
+            assertThat(jwtService.isValid(INVALID_TOKEN)).isFalse();
+        }
+
+        @Test
+        void whenTokenIsEmpty_thenReturnFalse() {
+            // when + then
+            assertThat(jwtService.isValid("")).isFalse();
+        }
+    }
+
+    @Nested
+    class GetEmailFromTokenTest {
+
+        @Test
+        void whenAccessToken_thenReturnCorrectEmail() {
+            // given
+            String token = jwtService.createAccessToken(buildUser());
+
+            // when
+            String email = jwtService.getEmailFromToken(token);
+
+            // then
+            assertThat(email).isEqualTo(USER_EMAIL);
+        }
+
+        @Test
+        void whenRefreshToken_thenReturnCorrectEmail() {
+            // given
+            String token = jwtService.createRefreshToken(buildUser(), false);
+
+            // when
+            String email = jwtService.getEmailFromToken(token);
+
+            // then
+            assertThat(email).isEqualTo(USER_EMAIL);
+        }
+
+        @Test
+        void whenTokenIsInvalid_thenThrowException() {
+            // when + then
+            assertThatThrownBy(() -> jwtService.getEmailFromToken(INVALID_TOKEN))
+                    .isInstanceOf(InvalidTokenException.class);
+        }
+    }
+
+
+    static class TestResources {
+
+        static final Long USER_ID = UserTestData.getJeremy().getId();
+        static final String USER_EMAIL = UserTestData.getJeremy().getEmail();
+        static final String INVALID_TOKEN = "this.is.invalid";
+
+        static User buildUser() {
+            return UserTestData.getJeremy();
+        }
     }
 }

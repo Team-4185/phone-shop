@@ -13,6 +13,7 @@ import org.springframework.stereotype.Component;
 public class TestAuthHelper {
     public static String TEST_COMPONENT_EMAIL = "test@gmail.com";
     public static String TEST_COMPONENT_PASSWORD = "password";
+    public static boolean TEST_COMPONENT_REMEMBER_ME_FLAG = false;
 
     private final JwtAuthorizationService authService;
     private final UserRegisterRequestDto registerRequest = new UserRegisterRequestDto(
@@ -22,7 +23,8 @@ public class TestAuthHelper {
     );
     private final UserLoginRequestDto loginRequest = new UserLoginRequestDto(
             TEST_COMPONENT_EMAIL,
-            TEST_COMPONENT_PASSWORD
+            TEST_COMPONENT_PASSWORD,
+            TEST_COMPONENT_REMEMBER_ME_FLAG
     );
 
 
