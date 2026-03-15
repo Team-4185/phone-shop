@@ -20,8 +20,8 @@ import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
+import java.time.Duration;
 import java.time.Instant;
-import java.time.temporal.ChronoUnit;
 import java.util.Base64;
 import java.util.Date;
 
@@ -71,33 +71,41 @@ public class JwtServiceImpl implements JwtService {
                 .add(TOKEN_TYPE_CLAIM, ACCESS_TOKEN_TYPE)
                 .build();
 
-        Instant expiration = Instant.now().plus(jwtProperties.getAccessTokenExpiration(), ChronoUnit.MINUTES);
+        Instant expiration = Instant.now().plus(jwtProperties.getAccessTokenExpiration());
         return createToken(claims, expiration);
     }
 
     @Override
-    public String createRefreshToken(User user) {
+    public String createRefreshToken(User user, boolean rememberMe) {
         Claims claims = Jwts.claims()
                 .subject(user.getEmail())
                 .add("userId", user.getId())
                 .add("role", user.getRole().getName())
+                .add("rememberMe", rememberMe)
                 .add(TOKEN_TYPE_CLAIM, REFRESH_TOKEN_TYPE)
                 .build();
 
-        Instant expiration = Instant.now().plus(jwtProperties.getRefreshTokenExpiration(), ChronoUnit.HOURS);
-        return createToken(claims, expiration);
+        Duration expiration = rememberMe
+                ? jwtProperties.getRememberMeRefreshTokenExpiration()
+                : jwtProperties.getRefreshTokenExpiration();
+
+        Instant expirationInstant = Instant.now().plus(expiration);
+        return createToken(claims, expirationInstant);
     }
 
     @Override
     public JwtResponseDto refreshTokens(String refreshToken, User user) {
+        boolean rememberMe = getClaims(refreshToken).get("rememberMe", Boolean.class);
+
         String newAccessToken = createAccessToken(user);
-        String newRefreshToken = createRefreshToken(user);
+        String newRefreshToken = createRefreshToken(user, rememberMe);
 
         return new JwtResponseDto(
                 user.getId(),
                 user.getEmail(),
                 newAccessToken,
-                newRefreshToken
+                newRefreshToken,
+                rememberMe
         );
     }
 
@@ -145,10 +153,10 @@ public class JwtServiceImpl implements JwtService {
         }
     }
 
-    private String createToken(Claims claims, Instant expiration) {
+    private String createToken(Claims claims, Instant expirationInstant) {
         return Jwts.builder()
                 .claims(claims)
-                .expiration(Date.from(expiration))
+                .expiration(Date.from(expirationInstant))
                 .signWith(privateKey)
                 .compact();
     }

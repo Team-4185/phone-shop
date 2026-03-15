@@ -42,17 +42,13 @@ public class JwtAuthorizationServiceImplTest {
     @InjectMocks
     private JwtAuthorizationServiceImpl jwtAuthorizationService;
 
-    private static final String ACCESS_TOKEN = "accessToken";
-    private static final String REFRESH_TOKEN = "refreshToken";
-
-
     @Nested
     class RegisterTest {
 
         @Test
         void whenAllValid_thenRegisterNewUserAndReturnJwtResponseDto() throws Exception {
             // given
-            User jeremy = UserTestData.getJeremy();
+            User jeremy = TestResources.buildUser();
             var userRegisterRequestDto = new UserRegisterRequestDto(
                     jeremy.getEmail(),
                     jeremy.getPassword(),
@@ -77,8 +73,8 @@ public class JwtAuthorizationServiceImplTest {
             assertNotNull(result);
             assertEquals(jeremy.getId(), result.userId());
             assertEquals(jeremy.getEmail(), result.email());
-            assertEquals(ACCESS_TOKEN, result.accessToken());
-            assertEquals(REFRESH_TOKEN, result.refreshToken());
+            assertEquals(TestResources.ACCESS_TOKEN, result.accessToken());
+            assertEquals(TestResources.REFRESH_TOKEN, result.refreshToken());
         }
 
         @Test
@@ -121,7 +117,8 @@ public class JwtAuthorizationServiceImplTest {
             User jeremy = UserTestData.getJeremy();
             var userLoginRequestDto = new UserLoginRequestDto(
                     jeremy.getEmail(),
-                    jeremy.getPassword()
+                    jeremy.getPassword(),
+                    false
             );
 
             // mockito
@@ -136,8 +133,8 @@ public class JwtAuthorizationServiceImplTest {
             assertNotNull(result);
             assertEquals(jeremy.getId(), result.userId());
             assertEquals(jeremy.getEmail(), result.email());
-            assertEquals(ACCESS_TOKEN, result.accessToken());
-            assertEquals(REFRESH_TOKEN, result.refreshToken());
+            assertEquals(TestResources.ACCESS_TOKEN, result.accessToken());
+            assertEquals(TestResources.REFRESH_TOKEN, result.refreshToken());
         }
 
         @Test
@@ -146,7 +143,8 @@ public class JwtAuthorizationServiceImplTest {
             User jeremy = UserTestData.getJeremy();
             var userLoginRequestDto = new UserLoginRequestDto(
                     jeremy.getEmail(),
-                    jeremy.getPassword()
+                    jeremy.getPassword(),
+                    false
             );
 
             // mockito
@@ -181,36 +179,37 @@ public class JwtAuthorizationServiceImplTest {
         @Test
         void whenRefreshTokenIsValid_thenReturnNewJwtResponseDto() throws Exception {
             // given
-            String refreshToken = "refreshToken";
             User jeremy = UserTestData.getJeremy();
             var jwtResponseDto = new JwtResponseDto(
                     jeremy.getId(),
                     jeremy.getEmail(),
-                    ACCESS_TOKEN,
-                    REFRESH_TOKEN
+                    TestResources.ACCESS_TOKEN,
+                    TestResources.REFRESH_TOKEN,
+                    false
+
             );
 
             // mockito
-            Mockito.when(jwtService.isRefreshToken(refreshToken))
+            Mockito.when(jwtService.isRefreshToken(TestResources.REFRESH_TOKEN))
                     .thenReturn(true);
-            Mockito.when(jwtService.isValid(refreshToken))
+            Mockito.when(jwtService.isValid(TestResources.REFRESH_TOKEN))
                     .thenReturn(true);
-            Mockito.when(jwtService.getEmailFromToken(refreshToken))
+            Mockito.when(jwtService.getEmailFromToken(TestResources.REFRESH_TOKEN))
                     .thenReturn(jeremy.getEmail());
             Mockito.when(userService.getByEmail(jeremy.getEmail()))
                     .thenReturn(Optional.of(jeremy));
-            Mockito.when(jwtService.refreshTokens(refreshToken, jeremy))
+            Mockito.when(jwtService.refreshTokens(TestResources.REFRESH_TOKEN, jeremy))
                     .thenReturn(jwtResponseDto);
 
             // when
-            JwtResponseDto result = jwtAuthorizationService.refresh(refreshToken);
+            JwtResponseDto result = jwtAuthorizationService.refresh(TestResources.REFRESH_TOKEN);
 
             // then
             assertNotNull(result);
             assertEquals(jeremy.getId(), result.userId());
             assertEquals(jeremy.getEmail(), result.email());
-            assertEquals(ACCESS_TOKEN, result.accessToken());
-            assertEquals(REFRESH_TOKEN, result.refreshToken());
+            assertEquals(TestResources.ACCESS_TOKEN, result.accessToken());
+            assertEquals(TestResources.REFRESH_TOKEN, result.refreshToken());
         }
 
         @Test
@@ -228,37 +227,30 @@ public class JwtAuthorizationServiceImplTest {
 
         @Test
         void whenTokenIsNotValid_thenThrowException() throws Exception {
-            // given
-            String refreshToken = "refreshToken";
-
             // mockito
-            Mockito.when(jwtService.isRefreshToken(refreshToken))
+            Mockito.when(jwtService.isRefreshToken(TestResources.REFRESH_TOKEN))
                     .thenReturn(true);
-            Mockito.when(jwtService.isValid(refreshToken))
+            Mockito.when(jwtService.isValid(TestResources.REFRESH_TOKEN))
                     .thenReturn(false);
 
             // when + then
-            assertThrows(InvalidTokenException.class, () -> jwtAuthorizationService.refresh(refreshToken));
+            assertThrows(InvalidTokenException.class, () -> jwtAuthorizationService.refresh(TestResources.REFRESH_TOKEN));
         }
 
         @Test
         void whenUserNotExistsByEmail_thenThrowException() throws Exception {
-            // given
-            String refreshToken = "refreshToken";
-            String email = "jeremy@gamil.com";
-
             // mockito
-            Mockito.when(jwtService.isRefreshToken(refreshToken))
+            Mockito.when(jwtService.isRefreshToken(TestResources.REFRESH_TOKEN))
                     .thenReturn(true);
-            Mockito.when(jwtService.isValid(refreshToken))
+            Mockito.when(jwtService.isValid(TestResources.REFRESH_TOKEN))
                     .thenReturn(true);
-            Mockito.when(jwtService.getEmailFromToken(refreshToken))
-                    .thenReturn(email);
-            Mockito.when(userService.getByEmail(email))
+            Mockito.when(jwtService.getEmailFromToken(TestResources.REFRESH_TOKEN))
+                    .thenReturn(TestResources.USER_EMAIL);
+            Mockito.when(userService.getByEmail(TestResources.USER_EMAIL))
                     .thenReturn(Optional.empty());
 
             // when + then
-            assertThrows(ResourceNotFoundException.class, () -> jwtAuthorizationService.refresh(refreshToken));
+            assertThrows(ResourceNotFoundException.class, () -> jwtAuthorizationService.refresh(TestResources.REFRESH_TOKEN));
         }
 
         @Test
@@ -278,9 +270,37 @@ public class JwtAuthorizationServiceImplTest {
     private void mockCreateJwtResponseMethod(User jeremy) {
         // mocking method: createJwtResponse(User user)
         Mockito.when(jwtService.createAccessToken(jeremy))
-                .thenReturn(ACCESS_TOKEN);
-        Mockito.when(jwtService.createRefreshToken(jeremy))
-                .thenReturn(REFRESH_TOKEN);
+                .thenReturn(TestResources.ACCESS_TOKEN);
+        Mockito.when(jwtService.createRefreshToken(jeremy, false))
+                .thenReturn(TestResources.REFRESH_TOKEN);
     }
 
+    static class TestResources {
+
+        static final Long USER_ID = 1L;
+        static final String USER_EMAIL = "jeremy@gmail.com";
+        static final String USER_PASSWORD = "Password123!";
+        static final String ACCESS_TOKEN = "accessToken";
+        static final String REFRESH_TOKEN = "refreshToken";
+
+        static User buildUser() {
+            return UserTestData.getJeremy();
+        }
+
+        static UserLoginRequestDto buildUserLoginRequestDto() {
+            return new UserLoginRequestDto(
+                    USER_EMAIL,
+                    USER_PASSWORD,
+                    false
+            );
+        }
+
+        static UserLoginRequestDto buildUserLoginRequestDtoWithRememberMe() {
+            return new UserLoginRequestDto(
+                    USER_EMAIL,
+                    USER_PASSWORD,
+                    true
+            );
+        }
+    }
 }

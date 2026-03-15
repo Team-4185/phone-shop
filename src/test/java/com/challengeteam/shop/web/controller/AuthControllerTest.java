@@ -29,6 +29,8 @@ import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.time.Duration;
+
 import static com.challengeteam.shop.web.controller.AuthControllerTest.TestResources.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -37,12 +39,18 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @SpringBootTest
 public class AuthControllerTest {
-    @Autowired private TestAuthHelper testAuthHelper;
-    @Autowired private MockMvc mockMvc;
-    @Autowired private UserService userService;
-    @Autowired private UserRepository userRepository;
-    @Autowired private ObjectMapper objectMapper;
-    @Autowired private JwtProperties jwtProperties;
+    @Autowired
+    private TestAuthHelper testAuthHelper;
+    @Autowired
+    private MockMvc mockMvc;
+    @Autowired
+    private UserService userService;
+    @Autowired
+    private UserRepository userRepository;
+    @Autowired
+    private ObjectMapper objectMapper;
+    @Autowired
+    private JwtProperties jwtProperties;
     private JwtResponseDto token;
 
 
@@ -268,7 +276,7 @@ public class AuthControllerTest {
         private static final String URL = "/api/auth/login";
 
         @Test
-        void whenAllRight_thenLoginAndReturnToken() throws Exception {
+        void whenRememberMeIsFalse_thenLoginAndCookieHasShorterMaxAge() throws Exception {
             UserLoginRequestDto body = buildUserLoginRequestDto(TestUserCredentials.EXISTING_CREDENTIALS);
 
             var request = post(URL)
@@ -281,7 +289,26 @@ public class AuthControllerTest {
                     .andExpect(jsonPath("$.userId").isNotEmpty())
                     .andExpect(jsonPath("$.email").value(TestUserCredentials.EXISTING_CREDENTIALS.email))
                     .andExpect(jsonPath("$.accessToken").isNotEmpty())
-                    .andExpect(cookie().exists("refreshToken"));
+                    .andExpect(cookie().exists("refreshToken"))
+                    .andExpect(cookie().maxAge("refreshToken", (int) jwtProperties.getRefreshTokenExpiration().toSeconds()));
+        }
+
+        @Test
+        void whenRememberMeIsTrue_thenLoginAndCookieHasLongerMaxAge() throws Exception {
+            UserLoginRequestDto body = buildUserLoginRequestDtoWithRememberMe(TestUserCredentials.EXISTING_CREDENTIALS);
+
+            var request = post(URL)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(body))
+                    .accept(MediaType.APPLICATION_JSON);
+
+            mockMvc.perform(request)
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.userId").isNotEmpty())
+                    .andExpect(jsonPath("$.email").value(TestUserCredentials.EXISTING_CREDENTIALS.email))
+                    .andExpect(jsonPath("$.accessToken").isNotEmpty())
+                    .andExpect(cookie().exists("refreshToken"))
+                    .andExpect(cookie().maxAge("refreshToken", (int) jwtProperties.getRememberMeRefreshTokenExpiration().toSeconds()));
         }
 
         @Test
@@ -443,7 +470,7 @@ public class AuthControllerTest {
         void whenRefreshTokenIsExpired_thenReturn401() throws Exception {
             // get new properties with: refresh_token_expiration = 0
             var properties = JwtProperties.copyOf(jwtProperties);
-            properties.setRefreshTokenExpiration(0);
+            properties.setRefreshTokenExpiration(Duration.ZERO);
             var jwtService = new JwtServiceImpl(properties);
             jwtService.init();
 
@@ -457,7 +484,7 @@ public class AuthControllerTest {
                     .password("testPassword")
                     .role(role)
                     .build();
-            String expiredRefreshToken = jwtService.createRefreshToken(user);
+            String expiredRefreshToken = jwtService.createRefreshToken(user, false);
 
             expect401WhenTokenIsNotRight(expiredRefreshToken);
         }
@@ -527,7 +554,16 @@ public class AuthControllerTest {
         public static UserLoginRequestDto buildUserLoginRequestDto(TestUserCredentials credentials) {
             return new UserLoginRequestDto(
                     credentials.email,
-                    credentials.password
+                    credentials.password,
+                    false
+            );
+        }
+
+        public static UserLoginRequestDto buildUserLoginRequestDtoWithRememberMe(TestUserCredentials credentials) {
+            return new UserLoginRequestDto(
+                    credentials.email,
+                    credentials.password,
+                    true
             );
         }
 
