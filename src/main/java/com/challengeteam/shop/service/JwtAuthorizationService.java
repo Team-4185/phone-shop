@@ -1,8 +1,8 @@
 package com.challengeteam.shop.service;
 
-import com.challengeteam.shop.dto.user.UserLoginRequestDto;
+import com.challengeteam.shop.dto.auth.UserLoginRequestDto;
 import com.challengeteam.shop.dto.jwt.JwtResponseDto;
-import com.challengeteam.shop.dto.user.UserRegisterRequestDto;
+import com.challengeteam.shop.dto.auth.UserRegisterRequestDto;
 
 public interface JwtAuthorizationService {
 

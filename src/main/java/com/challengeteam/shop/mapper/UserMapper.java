@@ -1,6 +1,6 @@
 package com.challengeteam.shop.mapper;
 
-import com.challengeteam.shop.dto.user.UserRegisterRequestDto;
+import com.challengeteam.shop.dto.auth.UserRegisterRequestDto;
 import com.challengeteam.shop.dto.user.UserResponseDto;
 import com.challengeteam.shop.entity.user.User;
 import org.mapstruct.Mapper;

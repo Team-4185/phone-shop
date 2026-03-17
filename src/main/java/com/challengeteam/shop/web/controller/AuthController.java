@@ -2,8 +2,8 @@ package com.challengeteam.shop.web.controller;
 
 import com.challengeteam.shop.dto.jwt.JwtPublicResponseDto;
 import com.challengeteam.shop.dto.jwt.JwtResponseDto;
-import com.challengeteam.shop.dto.user.UserLoginRequestDto;
-import com.challengeteam.shop.dto.user.UserRegisterRequestDto;
+import com.challengeteam.shop.dto.auth.UserLoginRequestDto;
+import com.challengeteam.shop.dto.auth.UserRegisterRequestDto;
 import com.challengeteam.shop.properties.JwtProperties;
 import com.challengeteam.shop.service.JwtAuthorizationService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -82,6 +82,9 @@ public class AuthController {
                 )
         );
     }
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<Void> forgotPassword(@RequestBody ForgotPasswordRequestDto forgotPasswordRequestDto)
 
     private void addRefreshTokenCookie(HttpServletResponse httpServletResponse, String refreshToken, boolean rememberMe) {
         int maxAge = rememberMe
