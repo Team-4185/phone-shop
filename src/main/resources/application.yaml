@@ -5,6 +5,14 @@ server:
 spring:
   config:
     import: optional:file:.env[.properties]
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: {$GMAIL_USERNAME}
+    password: ${GMAIL_APP_PASSWORD}
+    properties:
+      mail.smtp.auth: true
+      mail.smtp.starttls.enable: true
   datasource:
     url: ${DB_URL}
     username: ${DB_USERNAME}
@@ -42,12 +50,17 @@ security:
     allowed-headers: ${CORS_ALLOWED_HEADERS}
     max-cache-age: ${CORS_MAX_CACHE_AGE}                        # seconds
     allow-credentials: ${CORS_ALLOW_CREDENTIALS}
+
+  frontend-url: ${FRONTEND_URL}
+
   jwt:
     private-key: ${JWT_PRIVATE_KEY}
     public-key: ${JWT_PUBLIC_KEY}
+    reset-secret: ${JWT_RESET_SECRET}
     access-token-expiration: ${JWT_ACCESS_TOKEN_EXPIRATION}
     refresh-token-expiration: ${JWT_REFRESH_TOKEN_EXPIRATION}
     remember-me-refresh-token-expiration: ${JWT_REMEMBER_ME_REFRESH_TOKEN_EXPIRATION}
+    reset-token-expiration: ${JWT_RESET_TOKEN_EXPIRATION}
 
 minio:
   url: ${MINIO_URL}

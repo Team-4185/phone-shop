@@ -1,11 +1,14 @@
 package com.challengeteam.shop.web.controller;
 
+import com.challengeteam.shop.dto.auth.ForgotPasswordRequestDto;
+import com.challengeteam.shop.dto.auth.ResetPasswordRequestDto;
 import com.challengeteam.shop.dto.jwt.JwtPublicResponseDto;
 import com.challengeteam.shop.dto.jwt.JwtResponseDto;
 import com.challengeteam.shop.dto.auth.UserLoginRequestDto;
 import com.challengeteam.shop.dto.auth.UserRegisterRequestDto;
 import com.challengeteam.shop.properties.JwtProperties;
 import com.challengeteam.shop.service.JwtAuthorizationService;
+import com.challengeteam.shop.service.PasswordResetService;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
@@ -20,6 +23,8 @@ import org.springframework.web.bind.annotation.*;
 public class AuthController {
 
     private final JwtAuthorizationService jwtAuthorizationService;
+
+    private final PasswordResetService passwordResetService;
 
     private final JwtProperties jwtProperties;
 
@@ -83,8 +88,27 @@ public class AuthController {
         );
     }
 
+    @Operation(
+            summary = "Endpoint for password reset request",
+            description = "Sends a password reset link to the email. Always returns 204 regardless of whether the email exists in the system."
+    )
     @PostMapping("/forgot-password")
-    public ResponseEntity<Void> forgotPassword(@RequestBody ForgotPasswordRequestDto forgotPasswordRequestDto)
+    public ResponseEntity<Void> forgotPassword(@Valid @RequestBody ForgotPasswordRequestDto forgotPasswordRequestDto) {
+        passwordResetService.sendResetLink(forgotPasswordRequestDto.email());
+
+        return ResponseEntity.noContent().build();
+    }
+
+    @Operation(
+            summary = "Endpoint for password reset",
+            description = "Takes a reset token and a new password. If the token is valid and not expired, updates the user's password."
+    )
+    @PostMapping("/reset-password")
+    public ResponseEntity<Void> resetPassword(@Valid @RequestBody ResetPasswordRequestDto resetPasswordRequestDto) {
+        passwordResetService.resetPassword(resetPasswordRequestDto.token(), resetPasswordRequestDto.newPassword());
+
+        return ResponseEntity.noContent().build();
+    }
 
     private void addRefreshTokenCookie(HttpServletResponse httpServletResponse, String refreshToken, boolean rememberMe) {
         int maxAge = rememberMe

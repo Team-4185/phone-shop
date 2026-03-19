@@ -5,10 +5,13 @@ import com.challengeteam.shop.entity.user.User;
 import com.challengeteam.shop.exceptionHandling.exception.InvalidTokenException;
 import com.challengeteam.shop.properties.JwtProperties;
 import com.challengeteam.shop.testData.user.UserTestData;
+import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.security.Keys;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
+import javax.crypto.SecretKey;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.time.Duration;
@@ -31,12 +34,17 @@ class JwtServiceImplTest {
         String privateKeyBase64 = Base64.getEncoder().encodeToString(keyPair.getPrivate().getEncoded());
         String publicKeyBase64 = Base64.getEncoder().encodeToString(keyPair.getPublic().getEncoded());
 
+        SecretKey resetSecretKey = Keys.secretKeyFor(SignatureAlgorithm.HS256);
+        String resetSecret = Base64.getEncoder().encodeToString(resetSecretKey.getEncoded());
+
         jwtProperties = mock(JwtProperties.class);
         when(jwtProperties.getPrivateKey()).thenReturn(privateKeyBase64);
         when(jwtProperties.getPublicKey()).thenReturn(publicKeyBase64);
+        when(jwtProperties.getResetSecret()).thenReturn(resetSecret);
         when(jwtProperties.getAccessTokenExpiration()).thenReturn(Duration.ofMinutes(60));
         when(jwtProperties.getRefreshTokenExpiration()).thenReturn(Duration.ofDays(10));
         when(jwtProperties.getRememberMeRefreshTokenExpiration()).thenReturn(Duration.ofDays(30));
+        when(jwtProperties.getResetTokenExpiration()).thenReturn(Duration.ofMinutes(15));
 
         jwtService = new JwtServiceImpl(jwtProperties);
         jwtService.init();
@@ -213,6 +221,60 @@ class JwtServiceImplTest {
         }
     }
 
+    @Nested
+    class CreateResetTokenTest {
+
+        @Test
+        void whenUserIsValid_thenReturnResetToken() {
+            // when
+            String token = jwtService.createResetToken(buildUser());
+
+            // then
+            assertThat(token).isNotNull();
+            assertThat(jwtService.getEmailFromResetToken(token)).isEqualTo(USER_EMAIL);
+            verify(jwtProperties).getResetTokenExpiration();
+        }
+
+        @Test
+        void whenUserIsNull_thenThrowException() {
+            // when + then
+            assertThatThrownBy(() -> jwtService.createResetToken(null))
+                    .isInstanceOf(NullPointerException.class);
+        }
+    }
+
+    @Nested
+    class GetEmailFromResetTokenTest {
+
+        @Test
+        void whenResetToken_thenReturnCorrectEmail() {
+            // given
+            String token = jwtService.createResetToken(buildUser());
+
+            // when
+            String email = jwtService.getEmailFromResetToken(token);
+
+            // then
+            assertThat(email).isEqualTo(USER_EMAIL);
+        }
+
+        @Test
+        void whenTokenIsInvalid_thenThrowException() {
+            // when + then
+            assertThatThrownBy(() -> jwtService.getEmailFromResetToken(INVALID_TOKEN))
+                    .isInstanceOf(InvalidTokenException.class);
+        }
+
+        @Test
+        void whenAuthTokenPassedInsteadOfResetToken_thenThrowException() {
+            // given - auth токен підписаний RSA, reset токен очікує HMAC
+            String authToken = jwtService.createAccessToken(buildUser());
+
+            // when + then
+            assertThatThrownBy(() -> jwtService.getEmailFromResetToken(authToken))
+                    .isInstanceOf(InvalidTokenException.class);
+        }
+    }
 
     static class TestResources {
 
