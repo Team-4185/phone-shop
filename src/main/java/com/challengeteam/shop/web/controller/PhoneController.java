@@ -50,13 +50,7 @@ public class PhoneController {
             @Valid PhoneFilterDto filterDto
     ) {
 
-        int page = pageRequestDto.page() - 1;
-        int size = pageRequestDto.size();
-
-        Page<Phone> phones = phoneService.getPhones(page, size, filterDto);
-        Page<PhoneResponseDto> response = phones.map(phoneMapper::toResponse);
-
-        return ResponseEntity.ok(PageResponseDto.of(response));
+        return getPageResponseDtoResponseEntity(pageRequestDto, filterDto, phoneService, phoneMapper);
     }
 
     @Operation(
