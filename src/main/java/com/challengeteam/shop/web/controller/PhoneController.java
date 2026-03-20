@@ -29,6 +29,8 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.challengeteam.shop.web.controller.admin.AdminProductController.getPageResponseDtoResponseEntity;
+
 @RestController
 @RequestMapping("/api/v1/phones")
 @RequiredArgsConstructor
