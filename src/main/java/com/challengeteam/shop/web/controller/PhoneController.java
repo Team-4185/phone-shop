@@ -29,6 +29,8 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.challengeteam.shop.web.controller.admin.AdminProductController.getPageResponseDtoResponseEntity;
+
 @RestController
 @RequestMapping("/api/v1/phones")
 @RequiredArgsConstructor
@@ -50,13 +52,7 @@ public class PhoneController {
             @Valid PhoneFilterDto filterDto
     ) {
 
-        int page = pageRequestDto.page() - 1;
-        int size = pageRequestDto.size();
-
-        Page<Phone> phones = phoneService.getPhones(page, size, filterDto);
-        Page<PhoneResponseDto> response = phones.map(phoneMapper::toResponse);
-
-        return ResponseEntity.ok(PageResponseDto.of(response));
+        return getPageResponseDtoResponseEntity(pageRequestDto, filterDto, phoneService, phoneMapper);
     }
 
     @Operation(
