@@ -6,8 +6,10 @@ import com.challengeteam.shop.dto.jwt.JwtResponseDto;
 import com.challengeteam.shop.dto.user.CreateUserDto;
 import com.challengeteam.shop.dto.auth.UserLoginRequestDto;
 import com.challengeteam.shop.dto.auth.UserRegisterRequestDto;
+import com.challengeteam.shop.entity.token.PasswordResetToken;
 import com.challengeteam.shop.entity.user.Role;
 import com.challengeteam.shop.entity.user.User;
+import com.challengeteam.shop.persistence.repository.PasswordResetTokenRepository;
 import com.challengeteam.shop.persistence.repository.UserRepository;
 import com.challengeteam.shop.properties.JwtProperties;
 import com.challengeteam.shop.service.JwtService;
@@ -35,6 +37,7 @@ import org.springframework.test.context.bean.override.convention.TestBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.Duration;
+import java.time.LocalDateTime;
 
 import static com.challengeteam.shop.web.controller.AuthControllerTest.TestResources.*;
 import static org.mockito.Mockito.mock;
@@ -55,6 +58,8 @@ public class AuthControllerTest {
     private UserService userService;
     @Autowired
     private UserRepository userRepository;
+    @Autowired
+    private PasswordResetTokenRepository tokenRepository;
     @Autowired
     private ObjectMapper objectMapper;
     @Autowired
@@ -566,7 +571,7 @@ public class AuthControllerTest {
 
         @Test
         void whenEmailNotExists_thenReturn204() throws Exception {
-            ForgotPasswordRequestDto body = buildForgotPasswordRequestDto(TestUserCredentials.EXISTING_CREDENTIALS);
+            ForgotPasswordRequestDto body = buildForgotPasswordRequestDto(TestUserCredentials.NOT_EXISTING_CREDENTIALS);
 
             mockMvc.perform(post(URL)
                             .contentType(MediaType.APPLICATION_JSON)
@@ -616,6 +621,12 @@ public class AuthControllerTest {
         void whenTokenAndPasswordAreValid_thenReturn204() throws Exception {
             User user = userRepository.findByEmail(TestUserCredentials.EXISTING_CREDENTIALS.email).orElseThrow();
             String resetToken = jwtService.createResetToken(user);
+
+            tokenRepository.save(PasswordResetToken.builder()
+                    .user(user)
+                    .token(resetToken)
+                    .expiresAt(LocalDateTime.now().plusHours(1))
+                    .build());
 
             ResetPasswordRequestDto body = buildResetPasswordRequestDto(resetToken, TestUserCredentials.NOT_EXISTING_CREDENTIALS);
 
@@ -697,7 +708,6 @@ public class AuthControllerTest {
 
         static final String RESET_TOKEN = "valid.reset.token";
         static final String INVALID_TOKEN = "invalid.reset.token";
-        static final String NEW_PASSWORD = "newPassword123";
 
         public static CreateUserDto buildCreateUserDto(TestUserCredentials credentials) {
             return new CreateUserDto(

@@ -1,8 +1,10 @@
 package com.challengeteam.shop.service.impl;
 
+import com.challengeteam.shop.entity.token.PasswordResetToken;
 import com.challengeteam.shop.entity.user.User;
 import com.challengeteam.shop.exceptionHandling.exception.InvalidTokenException;
 import com.challengeteam.shop.exceptionHandling.exception.ResourceNotFoundException;
+import com.challengeteam.shop.persistence.repository.PasswordResetTokenRepository;
 import com.challengeteam.shop.persistence.repository.UserRepository;
 import com.challengeteam.shop.service.EmailService;
 import com.challengeteam.shop.service.JwtService;
@@ -17,6 +19,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 import static com.challengeteam.shop.service.impl.PasswordResetServiceImplTest.TestResources.*;
@@ -30,6 +34,9 @@ class PasswordResetServiceImplTest {
 
     @Mock
     private UserRepository userRepository;
+
+    @Mock
+    private PasswordResetTokenRepository tokenRepository;
 
     @Mock
     private JwtService jwtService;
@@ -85,8 +92,13 @@ class PasswordResetServiceImplTest {
         void whenTokenAndUserAreValid_thenUpdatePassword() {
             // given
             User user = buildUser();
+            PasswordResetToken resetToken = buildActiveResetToken(user);
+            List<PasswordResetToken> activeTokens = List.of(resetToken);
+
+            when(tokenRepository.findByToken(RESET_TOKEN)).thenReturn(Optional.of(resetToken));
             when(jwtService.getEmailFromResetToken(RESET_TOKEN)).thenReturn(USER_EMAIL);
             when(userRepository.findByEmail(USER_EMAIL)).thenReturn(Optional.of(user));
+            when(tokenRepository.findAllByUserId(user.getId())).thenReturn(activeTokens);
             when(passwordEncoder.encode(NEW_PASSWORD)).thenReturn(ENCODED_PASSWORD);
 
             // when
@@ -94,25 +106,53 @@ class PasswordResetServiceImplTest {
 
             // then
             assertThat(user.getPassword()).isEqualTo(ENCODED_PASSWORD);
+            verify(tokenRepository).saveAll(activeTokens);
             verify(userRepository).save(user);
         }
 
         @Test
-        void whenTokenIsInvalid_thenThrowException() {
+        void whenTokenNotFound_thenThrowException() {
             // given
-            when(jwtService.getEmailFromResetToken(INVALID_TOKEN))
-                    .thenThrow(new InvalidTokenException("Invalid token"));
+            when(tokenRepository.findByToken(INVALID_TOKEN)).thenReturn(Optional.empty());
 
             // when + then
             assertThatThrownBy(() -> passwordResetService.resetPassword(INVALID_TOKEN, NEW_PASSWORD))
                     .isInstanceOf(InvalidTokenException.class);
 
-            verifyNoInteractions(userRepository, emailService);
+            verifyNoInteractions(jwtService, userRepository, emailService);
+        }
+
+        @Test
+        void whenTokenIsUsed_thenThrowException() {
+            // given
+            PasswordResetToken usedToken = buildUsedResetToken(buildUser());
+            when(tokenRepository.findByToken(RESET_TOKEN)).thenReturn(Optional.of(usedToken));
+
+            // when + then
+            assertThatThrownBy(() -> passwordResetService.resetPassword(RESET_TOKEN, NEW_PASSWORD))
+                    .isInstanceOf(InvalidTokenException.class);
+
+            verifyNoInteractions(jwtService, userRepository);
+        }
+
+        @Test
+        void whenTokenIsExpired_thenThrowException() {
+            // given
+            PasswordResetToken expiredToken = buildExpiredResetToken(buildUser());
+            when(tokenRepository.findByToken(RESET_TOKEN)).thenReturn(Optional.of(expiredToken));
+
+            // when + then
+            assertThatThrownBy(() -> passwordResetService.resetPassword(RESET_TOKEN, NEW_PASSWORD))
+                    .isInstanceOf(InvalidTokenException.class);
+
+            verifyNoInteractions(jwtService, userRepository);
         }
 
         @Test
         void whenUserNotFound_thenThrowException() {
             // given
+            PasswordResetToken resetToken = buildActiveResetToken(buildUser());
+            when(tokenRepository.findByToken(RESET_TOKEN)).thenReturn(Optional.of(resetToken));
             when(jwtService.getEmailFromResetToken(RESET_TOKEN)).thenReturn(USER_EMAIL);
             when(userRepository.findByEmail(USER_EMAIL)).thenReturn(Optional.empty());
 
@@ -135,6 +175,31 @@ class PasswordResetServiceImplTest {
 
         static User buildUser() {
             return UserTestData.getJeremy();
+        }
+
+        static PasswordResetToken buildActiveResetToken(User user) {
+            return PasswordResetToken.builder()
+                    .user(user)
+                    .token(RESET_TOKEN)
+                    .expiresAt(LocalDateTime.now().plusHours(1))
+                    .build();
+        }
+
+        static PasswordResetToken buildUsedResetToken(User user) {
+            return PasswordResetToken.builder()
+                    .user(user)
+                    .token(RESET_TOKEN)
+                    .expiresAt(LocalDateTime.now().plusHours(1))
+                    .usedAt(LocalDateTime.now())
+                    .build();
+        }
+
+        static PasswordResetToken buildExpiredResetToken(User user) {
+            return PasswordResetToken.builder()
+                    .user(user)
+                    .token(RESET_TOKEN)
+                    .expiresAt(LocalDateTime.now().minusHours(1))
+                    .build();
         }
     }
 }
