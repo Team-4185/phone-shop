@@ -6,14 +6,17 @@ import com.challengeteam.shop.exceptionHandling.exception.InvalidTokenException;
 import com.challengeteam.shop.exceptionHandling.exception.ResourceNotFoundException;
 import com.challengeteam.shop.persistence.repository.PasswordResetTokenRepository;
 import com.challengeteam.shop.persistence.repository.UserRepository;
+import com.challengeteam.shop.properties.JwtProperties;
 import com.challengeteam.shop.service.EmailService;
 import com.challengeteam.shop.service.JwtService;
 import com.challengeteam.shop.service.PasswordResetService;
 import lombok.RequiredArgsConstructor;
+import org.apache.commons.codec.digest.DigestUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.time.Instant;
 import java.util.List;
 
 @Service
@@ -30,6 +33,8 @@ public class PasswordResetServiceImpl implements PasswordResetService {
 
     private final PasswordEncoder passwordEncoder;
 
+    private final JwtProperties jwtProperties;
+
     @Value("${security.frontend-url}")
     private String frontendUrl;
 
@@ -37,14 +42,25 @@ public class PasswordResetServiceImpl implements PasswordResetService {
     public void sendResetLink(String email) {
         userRepository.findByEmail(email).ifPresent(user -> {
             String token = jwtService.createResetToken(user);
-            String link = frontendUrl + "/reset-password?token=" + token;
+            String tokenHash = hashToken(token);
+
+            tokenRepository.save(
+                    PasswordResetToken.builder()
+                            .tokenHash(tokenHash)
+                            .expiresAt(Instant.now().plus(jwtProperties.getResetTokenExpiration()))
+                            .build()
+            );
+
+            String link = frontendUrl + "/reset-password?token=" + tokenHash;
             emailService.sendResetLink(user.getEmail(), link);
         });
     }
 
     @Override
     public void resetPassword(String token, String newPassword) {
-        PasswordResetToken resetToken = tokenRepository.findByToken(token)
+        String tokenHash = hashToken(token);
+
+        PasswordResetToken resetToken = tokenRepository.findByTokenHash(tokenHash)
                 .orElseThrow(() -> new InvalidTokenException("Token is invalid"));
 
         if (!resetToken.isActive()) {
@@ -65,6 +81,10 @@ public class PasswordResetServiceImpl implements PasswordResetService {
 
         user.setPassword(passwordEncoder.encode(newPassword));
         userRepository.save(user);
+    }
+
+    private String hashToken(String token) {
+        return DigestUtils.sha256Hex(token);
     }
 
 }
