@@ -6,19 +6,23 @@ import com.challengeteam.shop.exceptionHandling.exception.InvalidTokenException;
 import com.challengeteam.shop.exceptionHandling.exception.ResourceNotFoundException;
 import com.challengeteam.shop.persistence.repository.PasswordResetTokenRepository;
 import com.challengeteam.shop.persistence.repository.UserRepository;
+import com.challengeteam.shop.properties.JwtProperties;
 import com.challengeteam.shop.service.EmailService;
 import com.challengeteam.shop.service.JwtService;
 import com.challengeteam.shop.testData.user.UserTestData;
+import org.apache.commons.codec.digest.DigestUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
@@ -48,6 +52,9 @@ class PasswordResetServiceImplTest {
     @Mock
     private PasswordEncoder passwordEncoder;
 
+    @Mock
+    private JwtProperties jwtProperties;
+
     @InjectMocks
     private PasswordResetServiceImpl passwordResetService;
 
@@ -60,16 +67,22 @@ class PasswordResetServiceImplTest {
     class SendResetLinkTest {
 
         @Test
-        void whenUserExists_thenSendResetLink() {
+        void whenUserExists_thenSaveTokenAndSendResetLink() {
             // given
             User user = buildUser();
             when(userRepository.findByEmail(USER_EMAIL)).thenReturn(Optional.of(user));
             when(jwtService.createResetToken(user)).thenReturn(RESET_TOKEN);
+            when(jwtProperties.getResetTokenExpiration()).thenReturn(Duration.ofHours(1));
 
             // when
             passwordResetService.sendResetLink(USER_EMAIL);
 
             // then
+            ArgumentCaptor<PasswordResetToken> captor = ArgumentCaptor.forClass(PasswordResetToken.class);
+            verify(tokenRepository).save(captor.capture());
+            assertThat(captor.getValue().getTokenHash()).isEqualTo(DigestUtils.sha256Hex(RESET_TOKEN));
+            assertThat(captor.getValue().getExpiresAt()).isAfter(Instant.now());
+            assertThat(captor.getValue().getUser()).isEqualTo(user);
             verify(emailService).sendResetLink(USER_EMAIL, "https://test.com/reset-password?token=" + RESET_TOKEN);
         }
 
@@ -82,7 +95,7 @@ class PasswordResetServiceImplTest {
             passwordResetService.sendResetLink(USER_EMAIL);
 
             // then
-            verifyNoInteractions(jwtService, emailService);
+            verifyNoInteractions(jwtService, tokenRepository, emailService);
         }
     }
 
@@ -95,8 +108,9 @@ class PasswordResetServiceImplTest {
             User user = buildUser();
             PasswordResetToken resetToken = buildActiveResetToken(user);
             List<PasswordResetToken> activeTokens = List.of(resetToken);
+            String tokenHash = DigestUtils.sha256Hex(RESET_TOKEN);
 
-            when(tokenRepository.findByToken(RESET_TOKEN)).thenReturn(Optional.of(resetToken));
+            when(tokenRepository.findByTokenHash(tokenHash)).thenReturn(Optional.of(resetToken));
             when(jwtService.getEmailFromResetToken(RESET_TOKEN)).thenReturn(USER_EMAIL);
             when(userRepository.findByEmail(USER_EMAIL)).thenReturn(Optional.of(user));
             when(tokenRepository.findAllByUserId(user.getId())).thenReturn(activeTokens);
@@ -107,6 +121,7 @@ class PasswordResetServiceImplTest {
 
             // then
             assertThat(user.getPassword()).isEqualTo(ENCODED_PASSWORD);
+            assertThat(resetToken.isActive()).isFalse();
             verify(tokenRepository).saveAll(activeTokens);
             verify(userRepository).save(user);
         }
@@ -114,7 +129,8 @@ class PasswordResetServiceImplTest {
         @Test
         void whenTokenNotFound_thenThrowException() {
             // given
-            when(tokenRepository.findByToken(INVALID_TOKEN)).thenReturn(Optional.empty());
+            String tokenHash = DigestUtils.sha256Hex(INVALID_TOKEN);
+            when(tokenRepository.findByTokenHash(tokenHash)).thenReturn(Optional.empty());
 
             // when + then
             assertThatThrownBy(() -> passwordResetService.resetPassword(INVALID_TOKEN, NEW_PASSWORD))
@@ -126,8 +142,9 @@ class PasswordResetServiceImplTest {
         @Test
         void whenTokenIsUsed_thenThrowException() {
             // given
+            String tokenHash = DigestUtils.sha256Hex(RESET_TOKEN);
             PasswordResetToken usedToken = buildUsedResetToken(buildUser());
-            when(tokenRepository.findByToken(RESET_TOKEN)).thenReturn(Optional.of(usedToken));
+            when(tokenRepository.findByTokenHash(tokenHash)).thenReturn(Optional.of(usedToken));
 
             // when + then
             assertThatThrownBy(() -> passwordResetService.resetPassword(RESET_TOKEN, NEW_PASSWORD))
@@ -139,8 +156,9 @@ class PasswordResetServiceImplTest {
         @Test
         void whenTokenIsExpired_thenThrowException() {
             // given
+            String tokenHash = DigestUtils.sha256Hex(RESET_TOKEN);
             PasswordResetToken expiredToken = buildExpiredResetToken(buildUser());
-            when(tokenRepository.findByToken(RESET_TOKEN)).thenReturn(Optional.of(expiredToken));
+            when(tokenRepository.findByTokenHash(tokenHash)).thenReturn(Optional.of(expiredToken));
 
             // when + then
             assertThatThrownBy(() -> passwordResetService.resetPassword(RESET_TOKEN, NEW_PASSWORD))
@@ -152,8 +170,9 @@ class PasswordResetServiceImplTest {
         @Test
         void whenUserNotFound_thenThrowException() {
             // given
+            String tokenHash = DigestUtils.sha256Hex(RESET_TOKEN);
             PasswordResetToken resetToken = buildActiveResetToken(buildUser());
-            when(tokenRepository.findByToken(RESET_TOKEN)).thenReturn(Optional.of(resetToken));
+            when(tokenRepository.findByTokenHash(tokenHash)).thenReturn(Optional.of(resetToken));
             when(jwtService.getEmailFromResetToken(RESET_TOKEN)).thenReturn(USER_EMAIL);
             when(userRepository.findByEmail(USER_EMAIL)).thenReturn(Optional.empty());
 
@@ -181,7 +200,7 @@ class PasswordResetServiceImplTest {
         static PasswordResetToken buildActiveResetToken(User user) {
             return PasswordResetToken.builder()
                     .user(user)
-                    .token(RESET_TOKEN)
+                    .tokenHash(DigestUtils.sha256Hex(RESET_TOKEN))
                     .expiresAt(Instant.now().plus(1, ChronoUnit.HOURS))
                     .build();
         }
@@ -189,7 +208,7 @@ class PasswordResetServiceImplTest {
         static PasswordResetToken buildUsedResetToken(User user) {
             return PasswordResetToken.builder()
                     .user(user)
-                    .token(RESET_TOKEN)
+                    .tokenHash(DigestUtils.sha256Hex(RESET_TOKEN))
                     .expiresAt(Instant.now().plus(1, ChronoUnit.HOURS))
                     .usedAt(Instant.now())
                     .build();
@@ -198,7 +217,7 @@ class PasswordResetServiceImplTest {
         static PasswordResetToken buildExpiredResetToken(User user) {
             return PasswordResetToken.builder()
                     .user(user)
-                    .token(RESET_TOKEN)
+                    .tokenHash(DigestUtils.sha256Hex(RESET_TOKEN))
                     .expiresAt(Instant.now().minus(1, ChronoUnit.HOURS))
                     .build();
         }

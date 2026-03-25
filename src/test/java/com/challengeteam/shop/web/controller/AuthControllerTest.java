@@ -21,6 +21,7 @@ import com.challengeteam.shop.testContainer.TestContextConfigurator;
 import com.challengeteam.shop.web.TestAuthHelper;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.Cookie;
+import org.apache.commons.codec.digest.DigestUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -37,10 +38,10 @@ import org.springframework.test.context.bean.override.convention.TestBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.Duration;
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
+import java.util.List;
 
 import static com.challengeteam.shop.web.controller.AuthControllerTest.TestResources.*;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -620,20 +621,25 @@ public class AuthControllerTest {
 
         @Test
         void whenTokenAndPasswordAreValid_thenReturn204() throws Exception {
+            mockMvc.perform(post("/api/auth/forgot-password")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(
+                                    buildForgotPasswordRequestDto(TestUserCredentials.EXISTING_CREDENTIALS))))
+                    .andExpect(status().isNoContent());
+
             User user = userRepository.findByEmail(TestUserCredentials.EXISTING_CREDENTIALS.email).orElseThrow();
+            List<PasswordResetToken> tokens = tokenRepository.findAllByUserId(user.getId());
+            assertThat(tokens).hasSize(1);
+            assertThat(tokens.getFirst().isActive()).isTrue();
+
             String resetToken = jwtService.createResetToken(user);
-
-            tokenRepository.save(PasswordResetToken.builder()
-                    .user(user)
-                    .token(resetToken)
-                    .expiresAt(Instant.now().plus(1, ChronoUnit.HOURS))
-                    .build());
-
-            ResetPasswordRequestDto body = buildResetPasswordRequestDto(resetToken, TestUserCredentials.NOT_EXISTING_CREDENTIALS);
+            tokens.getFirst().setTokenHash(DigestUtils.sha256Hex(resetToken));
+            tokenRepository.save(tokens.getFirst());
 
             mockMvc.perform(post(URL)
                             .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(body)))
+                            .content(objectMapper.writeValueAsString(
+                                    buildResetPasswordRequestDto(resetToken, TestUserCredentials.NOT_EXISTING_CREDENTIALS))))
                     .andExpect(status().isNoContent());
         }
 
