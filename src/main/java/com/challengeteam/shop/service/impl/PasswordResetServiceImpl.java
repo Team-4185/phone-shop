@@ -15,6 +15,7 @@ import org.apache.commons.codec.digest.DigestUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.util.List;
@@ -38,6 +39,7 @@ public class PasswordResetServiceImpl implements PasswordResetService {
     @Value("${security.frontend-url}")
     private String frontendUrl;
 
+    @Transactional
     @Override
     public void sendResetLink(String email) {
         userRepository.findByEmail(email).ifPresent(user -> {
@@ -48,14 +50,16 @@ public class PasswordResetServiceImpl implements PasswordResetService {
                     PasswordResetToken.builder()
                             .tokenHash(tokenHash)
                             .expiresAt(Instant.now().plus(jwtProperties.getResetTokenExpiration()))
+                            .user(user)
                             .build()
             );
 
-            String link = frontendUrl + "/reset-password?token=" + tokenHash;
+            String link = frontendUrl + "/reset-password?token=" + token;
             emailService.sendResetLink(user.getEmail(), link);
         });
     }
 
+    @Transactional
     @Override
     public void resetPassword(String token, String newPassword) {
         String tokenHash = hashToken(token);
