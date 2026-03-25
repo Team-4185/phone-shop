@@ -37,7 +37,8 @@ import org.springframework.test.context.bean.override.convention.TestBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.Duration;
-import java.time.LocalDateTime;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 
 import static com.challengeteam.shop.web.controller.AuthControllerTest.TestResources.*;
 import static org.mockito.Mockito.mock;
@@ -625,7 +626,7 @@ public class AuthControllerTest {
             tokenRepository.save(PasswordResetToken.builder()
                     .user(user)
                     .token(resetToken)
-                    .expiresAt(LocalDateTime.now().plusHours(1))
+                    .expiresAt(Instant.now().plus(1, ChronoUnit.HOURS))
                     .build());
 
             ResetPasswordRequestDto body = buildResetPasswordRequestDto(resetToken, TestUserCredentials.NOT_EXISTING_CREDENTIALS);

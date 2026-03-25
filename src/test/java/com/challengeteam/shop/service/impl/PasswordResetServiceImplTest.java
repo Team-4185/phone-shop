@@ -19,7 +19,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Optional;
 
@@ -181,7 +182,7 @@ class PasswordResetServiceImplTest {
             return PasswordResetToken.builder()
                     .user(user)
                     .token(RESET_TOKEN)
-                    .expiresAt(LocalDateTime.now().plusHours(1))
+                    .expiresAt(Instant.now().plus(1, ChronoUnit.HOURS))
                     .build();
         }
 
@@ -189,8 +190,8 @@ class PasswordResetServiceImplTest {
             return PasswordResetToken.builder()
                     .user(user)
                     .token(RESET_TOKEN)
-                    .expiresAt(LocalDateTime.now().plusHours(1))
-                    .usedAt(LocalDateTime.now())
+                    .expiresAt(Instant.now().plus(1, ChronoUnit.HOURS))
+                    .usedAt(Instant.now())
                     .build();
         }
 
@@ -198,7 +199,7 @@ class PasswordResetServiceImplTest {
             return PasswordResetToken.builder()
                     .user(user)
                     .token(RESET_TOKEN)
-                    .expiresAt(LocalDateTime.now().minusHours(1))
+                    .expiresAt(Instant.now().minus(1, ChronoUnit.HOURS))
                     .build();
         }
     }
