@@ -1,8 +1,6 @@
 name: CI
 
 on:
-  push:
-    branches: [ feature/NTT-317/add-ci ]
   pull_request:
     branches: [ develop, main ]
 
