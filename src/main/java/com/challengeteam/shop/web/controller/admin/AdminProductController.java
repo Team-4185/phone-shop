@@ -5,17 +5,11 @@ import com.challengeteam.shop.dto.admin.product.AdminProductFilterDto;
 import com.challengeteam.shop.dto.admin.product.AdminProductListItemResponseDto;
 import com.challengeteam.shop.dto.pagination.PageRequestDto;
 import com.challengeteam.shop.dto.pagination.PageResponseDto;
-import com.challengeteam.shop.dto.pagination.PhoneFilterDto;
-import com.challengeteam.shop.dto.phone.PhoneResponseDto;
-import com.challengeteam.shop.entity.phone.Phone;
-import com.challengeteam.shop.mapper.PhoneMapper;
-import com.challengeteam.shop.service.PhoneService;
 import com.challengeteam.shop.service.admin.AdminProductQueryService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.jspecify.annotations.NonNull;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -30,6 +24,7 @@ import org.springframework.web.bind.annotation.RestController;
 @SecurityRequirement(name = "bearer-jwt")
 @Validated
 public class AdminProductController {
+
   private final AdminProductQueryService adminProductQueryService;
 
   @Operation(
@@ -46,21 +41,6 @@ public class AdminProductController {
         adminProductQueryService.getProducts(page, size, filterDto);
 
     return ResponseEntity.ok(PageResponseDto.of(products));
-  }
-
-  @NonNull
-  public static ResponseEntity<PageResponseDto<PhoneResponseDto>> getPageResponseDtoResponseEntity(
-      @Valid PageRequestDto pageRequestDto,
-      @Valid PhoneFilterDto filterDto,
-      PhoneService phoneService,
-      PhoneMapper phoneMapper) {
-    int page = pageRequestDto.page() - 1;
-    int size = pageRequestDto.size();
-
-    Page<Phone> phones = phoneService.getPhones(page, size, filterDto);
-    Page<PhoneResponseDto> response = phones.map(phoneMapper::toResponse);
-
-    return ResponseEntity.ok(PageResponseDto.of(response));
   }
 
   @Operation(

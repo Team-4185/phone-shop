@@ -7,6 +7,7 @@ import org.springframework.data.jpa.domain.Specification;
 
 import java.math.BigDecimal;
 import java.util.Objects;
+import java.util.function.Function;
 
 public final class AdminProductSpecification {
 
@@ -26,7 +27,7 @@ public final class AdminProductSpecification {
     return spec;
   }
 
-  public static Specification<Phone> fetchImages() {
+  private static Specification<Phone> fetchImages() {
     return (root, query, cb) -> {
       Objects.requireNonNull(query);
 
@@ -39,7 +40,7 @@ public final class AdminProductSpecification {
     };
   }
 
-  public static Specification<Phone> matchesSearch(String search) {
+  private static Specification<Phone> matchesSearch(String search) {
     return (root, query, cb) -> {
       String pattern = "%" + search.toLowerCase() + "%";
 
@@ -50,29 +51,27 @@ public final class AdminProductSpecification {
     };
   }
 
-  public static Specification<Phone> hasBrand(String brand) {
+  private static Specification<Phone> hasBrand(String brand) {
     return (root, query, cb) -> cb.equal(cb.lower(root.get("brand")), brand.toLowerCase());
   }
 
-  public static Specification<Phone> priceGreaterThanOrEqual(BigDecimal minPrice) {
+  private static Specification<Phone> priceGreaterThanOrEqual(BigDecimal minPrice) {
     return (root, query, cb) -> cb.greaterThanOrEqualTo(root.get("price"), minPrice);
   }
 
-  public static Specification<Phone> priceLessThanOrEqual(BigDecimal maxPrice) {
+  private static Specification<Phone> priceLessThanOrEqual(BigDecimal maxPrice) {
     return (root, query, cb) -> cb.lessThanOrEqualTo(root.get("price"), maxPrice);
   }
 
   private static <T> Specification<Phone> addIfPresent(
-      Specification<Phone> spec,
-      T value,
-      java.util.function.Function<T, Specification<Phone>> specificationFactory) {
+      Specification<Phone> spec, T value, Function<T, Specification<Phone>> specificationFactory) {
     return value == null ? spec : spec.and(specificationFactory.apply(value));
   }
 
   private static Specification<Phone> addIfHasText(
       Specification<Phone> spec,
       String value,
-      java.util.function.Function<String, Specification<Phone>> specificationFactory) {
+      Function<String, Specification<Phone>> specificationFactory) {
     return value == null || value.isBlank() ? spec : spec.and(specificationFactory.apply(value));
   }
 }
