@@ -1,5 +1,6 @@
 package com.challengeteam.shop.service;
 
+import com.challengeteam.shop.dto.pagination.PhoneFilterDto;
 import com.challengeteam.shop.dto.phone.PhoneCreateRequestDto;
 import com.challengeteam.shop.dto.phone.PhoneUpdateRequestDto;
 import com.challengeteam.shop.entity.image.Image;
@@ -13,7 +14,7 @@ import java.util.Optional;
 public interface PhoneService {
 
     Optional<Phone> getById(Long id);
-    Page<Phone> getPhones(int page, int size);
+    Page<Phone> getPhones(int page, int size, PhoneFilterDto filterDto);
     Long create(PhoneCreateRequestDto phoneCreateRequestDto, List<MultipartFile> images);
     void update(Long id, PhoneUpdateRequestDto phoneUpdateRequestDto);
     void delete(Long id);

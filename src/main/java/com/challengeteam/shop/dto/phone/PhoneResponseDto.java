@@ -1,6 +1,9 @@
 package com.challengeteam.shop.dto.phone;
 
+import com.challengeteam.shop.dto.image.ImageMetadataResponseDto;
+
 import java.math.BigDecimal;
+import java.util.List;
 
 public record PhoneResponseDto(
         Long id,
@@ -14,6 +17,7 @@ public record PhoneResponseDto(
         String screenSize,
         String frontCamera,
         String mainCamera,
-        String batteryCapacity
+        String batteryCapacity,
+        List<ImageMetadataResponseDto> images
 ) {
 }

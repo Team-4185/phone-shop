@@ -1,5 +1,6 @@
 package com.challengeteam.shop.service.impl;
 
+import com.challengeteam.shop.dto.pagination.PhoneFilterDto;
 import com.challengeteam.shop.dto.phone.PhoneCreateRequestDto;
 import com.challengeteam.shop.dto.phone.PhoneUpdateRequestDto;
 import com.challengeteam.shop.entity.image.Image;
@@ -20,10 +21,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.*;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -37,6 +36,7 @@ import java.util.stream.LongStream;
 import static com.challengeteam.shop.service.impl.PhoneServiceImplTest.TestResources.*;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
 
 @ExtendWith(MockitoExtension.class)
 class PhoneServiceImplTest {
@@ -54,15 +54,18 @@ class PhoneServiceImplTest {
             // given
             int page = 0;
             int size = 10;
-            Pageable pageable = PageRequest.of(page, size);
+            PhoneFilterDto filterDto = buildDefaultPhoneFilterDto();
+            Sort expectedSort = Sort.by("name").ascending();
+            Pageable pageable = PageRequest.of(page, size, expectedSort);
             List<Phone> phones = buildPhonesFromTo(1, 11);
             Page<Phone> expected = new PageImpl<>(phones, pageable, 20);
 
             // mockito
-            Mockito.when(phoneRepository.findAll(pageable)).thenReturn(expected);
+            Mockito.when(phoneRepository.findAll(any(Specification.class), any(Pageable.class)))
+                    .thenReturn(expected);
 
             // when
-            Page<Phone> result = phoneService.getPhones(page, size);
+            Page<Phone> result = phoneService.getPhones(page, size, filterDto);
 
             // then
             assertThat(result).isNotNull();
@@ -71,7 +74,14 @@ class PhoneServiceImplTest {
             assertThat(result.getContent()).hasSize(10);
             assertThat(result.getTotalPages()).isEqualTo(2);
             assertThat(result.getTotalElements()).isEqualTo(20);
-            Mockito.verify(phoneRepository).findAll(pageable);
+
+            // capture
+            ArgumentCaptor<Specification<Phone>> specCaptor = ArgumentCaptor.forClass(Specification.class);
+            ArgumentCaptor<Pageable> pageableCaptor = ArgumentCaptor.forClass(Pageable.class);
+            Mockito.verify(phoneRepository).findAll(specCaptor.capture(), pageableCaptor.capture());
+
+            assertThat(specCaptor.getValue()).isNotNull();
+            assertThat(pageableCaptor.getValue()).isNotNull();
         }
 
         @Test
@@ -79,14 +89,17 @@ class PhoneServiceImplTest {
             // given
             int page = 0;
             int size = 10;
-            Pageable pageable = PageRequest.of(page, size);
+            PhoneFilterDto filterDto = buildDefaultPhoneFilterDto();
+            Sort expectedSort = Sort.by("name").ascending();
+            Pageable pageable = PageRequest.of(page, size, expectedSort);
             Page<Phone> expected = new PageImpl<>(List.of(), pageable, 0);
 
             // mockito
-            Mockito.when(phoneRepository.findAll(pageable)).thenReturn(expected);
+            Mockito.when(phoneRepository.findAll(any(Specification.class), any(Pageable.class)))
+                    .thenReturn(expected);
 
             // when
-            Page<Phone> result = phoneService.getPhones(page, size);
+            Page<Phone> result = phoneService.getPhones(page, size, filterDto);
 
             // then
             assertThat(result).isNotNull();
@@ -94,7 +107,14 @@ class PhoneServiceImplTest {
             assertThat(result.getSize()).isEqualTo(10);
             assertThat(result.getContent()).isEmpty();
             assertThat(result.getTotalElements()).isZero();
-            Mockito.verify(phoneRepository).findAll(pageable);
+
+            // capture
+            ArgumentCaptor<Specification<Phone>> specCaptor = ArgumentCaptor.forClass(Specification.class);
+            ArgumentCaptor<Pageable> pageableCaptor = ArgumentCaptor.forClass(Pageable.class);
+            Mockito.verify(phoneRepository).findAll(specCaptor.capture(), pageableCaptor.capture());
+
+            assertThat(specCaptor.getValue()).isNotNull();
+            assertThat(pageableCaptor.getValue()).isNotNull();
         }
 
         @Test
@@ -102,22 +122,32 @@ class PhoneServiceImplTest {
             // given
             int page = 1;
             int size = 10;
-            Pageable pageable = PageRequest.of(page, size);
+            PhoneFilterDto filterDto = buildDefaultPhoneFilterDto();
+            Sort expectedSort = Sort.by("name").ascending();
+            Pageable pageable = PageRequest.of(page, size, expectedSort);
             List<Phone> phones = buildPhonesFromTo(11, 15);
             Page<Phone> expected = new PageImpl<>(phones, pageable, 14);
 
             // mockito
-            Mockito.when(phoneRepository.findAll(pageable)).thenReturn(expected);
+            Mockito.when(phoneRepository.findAll(any(Specification.class), any(Pageable.class)))
+                    .thenReturn(expected);
 
             // when
-            Page<Phone> result = phoneService.getPhones(page, size);
+            Page<Phone> result = phoneService.getPhones(page, size, filterDto);
 
             // then
             assertThat(result).isNotNull();
             assertThat(result.getContent()).hasSize(4);
             assertThat(result.getTotalElements()).isEqualTo(14);
             assertThat(result.isLast()).isTrue();
-            Mockito.verify(phoneRepository).findAll(pageable);
+
+            // capture
+            ArgumentCaptor<Specification<Phone>> specCaptor = ArgumentCaptor.forClass(Specification.class);
+            ArgumentCaptor<Pageable> pageableCaptor = ArgumentCaptor.forClass(Pageable.class);
+            Mockito.verify(phoneRepository).findAll(specCaptor.capture(), pageableCaptor.capture());
+
+            assertThat(specCaptor.getValue()).isNotNull();
+            assertThat(pageableCaptor.getValue()).isNotNull();
         }
 
         @Test
@@ -125,22 +155,32 @@ class PhoneServiceImplTest {
             // given
             int page = 0;
             int size = 5;
-            Pageable pageable = PageRequest.of(page, size);
+            PhoneFilterDto filterDto = buildDefaultPhoneFilterDto();
+            Sort expectedSort = Sort.by("name").ascending();
+            Pageable pageable = PageRequest.of(page, size, expectedSort);
             List<Phone> phones = buildPhonesFromTo(1, 6);
             Page<Phone> expected = new PageImpl<>(phones, pageable, 25);
 
             // mockito
-            Mockito.when(phoneRepository.findAll(pageable)).thenReturn(expected);
+            Mockito.when(phoneRepository.findAll(any(Specification.class), any(Pageable.class)))
+                    .thenReturn(expected);
 
             // when
-            Page<Phone> result = phoneService.getPhones(page, size);
+            Page<Phone> result = phoneService.getPhones(page, size, filterDto);
 
             // then
             assertThat(result).isNotNull();
             assertThat(result.isFirst()).isTrue();
             assertThat(result.isLast()).isFalse();
             assertThat(result.hasNext()).isTrue();
-            Mockito.verify(phoneRepository).findAll(pageable);
+
+            // capture
+            ArgumentCaptor<Specification<Phone>> specCaptor = ArgumentCaptor.forClass(Specification.class);
+            ArgumentCaptor<Pageable> pageableCaptor = ArgumentCaptor.forClass(Pageable.class);
+            Mockito.verify(phoneRepository).findAll(specCaptor.capture(), pageableCaptor.capture());
+
+            assertThat(specCaptor.getValue()).isNotNull();
+            assertThat(pageableCaptor.getValue()).isNotNull();
         }
 
         @Test
@@ -148,21 +188,291 @@ class PhoneServiceImplTest {
             // given
             int page = 2;
             int size = 15;
-            Pageable pageable = PageRequest.of(page, size);
+            PhoneFilterDto filterDto = buildDefaultPhoneFilterDto();
+            Sort expectedSort = Sort.by("name").ascending();
+            Pageable pageable = PageRequest.of(page, size, expectedSort);
             List<Phone> phones = buildPhonesFromTo(1, 5);
             Page<Phone> expected = new PageImpl<>(phones, pageable, 50);
 
             // mockito
-            Mockito.when(phoneRepository.findAll(any(Pageable.class))).thenReturn(expected);
+            Mockito.when(phoneRepository.findAll(any(Specification.class), any(Pageable.class)))
+                    .thenReturn(expected);
 
             // when
-            phoneService.getPhones(page, size);
+            phoneService.getPhones(page, size, filterDto);
 
             // then
-            ArgumentCaptor<Pageable> captor = ArgumentCaptor.forClass(Pageable.class);
-            Mockito.verify(phoneRepository).findAll(captor.capture());
-            Pageable capturedPageable = captor.getValue();
+            ArgumentCaptor<Specification<Phone>> specCaptor = ArgumentCaptor.forClass(Specification.class);
+            ArgumentCaptor<Pageable> pageableCaptor = ArgumentCaptor.forClass(Pageable.class);
+            Mockito.verify(phoneRepository).findAll(specCaptor.capture(), pageableCaptor.capture());
 
+            Pageable capturedPageable = pageableCaptor.getValue();
+            assertThat(capturedPageable.getPageNumber()).isEqualTo(page);
+            assertThat(capturedPageable.getPageSize()).isEqualTo(size);
+        }
+
+        @Test
+        void whenSortByNameAsc_thenReturnSortedPhones() {
+            // given
+            int page = 0;
+            int size = 10;
+            PhoneFilterDto filterDto = buildDefaultPhoneFilterDto();
+            Sort expectedSort = Sort.by("name").ascending();
+            Pageable pageable = PageRequest.of(page, size, expectedSort);
+            List<Phone> phones = buildPhonesFromTo(1, 6);
+            Page<Phone> expected = new PageImpl<>(phones, pageable, 5);
+
+            // mockito
+            Mockito.when(phoneRepository.findAll(any(Specification.class), any(Pageable.class)))
+                    .thenReturn(expected);
+
+            // when
+            Page<Phone> result = phoneService.getPhones(page, size, filterDto);
+
+            // then
+            assertThat(result).isNotNull();
+            assertThat(result.getContent()).hasSize(5);
+
+            ArgumentCaptor<Pageable> pageableCaptor = ArgumentCaptor.forClass(Pageable.class);
+            Mockito.verify(phoneRepository).findAll(any(Specification.class), pageableCaptor.capture());
+            Pageable capturedPageable = pageableCaptor.getValue();
+
+            assertThat(capturedPageable.getSort()).isEqualTo(expectedSort);
+        }
+
+        @Test
+        void whenSortByNameDesc_thenReturnSortedPhones() {
+            // given
+            int page = 0;
+            int size = 10;
+            PhoneFilterDto filterDto = buildPhoneFilterDtoWithSortByNameDesc();
+            Sort expectedSort = Sort.by("name").descending();
+            Pageable pageable = PageRequest.of(page, size, expectedSort);
+            List<Phone> phones = buildPhonesFromTo(1, 6);
+            Page<Phone> expected = new PageImpl<>(phones, pageable, 5);
+
+            // mockito
+            Mockito.when(phoneRepository.findAll(any(Specification.class), any(Pageable.class)))
+                    .thenReturn(expected);
+
+            // when
+            Page<Phone> result = phoneService.getPhones(page, size, filterDto);
+
+            // then
+            assertThat(result).isNotNull();
+
+            ArgumentCaptor<Pageable> pageableCaptor = ArgumentCaptor.forClass(Pageable.class);
+            Mockito.verify(phoneRepository).findAll(any(Specification.class), pageableCaptor.capture());
+            Pageable capturedPageable = pageableCaptor.getValue();
+
+            assertThat(capturedPageable.getSort()).isEqualTo(expectedSort);
+        }
+
+        @Test
+        void whenSortByPriceAsc_thenReturnSortedPhones() {
+            // given
+            int page = 0;
+            int size = 10;
+            PhoneFilterDto filterDto = buildPhoneFilterDtoWithSortByPriceAsc();
+            Sort expectedSort = Sort.by("price").ascending();
+            Pageable pageable = PageRequest.of(page, size, expectedSort);
+            List<Phone> phones = buildPhonesFromTo(1, 6);
+            Page<Phone> expected = new PageImpl<>(phones, pageable, 5);
+
+            // mockito
+            Mockito.when(phoneRepository.findAll(any(Specification.class), any(Pageable.class)))
+                    .thenReturn(expected);
+
+            // when
+            Page<Phone> result = phoneService.getPhones(page, size, filterDto);
+
+            // then
+            assertThat(result).isNotNull();
+
+            ArgumentCaptor<Pageable> pageableCaptor = ArgumentCaptor.forClass(Pageable.class);
+            Mockito.verify(phoneRepository).findAll(any(Specification.class), pageableCaptor.capture());
+            Pageable capturedPageable = pageableCaptor.getValue();
+
+            assertThat(capturedPageable.getSort()).isEqualTo(expectedSort);
+        }
+
+        @Test
+        void whenSortByPriceDesc_thenReturnSortedPhones() {
+            // given
+            int page = 0;
+            int size = 10;
+            PhoneFilterDto filterDto = buildPhoneFilterDtoWithSortByPriceDesc();
+            Sort expectedSort = Sort.by("price").descending();
+            Pageable pageable = PageRequest.of(page, size, expectedSort);
+            List<Phone> phones = buildPhonesFromTo(1, 6);
+            Page<Phone> expected = new PageImpl<>(phones, pageable, 5);
+
+            // mockito
+            Mockito.when(phoneRepository.findAll(any(Specification.class), any(Pageable.class)))
+                    .thenReturn(expected);
+
+            // when
+            Page<Phone> result = phoneService.getPhones(page, size, filterDto);
+
+            // then
+            assertThat(result).isNotNull();
+
+            ArgumentCaptor<Pageable> pageableCaptor = ArgumentCaptor.forClass(Pageable.class);
+            Mockito.verify(phoneRepository).findAll(any(Specification.class), pageableCaptor.capture());
+            Pageable capturedPageable = pageableCaptor.getValue();
+
+            assertThat(capturedPageable.getSort()).isEqualTo(expectedSort);
+        }
+
+        @Test
+        void whenSortIsInvalid_thenDefaultToNameAsc() {
+            // given
+            int page = 0;
+            int size = 10;
+            PhoneFilterDto filterDto = buildPhoneFilterDtoWithInvalidSort();
+            Sort expectedSort = Sort.by("name").ascending();
+            Pageable pageable = PageRequest.of(page, size, expectedSort);
+            List<Phone> phones = buildPhonesFromTo(1, 6);
+            Page<Phone> expected = new PageImpl<>(phones, pageable, 5);
+
+            // mockito
+            Mockito.when(phoneRepository.findAll(any(Specification.class), any(Pageable.class)))
+                    .thenReturn(expected);
+
+            // when
+            Page<Phone> result = phoneService.getPhones(page, size, filterDto);
+
+            // then
+            assertThat(result).isNotNull();
+
+            ArgumentCaptor<Pageable> pageableCaptor = ArgumentCaptor.forClass(Pageable.class);
+            Mockito.verify(phoneRepository).findAll(any(Specification.class), pageableCaptor.capture());
+            Pageable capturedPageable = pageableCaptor.getValue();
+
+            assertThat(capturedPageable.getSort()).isEqualTo(expectedSort);
+        }
+
+        @Test
+        void whenFilterByBrand_thenPassSpecificationToRepository() {
+            // given
+            int page = 0;
+            int size = 10;
+            PhoneFilterDto filterDto = buildPhoneFilterDtoWithFilterByBrand();
+            Sort expectedSort = Sort.by("name").ascending();
+            Pageable pageable = PageRequest.of(page, size, expectedSort);
+            List<Phone> phones = buildPhonesFromTo(1, 4);
+            Page<Phone> expected = new PageImpl<>(phones, pageable, 3);
+
+            // mockito
+            Mockito.when(phoneRepository.findAll(any(Specification.class), any(Pageable.class)))
+                    .thenReturn(expected);
+
+            // when
+            Page<Phone> result = phoneService.getPhones(page, size, filterDto);
+
+            // then
+            assertThat(result).isNotNull();
+            assertThat(result.getContent()).hasSize(3);
+            Mockito.verify(phoneRepository).findAll(any(Specification.class), any(Pageable.class));
+        }
+
+        @Test
+        void whenFilterByPriceRange_thenPassSpecificationToRepository() {
+            // given
+            int page = 0;
+            int size = 10;
+            PhoneFilterDto filterDto = buildPhoneFilterDtoWithFilterByPriceRange();
+            Sort expectedSort = Sort.by("name").ascending();
+            Pageable pageable = PageRequest.of(page, size, expectedSort);
+            List<Phone> phones = buildPhonesFromTo(1, 6);
+            Page<Phone> expected = new PageImpl<>(phones, pageable, 5);
+
+            // mockito
+            Mockito.when(phoneRepository.findAll(any(Specification.class), any(Pageable.class)))
+                    .thenReturn(expected);
+
+            // when
+            Page<Phone> result = phoneService.getPhones(page, size, filterDto);
+
+            // then
+            assertThat(result).isNotNull();
+            assertThat(result.getContent()).hasSize(5);
+            Mockito.verify(phoneRepository).findAll(any(Specification.class), any(Pageable.class));
+        }
+
+        @Test
+        void whenFilterByMinPriceOnly_thenPassSpecificationToRepository() {
+            // given
+            int page = 0;
+            int size = 10;
+            PhoneFilterDto filterDto = buildPhoneFilterDtoWithFilterByMinPrice();
+            Sort expectedSort = Sort.by("name").ascending();
+            Pageable pageable = PageRequest.of(page, size, expectedSort);
+            List<Phone> phones = buildPhonesFromTo(1, 4);
+            Page<Phone> expected = new PageImpl<>(phones, pageable, 3);
+
+            // mockito
+            Mockito.when(phoneRepository.findAll(any(Specification.class), any(Pageable.class)))
+                    .thenReturn(expected);
+
+            // when
+            Page<Phone> result = phoneService.getPhones(page, size, filterDto);
+
+            // then
+            assertThat(result).isNotNull();
+            Mockito.verify(phoneRepository).findAll(any(Specification.class), any(Pageable.class));
+        }
+
+        @Test
+        void whenFilterByMaxPriceOnly_thenPassSpecificationToRepository() {
+            // given
+            int page = 0;
+            int size = 10;
+            PhoneFilterDto filterDto = buildPhoneFilterDtoWithFilterByMaxPrice();
+            Sort expectedSort = Sort.by("name").ascending();
+            Pageable pageable = PageRequest.of(page, size, expectedSort);
+            List<Phone> phones = buildPhonesFromTo(1, 8);
+            Page<Phone> expected = new PageImpl<>(phones, pageable, 7);
+
+            // mockito
+            Mockito.when(phoneRepository.findAll(any(Specification.class), any(Pageable.class)))
+                    .thenReturn(expected);
+
+            // when
+            Page<Phone> result = phoneService.getPhones(page, size, filterDto);
+
+            // then
+            assertThat(result).isNotNull();
+            Mockito.verify(phoneRepository).findAll(any(Specification.class), any(Pageable.class));
+        }
+
+        @Test
+        void whenFilterByBrandAndPriceRangeWithSort_thenApplyAllFilters() {
+            // given
+            int page = 0;
+            int size = 10;
+            PhoneFilterDto filterDto = buildPhoneFilterDtoWithSortAndFilterByPriceRangAndByBrand();
+            Sort expectedSort = Sort.by("price").descending();
+            Pageable pageable = PageRequest.of(page, size, expectedSort);
+            List<Phone> phones = buildPhonesFromTo(1, 4);
+            Page<Phone> expected = new PageImpl<>(phones, pageable, 3);
+
+            // mockito
+            Mockito.when(phoneRepository.findAll(any(Specification.class), any(Pageable.class)))
+                    .thenReturn(expected);
+
+            // when
+            Page<Phone> result = phoneService.getPhones(page, size, filterDto);
+
+            // then
+            assertThat(result).isNotNull();
+            assertThat(result.getContent()).hasSize(3);
+
+            ArgumentCaptor<Pageable> pageableCaptor = ArgumentCaptor.forClass(Pageable.class);
+            Mockito.verify(phoneRepository).findAll(any(Specification.class), pageableCaptor.capture());
+            Pageable capturedPageable = pageableCaptor.getValue();
+
+            assertThat(capturedPageable.getSort()).isEqualTo(expectedSort);
             assertThat(capturedPageable.getPageNumber()).isEqualTo(page);
             assertThat(capturedPageable.getPageSize()).isEqualTo(size);
         }
@@ -173,12 +483,14 @@ class PhoneServiceImplTest {
     class GetByIdTest {
 
         @Test
-        void whenPhoneExists_thenReturnOptionalWithPhone() {
+        void whenPhoneExistsWithImages_thenReturnOptionalWithPhone() {
             // given
             Phone phone = buildPhone(PHONE_ID);
+            phone.setImages(new ArrayList<>(List.of(buildImage())));
+            List<Image> expectedImages = List.copyOf(phone.getImages());
 
             // mockito
-            Mockito.when(phoneRepository.findById(PHONE_ID))
+            Mockito.when(phoneRepository.findByIdWithImages(PHONE_ID))
                     .thenReturn(Optional.of(phone));
 
             // when
@@ -187,20 +499,42 @@ class PhoneServiceImplTest {
             // then
             assertThat(result).isPresent();
             assertThat(result.get()).isEqualTo(phone);
-            Mockito.verify(phoneRepository).findById(PHONE_ID);
+            assertThat(result.get().getImages()).isNotNull().hasSize(expectedImages.size())
+                    .containsExactlyElementsOf(expectedImages);
+            Mockito.verify(phoneRepository).findByIdWithImages(PHONE_ID);
+        }
+
+        @Test
+        void whenPhoneExistsWithNoImages_thenReturnPhoneWithEmptyImageList() {
+            // given
+            Phone phone = buildPhone(PHONE_ID);
+            phone.setImages(new ArrayList<>());
+
+            // mockito
+            Mockito.when(phoneRepository.findByIdWithImages(PHONE_ID))
+                    .thenReturn(Optional.of(phone));
+
+            // when
+            Optional<Phone> result = phoneService.getById(PHONE_ID);
+
+            // then
+            assertThat(result).isPresent();
+            assertThat(result.get()).isEqualTo(phone);
+            assertThat(result.get().getImages()).isNotNull().isEmpty();
+            Mockito.verify(phoneRepository).findByIdWithImages(PHONE_ID);
         }
 
         @Test
         void whenPhoneDoesNotExist_thenReturnEmptyOptional() {
             // mockito
-            Mockito.when(phoneRepository.findById(PHONE_ID)).thenReturn(Optional.empty());
+            Mockito.when(phoneRepository.findByIdWithImages(PHONE_ID)).thenReturn(Optional.empty());
 
             // when
             Optional<Phone> result = phoneService.getById(PHONE_ID);
 
             // then
             assertThat(result).isNotPresent();
-            Mockito.verify(phoneRepository).findById(PHONE_ID);
+            Mockito.verify(phoneRepository).findByIdWithImages(PHONE_ID);
         }
 
         @Test
@@ -643,6 +977,96 @@ class PhoneServiceImplTest {
                     NEW_PHONE_FRONT_CAMERA,
                     NEW_PHONE_MAIN_CAMERA,
                     NEW_PHONE_BATTERY_CAPACITY
+            );
+        }
+
+        static PhoneFilterDto buildDefaultPhoneFilterDto() {
+            return new PhoneFilterDto(
+                    null,
+                    null,
+                    null,
+                    null
+            );
+        }
+
+        static PhoneFilterDto buildPhoneFilterDtoWithSortByNameDesc() {
+            return new PhoneFilterDto(
+                    null,
+                    null,
+                    null,
+                    "name_desc"
+            );
+        }
+
+        static PhoneFilterDto buildPhoneFilterDtoWithSortByPriceAsc() {
+            return new PhoneFilterDto(
+                    null,
+                    null,
+                    null,
+                    "price_asc"
+            );
+        }
+
+        static PhoneFilterDto buildPhoneFilterDtoWithSortByPriceDesc() {
+            return new PhoneFilterDto(
+                    null,
+                    null,
+                    null,
+                    "price_desc"
+            );
+        }
+
+        static PhoneFilterDto buildPhoneFilterDtoWithInvalidSort() {
+            return new PhoneFilterDto(
+                    null,
+                    null,
+                    null,
+                    "invalid_sort"
+            );
+        }
+
+        static PhoneFilterDto buildPhoneFilterDtoWithFilterByBrand() {
+            return new PhoneFilterDto(
+                    "Apple",
+                    null,
+                    null,
+                    "name_asc"
+            );
+        }
+
+        static PhoneFilterDto buildPhoneFilterDtoWithFilterByPriceRange() {
+            return new PhoneFilterDto(
+                    null,
+                    new BigDecimal("10000.0"),
+                    new BigDecimal("30000.0"),
+                    "name_asc"
+            );
+        }
+
+        static PhoneFilterDto buildPhoneFilterDtoWithFilterByMinPrice() {
+            return new PhoneFilterDto(
+                    null,
+                    new BigDecimal("10000.0"),
+                    null,
+                    "name_asc"
+            );
+        }
+
+        static PhoneFilterDto buildPhoneFilterDtoWithFilterByMaxPrice() {
+            return new PhoneFilterDto(
+                    null,
+                    null,
+                    new BigDecimal("30000.0"),
+                    "name_asc"
+            );
+        }
+
+        static PhoneFilterDto buildPhoneFilterDtoWithSortAndFilterByPriceRangAndByBrand() {
+            return new PhoneFilterDto(
+                    "Apple",
+                    new BigDecimal("10000.0"),
+                    new BigDecimal("30000.0"),
+                    "price_desc"
             );
         }
 
