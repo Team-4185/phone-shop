@@ -48,11 +48,15 @@ public class PhoneServiceImpl implements PhoneService {
     @Transactional(readOnly = true)
     @Override
     public Page<Phone> getPhones(int page, int size, PhoneFilterDto filterDto) {
-        log.debug("Get phones page={}, size={}, filters={}", page, size, filterDto);
-
         Pageable pageable = PageRequest.of(page, size, buildSort(filterDto.sort()));
         Specification<Phone> spec = PhoneSpecification.build(filterDto);
-        return phoneRepository.findAll(spec, pageable);
+
+        Page<Phone> phonePage = phoneRepository.findAll(spec, pageable); // SQL з LIMIT/OFFSET
+
+        List<Phone> phonesWithImages = phoneRepository
+                .findAllWithImages(phonePage.getContent());         // окремий JOIN FETCH
+
+        return new PageImpl<>(phonesWithImages, pageable, phonePage.getTotalElements());
     }
 
     private Sort buildSort(String sortParam) {
