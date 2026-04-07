@@ -28,4 +28,7 @@ public interface PhoneRepository extends JpaRepository<Phone, Long>, JpaSpecific
     @Query("SELECT p FROM Phone p LEFT JOIN FETCH p.images WHERE p.id = :id")
     Optional<Phone> findByIdWithImages(@Param("id") Long id);
 
+    @Query("SELECT p FROM Phone p LEFT JOIN FETCH p.images WHERE p IN :phones")
+    List<Phone> findAllWithImages(@Param("phones") List<Phone> phones);
+
 }
