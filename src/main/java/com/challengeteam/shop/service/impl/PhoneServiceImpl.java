@@ -23,8 +23,10 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -51,12 +53,21 @@ public class PhoneServiceImpl implements PhoneService {
         Pageable pageable = PageRequest.of(page, size, buildSort(filterDto.sort()));
         Specification<Phone> spec = PhoneSpecification.build(filterDto);
 
-        Page<Phone> phonePage = phoneRepository.findAll(spec, pageable); // SQL з LIMIT/OFFSET
+        Page<Phone> phonePage = phoneRepository.findAll(spec, pageable);
 
-        List<Phone> phonesWithImages = phoneRepository
-                .findAllWithImages(phonePage.getContent());         // окремий JOIN FETCH
+        List<Phone> orderedIds = phonePage.getContent();
 
-        return new PageImpl<>(phonesWithImages, pageable, phonePage.getTotalElements());
+        List<Phone> phonesWithImages = phoneRepository.findAllWithImages(orderedIds);
+
+        Map<Long, Phone> phonesById = phonesWithImages.stream()
+                .collect(Collectors.toMap(Phone::getId, p -> p));
+
+        List<Phone> sorted = orderedIds.stream()
+                .map(p -> phonesById.get(p.getId()))
+                .filter(Objects::nonNull)
+                .toList();
+
+        return new PageImpl<>(sorted, pageable, phonePage.getTotalElements());
     }
 
     private Sort buildSort(String sortParam) {
