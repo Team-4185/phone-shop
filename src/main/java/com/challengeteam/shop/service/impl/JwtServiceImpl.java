@@ -9,19 +9,21 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.security.Keys;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import javax.crypto.SecretKey;
 import java.security.KeyFactory;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
+import java.time.Duration;
 import java.time.Instant;
-import java.time.temporal.ChronoUnit;
 import java.util.Base64;
 import java.util.Date;
 
@@ -33,6 +35,7 @@ public class JwtServiceImpl implements JwtService {
     private static final String TOKEN_TYPE_CLAIM = "tokenType";
     private static final String ACCESS_TOKEN_TYPE = "ACCESS";
     private static final String REFRESH_TOKEN_TYPE = "REFRESH";
+    private static final String RESET_TOKEN_TYPE = "RESET";
 
     private final JwtProperties jwtProperties;
 
@@ -40,10 +43,13 @@ public class JwtServiceImpl implements JwtService {
 
     private PublicKey publicKey;
 
+    private SecretKey resetSecretKey;
+
     @PostConstruct
     public void init() {
         this.privateKey = loadPrivateKey(jwtProperties.getPrivateKey());
         this.publicKey = loadPublicKey(jwtProperties.getPublicKey());
+        this.resetSecretKey = Keys.hmacShaKeyFor(jwtProperties.getResetSecret().getBytes());
     }
 
     @SneakyThrows
@@ -71,33 +77,41 @@ public class JwtServiceImpl implements JwtService {
                 .add(TOKEN_TYPE_CLAIM, ACCESS_TOKEN_TYPE)
                 .build();
 
-        Instant expiration = Instant.now().plus(jwtProperties.getAccessTokenExpiration(), ChronoUnit.MINUTES);
+        Instant expiration = Instant.now().plus(jwtProperties.getAccessTokenExpiration());
         return createToken(claims, expiration);
     }
 
     @Override
-    public String createRefreshToken(User user) {
+    public String createRefreshToken(User user, boolean rememberMe) {
         Claims claims = Jwts.claims()
                 .subject(user.getEmail())
                 .add("userId", user.getId())
                 .add("role", user.getRole().getName())
+                .add("rememberMe", rememberMe)
                 .add(TOKEN_TYPE_CLAIM, REFRESH_TOKEN_TYPE)
                 .build();
 
-        Instant expiration = Instant.now().plus(jwtProperties.getRefreshTokenExpiration(), ChronoUnit.HOURS);
-        return createToken(claims, expiration);
+        Duration expiration = rememberMe
+                ? jwtProperties.getRememberMeRefreshTokenExpiration()
+                : jwtProperties.getRefreshTokenExpiration();
+
+        Instant expirationInstant = Instant.now().plus(expiration);
+        return createToken(claims, expirationInstant);
     }
 
     @Override
     public JwtResponseDto refreshTokens(String refreshToken, User user) {
+        boolean rememberMe = getClaims(refreshToken).get("rememberMe", Boolean.class);
+
         String newAccessToken = createAccessToken(user);
-        String newRefreshToken = createRefreshToken(user);
+        String newRefreshToken = createRefreshToken(user, rememberMe);
 
         return new JwtResponseDto(
                 user.getId(),
                 user.getEmail(),
                 newAccessToken,
-                newRefreshToken
+                newRefreshToken,
+                rememberMe
         );
     }
 
@@ -131,6 +145,36 @@ public class JwtServiceImpl implements JwtService {
         return getClaims(token).getSubject();
     }
 
+    @Override
+    public String createResetToken(User user) {
+        Claims claims = Jwts.claims()
+                .subject(user.getEmail())
+                .add(TOKEN_TYPE_CLAIM, RESET_TOKEN_TYPE)
+                .build();
+        Instant expiration = Instant.now().plus(jwtProperties.getResetTokenExpiration());
+        return Jwts.builder()
+                .claims(claims)
+                .expiration(Date.from(expiration))
+                .signWith(resetSecretKey)
+                .compact();
+    }
+
+    @Override
+    public String getEmailFromResetToken(String token) {
+        try {
+            Claims claims = Jwts.parser()
+                    .verifyWith(resetSecretKey)
+                    .build()
+                    .parseSignedClaims(token)
+                    .getPayload();
+            return claims.getSubject();
+        } catch (ExpiredJwtException e) {
+            throw new InvalidTokenException("Token is expired");
+        } catch (JwtException | IllegalArgumentException e) {
+            throw new InvalidTokenException("Token is invalid");
+        }
+    }
+
     private Claims getClaims(String token) {
         try {
             return Jwts.parser()
@@ -145,10 +189,10 @@ public class JwtServiceImpl implements JwtService {
         }
     }
 
-    private String createToken(Claims claims, Instant expiration) {
+    private String createToken(Claims claims, Instant expirationInstant) {
         return Jwts.builder()
                 .claims(claims)
-                .expiration(Date.from(expiration))
+                .expiration(Date.from(expirationInstant))
                 .signWith(privateKey)
                 .compact();
     }

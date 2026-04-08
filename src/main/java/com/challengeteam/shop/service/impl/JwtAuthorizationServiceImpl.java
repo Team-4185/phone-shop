@@ -2,8 +2,8 @@ package com.challengeteam.shop.service.impl;
 
 import com.challengeteam.shop.dto.jwt.JwtResponseDto;
 import com.challengeteam.shop.dto.user.CreateUserDto;
-import com.challengeteam.shop.dto.user.UserLoginRequestDto;
-import com.challengeteam.shop.dto.user.UserRegisterRequestDto;
+import com.challengeteam.shop.dto.auth.UserLoginRequestDto;
+import com.challengeteam.shop.dto.auth.UserRegisterRequestDto;
 import com.challengeteam.shop.entity.user.User;
 import com.challengeteam.shop.exceptionHandling.exception.*;
 import com.challengeteam.shop.service.JwtAuthorizationService;
@@ -45,7 +45,7 @@ public class JwtAuthorizationServiceImpl implements JwtAuthorizationService {
                 .orElseThrow(() -> new CriticalSystemException("Not found user immediately after creating. User id: " + id));
 
         log.debug("Created user with email: {}", registerRequest.email());
-        return createJwtResponse(user);
+        return createJwtResponse(user, false);
     }
 
     @Override
@@ -60,7 +60,7 @@ public class JwtAuthorizationServiceImpl implements JwtAuthorizationService {
                 .orElseThrow(() -> new CriticalSystemException("User not found after success authorization. User email: " + email));
 
         log.debug("Login user with email {}", email);
-        return createJwtResponse(user);
+        return createJwtResponse(user, loginRequest.rememberMe());
     }
 
     @Override
@@ -75,7 +75,7 @@ public class JwtAuthorizationServiceImpl implements JwtAuthorizationService {
             String email = jwtService.getEmailFromToken(refreshToken);
             User user = userService
                     .getByEmail(email)
-                    .orElseThrow(() -> new ResourceNotFoundException("Not found user with email: "));
+                    .orElseThrow(() -> new ResourceNotFoundException("Not found user with email: " + email));
 
             log.debug("Called refreshing token for user with email: {}", email);
             return jwtService.refreshTokens(refreshToken, user);
@@ -84,15 +84,16 @@ public class JwtAuthorizationServiceImpl implements JwtAuthorizationService {
         }
     }
 
-    private JwtResponseDto createJwtResponse(User user) {
+    private JwtResponseDto createJwtResponse(User user, boolean rememberMe) {
         String accessToken = jwtService.createAccessToken(user);
-        String refreshToken = jwtService.createRefreshToken(user);
+        String refreshToken = jwtService.createRefreshToken(user, rememberMe);
 
         return new JwtResponseDto(
                 user.getId(),
                 user.getEmail(),
                 accessToken,
-                refreshToken
+                refreshToken,
+                rememberMe
         );
     }
 

@@ -37,19 +37,23 @@ public record PhoneCreateRequestDto(
         Integer coresNumber,
 
         @NotBlank(message = "Screen size must not be empty")
-        @Pattern(regexp = "^\\d+(\\.\\d+)?\"$", message = "Screen size must be in format: number followed by \" (e.g., 6.7\")")
+        @Pattern(regexp = "^\\d+(\\.\\d+)?\"$", message = "Format: 6.7\"")
+        @Size(max = 5, message = "Screen size must be at most {max} characters long")
         String screenSize,
 
         @NotBlank(message = "Front camera must not be empty")
-        @Pattern(regexp = "^\\d+\\s*MP$", message = "Front camera must be in format: number followed by MP (e.g., 12 MP)")
+        @Pattern(regexp = "^\\d+ MP$", message = "Format: 12 MP")
+        @Size(max = 10, message = "Front camera must be at most {max} characters long")
         String frontCamera,
 
         @NotBlank(message = "Main camera must not be empty")
-        @Pattern(regexp = "^\\d+(-\\d+)*\\s*(-\\d+\\s*)?MP$", message = "Main camera must be in format: numbers separated by hyphens followed by MP (e.g., 48-12-12 MP)")
+        @Pattern(regexp = "^\\d+(-\\d+)* MP$", message = "Format: 48-12-12 MP")
+        @Size(max = 20, message = "Main camera must be at most {max} characters long")
         String mainCamera,
 
         @NotBlank(message = "Battery capacity must not be empty")
-        @Pattern(regexp = "^\\d+\\s*mAh$", message = "Battery capacity must be in format: number followed by mAh (e.g., 4323 mAh)")
+        @Pattern(regexp = "^\\d+ mAh$", message = "Format: 4323 mAh")
+        @Size(max = 10, message = "Battery capacity must be at most {max} characters long")
         String batteryCapacity
 ) {
 }

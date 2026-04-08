@@ -62,6 +62,8 @@ class PhoneServiceImplTest {
             // mockito
             Mockito.when(phoneRepository.findAll(any(Specification.class), any(Pageable.class)))
                     .thenReturn(expected);
+            Mockito.when(phoneRepository.findAllWithImages(expected.getContent()))
+                    .thenReturn(expected.getContent());
 
             // when
             Page<Phone> result = phoneService.getPhones(page, size, filterDto);
@@ -78,6 +80,7 @@ class PhoneServiceImplTest {
             ArgumentCaptor<Specification<Phone>> specCaptor = ArgumentCaptor.forClass(Specification.class);
             ArgumentCaptor<Pageable> pageableCaptor = ArgumentCaptor.forClass(Pageable.class);
             Mockito.verify(phoneRepository).findAll(specCaptor.capture(), pageableCaptor.capture());
+            Mockito.verify(phoneRepository).findAllWithImages(expected.getContent());
 
             assertThat(specCaptor.getValue()).isNotNull();
             assertThat(pageableCaptor.getValue()).isNotNull();
@@ -96,6 +99,8 @@ class PhoneServiceImplTest {
             // mockito
             Mockito.when(phoneRepository.findAll(any(Specification.class), any(Pageable.class)))
                     .thenReturn(expected);
+            Mockito.when(phoneRepository.findAllWithImages(List.of()))
+                    .thenReturn(List.of());
 
             // when
             Page<Phone> result = phoneService.getPhones(page, size, filterDto);
@@ -111,6 +116,7 @@ class PhoneServiceImplTest {
             ArgumentCaptor<Specification<Phone>> specCaptor = ArgumentCaptor.forClass(Specification.class);
             ArgumentCaptor<Pageable> pageableCaptor = ArgumentCaptor.forClass(Pageable.class);
             Mockito.verify(phoneRepository).findAll(specCaptor.capture(), pageableCaptor.capture());
+            Mockito.verify(phoneRepository).findAllWithImages(expected.getContent());
 
             assertThat(specCaptor.getValue()).isNotNull();
             assertThat(pageableCaptor.getValue()).isNotNull();
@@ -130,6 +136,8 @@ class PhoneServiceImplTest {
             // mockito
             Mockito.when(phoneRepository.findAll(any(Specification.class), any(Pageable.class)))
                     .thenReturn(expected);
+            Mockito.when(phoneRepository.findAllWithImages(expected.getContent()))
+                    .thenReturn(expected.getContent());
 
             // when
             Page<Phone> result = phoneService.getPhones(page, size, filterDto);
@@ -144,6 +152,7 @@ class PhoneServiceImplTest {
             ArgumentCaptor<Specification<Phone>> specCaptor = ArgumentCaptor.forClass(Specification.class);
             ArgumentCaptor<Pageable> pageableCaptor = ArgumentCaptor.forClass(Pageable.class);
             Mockito.verify(phoneRepository).findAll(specCaptor.capture(), pageableCaptor.capture());
+            Mockito.verify(phoneRepository).findAllWithImages(expected.getContent());
 
             assertThat(specCaptor.getValue()).isNotNull();
             assertThat(pageableCaptor.getValue()).isNotNull();
@@ -163,6 +172,8 @@ class PhoneServiceImplTest {
             // mockito
             Mockito.when(phoneRepository.findAll(any(Specification.class), any(Pageable.class)))
                     .thenReturn(expected);
+            Mockito.when(phoneRepository.findAllWithImages(expected.getContent()))
+                    .thenReturn(expected.getContent());
 
             // when
             Page<Phone> result = phoneService.getPhones(page, size, filterDto);
@@ -177,6 +188,7 @@ class PhoneServiceImplTest {
             ArgumentCaptor<Specification<Phone>> specCaptor = ArgumentCaptor.forClass(Specification.class);
             ArgumentCaptor<Pageable> pageableCaptor = ArgumentCaptor.forClass(Pageable.class);
             Mockito.verify(phoneRepository).findAll(specCaptor.capture(), pageableCaptor.capture());
+            Mockito.verify(phoneRepository).findAllWithImages(expected.getContent());
 
             assertThat(specCaptor.getValue()).isNotNull();
             assertThat(pageableCaptor.getValue()).isNotNull();
@@ -196,6 +208,8 @@ class PhoneServiceImplTest {
             // mockito
             Mockito.when(phoneRepository.findAll(any(Specification.class), any(Pageable.class)))
                     .thenReturn(expected);
+            Mockito.when(phoneRepository.findAllWithImages(expected.getContent()))
+                    .thenReturn(expected.getContent());
 
             // when
             phoneService.getPhones(page, size, filterDto);
@@ -204,6 +218,7 @@ class PhoneServiceImplTest {
             ArgumentCaptor<Specification<Phone>> specCaptor = ArgumentCaptor.forClass(Specification.class);
             ArgumentCaptor<Pageable> pageableCaptor = ArgumentCaptor.forClass(Pageable.class);
             Mockito.verify(phoneRepository).findAll(specCaptor.capture(), pageableCaptor.capture());
+            Mockito.verify(phoneRepository).findAllWithImages(expected.getContent());
 
             Pageable capturedPageable = pageableCaptor.getValue();
             assertThat(capturedPageable.getPageNumber()).isEqualTo(page);
@@ -224,6 +239,8 @@ class PhoneServiceImplTest {
             // mockito
             Mockito.when(phoneRepository.findAll(any(Specification.class), any(Pageable.class)))
                     .thenReturn(expected);
+            Mockito.when(phoneRepository.findAllWithImages(expected.getContent()))
+                    .thenReturn(expected.getContent());
 
             // when
             Page<Phone> result = phoneService.getPhones(page, size, filterDto);
@@ -234,6 +251,7 @@ class PhoneServiceImplTest {
 
             ArgumentCaptor<Pageable> pageableCaptor = ArgumentCaptor.forClass(Pageable.class);
             Mockito.verify(phoneRepository).findAll(any(Specification.class), pageableCaptor.capture());
+            Mockito.verify(phoneRepository).findAllWithImages(expected.getContent());
             Pageable capturedPageable = pageableCaptor.getValue();
 
             assertThat(capturedPageable.getSort()).isEqualTo(expectedSort);
@@ -253,6 +271,8 @@ class PhoneServiceImplTest {
             // mockito
             Mockito.when(phoneRepository.findAll(any(Specification.class), any(Pageable.class)))
                     .thenReturn(expected);
+            Mockito.when(phoneRepository.findAllWithImages(expected.getContent()))
+                    .thenReturn(expected.getContent());
 
             // when
             Page<Phone> result = phoneService.getPhones(page, size, filterDto);
@@ -262,6 +282,7 @@ class PhoneServiceImplTest {
 
             ArgumentCaptor<Pageable> pageableCaptor = ArgumentCaptor.forClass(Pageable.class);
             Mockito.verify(phoneRepository).findAll(any(Specification.class), pageableCaptor.capture());
+            Mockito.verify(phoneRepository).findAllWithImages(expected.getContent());
             Pageable capturedPageable = pageableCaptor.getValue();
 
             assertThat(capturedPageable.getSort()).isEqualTo(expectedSort);
@@ -281,6 +302,8 @@ class PhoneServiceImplTest {
             // mockito
             Mockito.when(phoneRepository.findAll(any(Specification.class), any(Pageable.class)))
                     .thenReturn(expected);
+            Mockito.when(phoneRepository.findAllWithImages(expected.getContent()))
+                    .thenReturn(expected.getContent());
 
             // when
             Page<Phone> result = phoneService.getPhones(page, size, filterDto);
@@ -290,6 +313,7 @@ class PhoneServiceImplTest {
 
             ArgumentCaptor<Pageable> pageableCaptor = ArgumentCaptor.forClass(Pageable.class);
             Mockito.verify(phoneRepository).findAll(any(Specification.class), pageableCaptor.capture());
+            Mockito.verify(phoneRepository).findAllWithImages(expected.getContent());
             Pageable capturedPageable = pageableCaptor.getValue();
 
             assertThat(capturedPageable.getSort()).isEqualTo(expectedSort);
@@ -309,6 +333,8 @@ class PhoneServiceImplTest {
             // mockito
             Mockito.when(phoneRepository.findAll(any(Specification.class), any(Pageable.class)))
                     .thenReturn(expected);
+            Mockito.when(phoneRepository.findAllWithImages(expected.getContent()))
+                    .thenReturn(expected.getContent());
 
             // when
             Page<Phone> result = phoneService.getPhones(page, size, filterDto);
@@ -318,6 +344,7 @@ class PhoneServiceImplTest {
 
             ArgumentCaptor<Pageable> pageableCaptor = ArgumentCaptor.forClass(Pageable.class);
             Mockito.verify(phoneRepository).findAll(any(Specification.class), pageableCaptor.capture());
+            Mockito.verify(phoneRepository).findAllWithImages(expected.getContent());
             Pageable capturedPageable = pageableCaptor.getValue();
 
             assertThat(capturedPageable.getSort()).isEqualTo(expectedSort);
@@ -337,6 +364,8 @@ class PhoneServiceImplTest {
             // mockito
             Mockito.when(phoneRepository.findAll(any(Specification.class), any(Pageable.class)))
                     .thenReturn(expected);
+            Mockito.when(phoneRepository.findAllWithImages(expected.getContent()))
+                    .thenReturn(expected.getContent());
 
             // when
             Page<Phone> result = phoneService.getPhones(page, size, filterDto);
@@ -346,6 +375,7 @@ class PhoneServiceImplTest {
 
             ArgumentCaptor<Pageable> pageableCaptor = ArgumentCaptor.forClass(Pageable.class);
             Mockito.verify(phoneRepository).findAll(any(Specification.class), pageableCaptor.capture());
+            Mockito.verify(phoneRepository).findAllWithImages(expected.getContent());
             Pageable capturedPageable = pageableCaptor.getValue();
 
             assertThat(capturedPageable.getSort()).isEqualTo(expectedSort);
@@ -365,6 +395,8 @@ class PhoneServiceImplTest {
             // mockito
             Mockito.when(phoneRepository.findAll(any(Specification.class), any(Pageable.class)))
                     .thenReturn(expected);
+            Mockito.when(phoneRepository.findAllWithImages(expected.getContent()))
+                    .thenReturn(expected.getContent());
 
             // when
             Page<Phone> result = phoneService.getPhones(page, size, filterDto);
@@ -373,6 +405,7 @@ class PhoneServiceImplTest {
             assertThat(result).isNotNull();
             assertThat(result.getContent()).hasSize(3);
             Mockito.verify(phoneRepository).findAll(any(Specification.class), any(Pageable.class));
+            Mockito.verify(phoneRepository).findAllWithImages(expected.getContent());
         }
 
         @Test
@@ -389,6 +422,8 @@ class PhoneServiceImplTest {
             // mockito
             Mockito.when(phoneRepository.findAll(any(Specification.class), any(Pageable.class)))
                     .thenReturn(expected);
+            Mockito.when(phoneRepository.findAllWithImages(expected.getContent()))
+                    .thenReturn(expected.getContent());
 
             // when
             Page<Phone> result = phoneService.getPhones(page, size, filterDto);
@@ -397,6 +432,7 @@ class PhoneServiceImplTest {
             assertThat(result).isNotNull();
             assertThat(result.getContent()).hasSize(5);
             Mockito.verify(phoneRepository).findAll(any(Specification.class), any(Pageable.class));
+            Mockito.verify(phoneRepository).findAllWithImages(expected.getContent());
         }
 
         @Test
@@ -413,6 +449,8 @@ class PhoneServiceImplTest {
             // mockito
             Mockito.when(phoneRepository.findAll(any(Specification.class), any(Pageable.class)))
                     .thenReturn(expected);
+            Mockito.when(phoneRepository.findAllWithImages(expected.getContent()))
+                    .thenReturn(expected.getContent());
 
             // when
             Page<Phone> result = phoneService.getPhones(page, size, filterDto);
@@ -420,6 +458,7 @@ class PhoneServiceImplTest {
             // then
             assertThat(result).isNotNull();
             Mockito.verify(phoneRepository).findAll(any(Specification.class), any(Pageable.class));
+            Mockito.verify(phoneRepository).findAllWithImages(expected.getContent());
         }
 
         @Test
@@ -436,6 +475,8 @@ class PhoneServiceImplTest {
             // mockito
             Mockito.when(phoneRepository.findAll(any(Specification.class), any(Pageable.class)))
                     .thenReturn(expected);
+            Mockito.when(phoneRepository.findAllWithImages(expected.getContent()))
+                    .thenReturn(expected.getContent());
 
             // when
             Page<Phone> result = phoneService.getPhones(page, size, filterDto);
@@ -443,6 +484,7 @@ class PhoneServiceImplTest {
             // then
             assertThat(result).isNotNull();
             Mockito.verify(phoneRepository).findAll(any(Specification.class), any(Pageable.class));
+            Mockito.verify(phoneRepository).findAllWithImages(expected.getContent());
         }
 
         @Test
@@ -459,6 +501,8 @@ class PhoneServiceImplTest {
             // mockito
             Mockito.when(phoneRepository.findAll(any(Specification.class), any(Pageable.class)))
                     .thenReturn(expected);
+            Mockito.when(phoneRepository.findAllWithImages(expected.getContent()))
+                    .thenReturn(expected.getContent());
 
             // when
             Page<Phone> result = phoneService.getPhones(page, size, filterDto);
@@ -469,6 +513,7 @@ class PhoneServiceImplTest {
 
             ArgumentCaptor<Pageable> pageableCaptor = ArgumentCaptor.forClass(Pageable.class);
             Mockito.verify(phoneRepository).findAll(any(Specification.class), pageableCaptor.capture());
+            Mockito.verify(phoneRepository).findAllWithImages(expected.getContent());
             Pageable capturedPageable = pageableCaptor.getValue();
 
             assertThat(capturedPageable.getSort()).isEqualTo(expectedSort);
@@ -482,12 +527,14 @@ class PhoneServiceImplTest {
     class GetByIdTest {
 
         @Test
-        void whenPhoneExists_thenReturnOptionalWithPhone() {
+        void whenPhoneExistsWithImages_thenReturnOptionalWithPhone() {
             // given
             Phone phone = buildPhone(PHONE_ID);
+            phone.setImages(new ArrayList<>(List.of(buildImage())));
+            List<Image> expectedImages = List.copyOf(phone.getImages());
 
             // mockito
-            Mockito.when(phoneRepository.findById(PHONE_ID))
+            Mockito.when(phoneRepository.findByIdWithImages(PHONE_ID))
                     .thenReturn(Optional.of(phone));
 
             // when
@@ -496,20 +543,42 @@ class PhoneServiceImplTest {
             // then
             assertThat(result).isPresent();
             assertThat(result.get()).isEqualTo(phone);
-            Mockito.verify(phoneRepository).findById(PHONE_ID);
+            assertThat(result.get().getImages()).isNotNull().hasSize(expectedImages.size())
+                    .containsExactlyElementsOf(expectedImages);
+            Mockito.verify(phoneRepository).findByIdWithImages(PHONE_ID);
+        }
+
+        @Test
+        void whenPhoneExistsWithNoImages_thenReturnPhoneWithEmptyImageList() {
+            // given
+            Phone phone = buildPhone(PHONE_ID);
+            phone.setImages(new ArrayList<>());
+
+            // mockito
+            Mockito.when(phoneRepository.findByIdWithImages(PHONE_ID))
+                    .thenReturn(Optional.of(phone));
+
+            // when
+            Optional<Phone> result = phoneService.getById(PHONE_ID);
+
+            // then
+            assertThat(result).isPresent();
+            assertThat(result.get()).isEqualTo(phone);
+            assertThat(result.get().getImages()).isNotNull().isEmpty();
+            Mockito.verify(phoneRepository).findByIdWithImages(PHONE_ID);
         }
 
         @Test
         void whenPhoneDoesNotExist_thenReturnEmptyOptional() {
             // mockito
-            Mockito.when(phoneRepository.findById(PHONE_ID)).thenReturn(Optional.empty());
+            Mockito.when(phoneRepository.findByIdWithImages(PHONE_ID)).thenReturn(Optional.empty());
 
             // when
             Optional<Phone> result = phoneService.getById(PHONE_ID);
 
             // then
             assertThat(result).isNotPresent();
-            Mockito.verify(phoneRepository).findById(PHONE_ID);
+            Mockito.verify(phoneRepository).findByIdWithImages(PHONE_ID);
         }
 
         @Test
@@ -752,7 +821,7 @@ class PhoneServiceImplTest {
 
             // then
             assertThat(result.size()).isEqualTo(1);
-            assertThat(result.get(0)).isEqualTo(buildImage());
+            assertThat(result.getFirst()).isEqualTo(buildImage());
         }
 
         @Test

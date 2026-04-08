@@ -97,6 +97,7 @@ class PhoneControllerTest {
                     .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                     .andExpect(jsonPath("$.content").isArray())
                     .andExpect(jsonPath("$.content", hasSize(3)))
+                    .andExpect(jsonPath("$.content[*].images").exists())
                     .andExpect(jsonPath("$.totalElements").value(3))
                     .andExpect(jsonPath("$.totalPages").value(1))
                     .andExpect(jsonPath("$.size").value(10))
@@ -113,6 +114,7 @@ class PhoneControllerTest {
                             .header(HttpHeaders.AUTHORIZATION, auth(token)))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.content", hasSize(2)))
+                    .andExpect(jsonPath("$.content[*].images").exists())
                     .andExpect(jsonPath("$.totalElements").value(3))
                     .andExpect(jsonPath("$.totalPages").value(2))
                     .andExpect(jsonPath("$.size").value(2))
@@ -127,6 +129,7 @@ class PhoneControllerTest {
                             .header(HttpHeaders.AUTHORIZATION, auth(token)))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.content", hasSize(1)))
+                    .andExpect(jsonPath("$.content[*].images").exists())
                     .andExpect(jsonPath("$.totalElements").value(3))
                     .andExpect(jsonPath("$.totalPages").value(2))
                     .andExpect(jsonPath("$.size").value(2))
@@ -221,7 +224,8 @@ class PhoneControllerTest {
                     .andExpect(jsonPath("$.content").isArray())
                     .andExpect(jsonPath("$.content", hasSize(1)))
                     .andExpect(jsonPath("$.content[0].brand").value("Apple"))
-                    .andExpect(jsonPath("$.content[0].name").value("iPhone 15"));
+                    .andExpect(jsonPath("$.content[0].name").value("iPhone 15"))
+                    .andExpect(jsonPath("$.content[*].images").exists());
         }
 
         @Test
@@ -232,7 +236,8 @@ class PhoneControllerTest {
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.content").isArray())
                     .andExpect(jsonPath("$.content", hasSize(2)))
-                    .andExpect(jsonPath("$.content[*].price", everyItem(greaterThanOrEqualTo(800.00))));
+                    .andExpect(jsonPath("$.content[*].price", everyItem(greaterThanOrEqualTo(800.00))))
+                    .andExpect(jsonPath("$.content[*].images").exists());
         }
 
         @Test
@@ -243,7 +248,8 @@ class PhoneControllerTest {
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.content").isArray())
                     .andExpect(jsonPath("$.content", hasSize(2)))
-                    .andExpect(jsonPath("$.content[*].price", everyItem(lessThanOrEqualTo(900.00))));
+                    .andExpect(jsonPath("$.content[*].price", everyItem(lessThanOrEqualTo(900.00))))
+                    .andExpect(jsonPath("$.content[*].images").exists());
         }
 
         @Test
@@ -256,7 +262,8 @@ class PhoneControllerTest {
                     .andExpect(jsonPath("$.content").isArray())
                     .andExpect(jsonPath("$.content", hasSize(1)))
                     .andExpect(jsonPath("$.content[0].name").value("Samsung Galaxy S24"))
-                    .andExpect(jsonPath("$.content[0].price").value(899.99));
+                    .andExpect(jsonPath("$.content[0].price").value(899.99))
+                    .andExpect(jsonPath("$.content[*].images").exists());
         }
 
         @Test
@@ -270,7 +277,8 @@ class PhoneControllerTest {
                     .andExpect(jsonPath("$.content").isArray())
                     .andExpect(jsonPath("$.content", hasSize(1)))
                     .andExpect(jsonPath("$.content[0].brand").value("Samsung"))
-                    .andExpect(jsonPath("$.content[0].name").value("Samsung Galaxy S24"));
+                    .andExpect(jsonPath("$.content[0].name").value("Samsung Galaxy S24"))
+                    .andExpect(jsonPath("$.content[*].images").exists());
         }
 
         @Test
@@ -315,7 +323,8 @@ class PhoneControllerTest {
                     .andExpect(jsonPath("$.content", hasSize(3)))
                     .andExpect(jsonPath("$.content[0].name").value("Google Pixel 8"))
                     .andExpect(jsonPath("$.content[1].name").value("iPhone 15"))
-                    .andExpect(jsonPath("$.content[2].name").value("Samsung Galaxy S24"));
+                    .andExpect(jsonPath("$.content[2].name").value("Samsung Galaxy S24"))
+                    .andExpect(jsonPath("$.content[*].images").exists());
         }
 
         @Test
@@ -328,7 +337,8 @@ class PhoneControllerTest {
                     .andExpect(jsonPath("$.content", hasSize(3)))
                     .andExpect(jsonPath("$.content[0].name").value("Samsung Galaxy S24"))
                     .andExpect(jsonPath("$.content[1].name").value("iPhone 15"))
-                    .andExpect(jsonPath("$.content[2].name").value("Google Pixel 8"));
+                    .andExpect(jsonPath("$.content[2].name").value("Google Pixel 8"))
+                    .andExpect(jsonPath("$.content[*].images").exists());
         }
 
         @Test
@@ -344,7 +354,8 @@ class PhoneControllerTest {
                     .andExpect(jsonPath("$.content[1].price").value(899.99))
                     .andExpect(jsonPath("$.content[1].name").value("Samsung Galaxy S24"))
                     .andExpect(jsonPath("$.content[2].price").value(999.99))
-                    .andExpect(jsonPath("$.content[2].name").value("iPhone 15"));
+                    .andExpect(jsonPath("$.content[2].name").value("iPhone 15"))
+                    .andExpect(jsonPath("$.content[*].images").exists());
         }
 
         @Test
@@ -360,7 +371,8 @@ class PhoneControllerTest {
                     .andExpect(jsonPath("$.content[1].price").value(899.99))
                     .andExpect(jsonPath("$.content[1].name").value("Samsung Galaxy S24"))
                     .andExpect(jsonPath("$.content[2].price").value(699.99))
-                    .andExpect(jsonPath("$.content[2].name").value("Google Pixel 8"));
+                    .andExpect(jsonPath("$.content[2].name").value("Google Pixel 8"))
+                    .andExpect(jsonPath("$.content[*].images").exists());
         }
 
         @Test
@@ -372,7 +384,8 @@ class PhoneControllerTest {
                     .andExpect(jsonPath("$.content", hasSize(3)))
                     .andExpect(jsonPath("$.content[0].name").value("Google Pixel 8"))
                     .andExpect(jsonPath("$.content[1].name").value("iPhone 15"))
-                    .andExpect(jsonPath("$.content[2].name").value("Samsung Galaxy S24"));
+                    .andExpect(jsonPath("$.content[2].name").value("Samsung Galaxy S24"))
+                    .andExpect(jsonPath("$.content[*].images").exists());
         }
 
         @Test
@@ -385,7 +398,8 @@ class PhoneControllerTest {
                     .andExpect(jsonPath("$.content", hasSize(3)))
                     .andExpect(jsonPath("$.content[0].name").value("Google Pixel 8"))
                     .andExpect(jsonPath("$.content[1].name").value("iPhone 15"))
-                    .andExpect(jsonPath("$.content[2].name").value("Samsung Galaxy S24"));
+                    .andExpect(jsonPath("$.content[2].name").value("Samsung Galaxy S24"))
+                    .andExpect(jsonPath("$.content[*].images").exists());
         }
 
         @Test
@@ -398,7 +412,8 @@ class PhoneControllerTest {
                     .andExpect(jsonPath("$.content", hasSize(3)))
                     .andExpect(jsonPath("$.content[0].name").value("Google Pixel 8"))
                     .andExpect(jsonPath("$.content[1].name").value("iPhone 15"))
-                    .andExpect(jsonPath("$.content[2].name").value("Samsung Galaxy S24"));
+                    .andExpect(jsonPath("$.content[2].name").value("Samsung Galaxy S24"))
+                    .andExpect(jsonPath("$.content[*].images").exists());
         }
 
         @Test
@@ -438,7 +453,8 @@ class PhoneControllerTest {
                     .andExpect(jsonPath("$.content", hasSize(1)))
                     .andExpect(jsonPath("$.content[0].brand").value("Apple"))
                     .andExpect(jsonPath("$.content[0].name").value("iPhone 15"))
-                    .andExpect(jsonPath("$.content[0].price").value(999.99));
+                    .andExpect(jsonPath("$.content[0].price").value(999.99))
+                    .andExpect(jsonPath("$.content[*].images").exists());
         }
 
         @Test
@@ -454,7 +470,8 @@ class PhoneControllerTest {
                     .andExpect(jsonPath("$.size").value(2))
                     .andExpect(jsonPath("$.page").value(1))
                     .andExpect(jsonPath("$.content[0].name").value("Samsung Galaxy S24"))
-                    .andExpect(jsonPath("$.content[1].name").value("iPhone 15"));
+                    .andExpect(jsonPath("$.content[1].name").value("iPhone 15"))
+                    .andExpect(jsonPath("$.content[*].images").exists());
         }
 
         @Test
@@ -472,7 +489,8 @@ class PhoneControllerTest {
                     .andExpect(jsonPath("$.content[0].name").value("iPhone 15"))
                     .andExpect(jsonPath("$.content[0].price").value(999.99))
                     .andExpect(jsonPath("$.content[1].name").value("Samsung Galaxy S24"))
-                    .andExpect(jsonPath("$.content[1].price").value(899.99));
+                    .andExpect(jsonPath("$.content[1].price").value(899.99))
+                    .andExpect(jsonPath("$.content[*].images").exists());
         }
     }
 
@@ -498,7 +516,23 @@ class PhoneControllerTest {
                     .andExpect(jsonPath("$.screenSize").value(TestPhone.PHONE_1.screenSize))
                     .andExpect(jsonPath("$.frontCamera").value(TestPhone.PHONE_1.frontCamera))
                     .andExpect(jsonPath("$.mainCamera").value(TestPhone.PHONE_1.mainCamera))
-                    .andExpect(jsonPath("$.batteryCapacity").value(TestPhone.PHONE_1.batteryCapacity));
+                    .andExpect(jsonPath("$.batteryCapacity").value(TestPhone.PHONE_1.batteryCapacity))
+                    .andExpect(jsonPath("$.images").isArray())
+                    .andExpect(jsonPath("$.images", hasSize(0)));
+        }
+
+        @Test
+        void whenPhoneHasImages_thenReturnPhoneWithImages() throws Exception {
+            mockMvc.perform(get(URL, phone2)
+                            .header(HttpHeaders.AUTHORIZATION, auth(token)))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.images").isArray())
+                    .andExpect(jsonPath("$.images", hasSize(2)))
+                    .andExpect(jsonPath("$.images[0].id").exists())
+                    .andExpect(jsonPath("$.images[0].name").exists())
+                    .andExpect(jsonPath("$.images[0].url").exists())
+                    .andExpect(jsonPath("$.images[0].size").exists())
+                    .andExpect(jsonPath("$.images[0].mimeType").exists());
         }
 
         @Test
@@ -747,6 +781,11 @@ class PhoneControllerTest {
         }
 
         @Test
+        void whenScreenSizeTooLong_thenStatus400() throws Exception {
+            expect400WithInvalidBody(TestPhone.INVALID_SCREEN_TOO_LONG);
+        }
+
+        @Test
         void whenFrontCameraIsNull_thenStatus400() throws Exception {
             expect400WithInvalidBody(TestPhone.INVALID_FRONT_CAMERA_NULL);
         }
@@ -764,6 +803,16 @@ class PhoneControllerTest {
         @Test
         void whenFrontCameraWithoutUnit_thenStatus400() throws Exception {
             expect400WithInvalidBody(TestPhone.INVALID_FRONT_CAMERA_NO_UNIT);
+        }
+
+        @Test
+        void whenFrontCameraWrongFormat_thenStatus400() throws Exception {
+            expect400WithInvalidBody(TestPhone.INVALID_FRONT_CAMERA_WRONG_FORMAT);
+        }
+
+        @Test
+        void whenFrontCameraTooLong_thenStatus400() throws Exception {
+            expect400WithInvalidBody(TestPhone.INVALID_FRONT_CAMERA_TOO_LONG);
         }
 
         @Test
@@ -792,6 +841,11 @@ class PhoneControllerTest {
         }
 
         @Test
+        void whenMainCameraTooLong_thenStatus400() throws Exception {
+            expect400WithInvalidBody(TestPhone.INVALID_MAIN_CAMERA_TOO_LONG);
+        }
+
+        @Test
         void whenBatteryCapacityIsNull_thenStatus400() throws Exception {
             expect400WithInvalidBody(TestPhone.INVALID_BATTERY_NULL);
         }
@@ -809,6 +863,11 @@ class PhoneControllerTest {
         @Test
         void whenBatteryCapacityWithWrongUnit_thenStatus400() throws Exception {
             expect400WithInvalidBody(TestPhone.INVALID_BATTERY_WRONG_UNIT);
+        }
+
+        @Test
+        void whenBatteryCapacityTooLong_thenStatus400() throws Exception {
+            expect400WithInvalidBody(TestPhone.INVALID_BATTERY_TOO_LONG);
         }
 
         @Test
@@ -952,17 +1011,6 @@ class PhoneControllerTest {
 
         // Validation tests
         @Test
-        void whenNameIsNull_thenStatus204() throws Exception {
-            PhoneUpdateRequestDto request = buildPhoneUpdateRequestDto(TestPhone.INVALID_NAME_NULL);
-
-            mockMvc.perform(put(URL, phone1)
-                            .header(HttpHeaders.AUTHORIZATION, auth(token))
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(request)))
-                    .andExpect(status().isNoContent());
-        }
-
-        @Test
         void whenNameIsBlank_thenStatus400() throws Exception {
             expect400WithInvalidBody(TestPhone.INVALID_NAME_BLANK);
         }
@@ -983,30 +1031,8 @@ class PhoneControllerTest {
         }
 
         @Test
-        void whenPriceIsNull_thenStatus204() throws Exception {
-            PhoneUpdateRequestDto request = buildPhoneUpdateRequestDto(TestPhone.INVALID_PRICE_NULL);
-
-            mockMvc.perform(put(URL, phone1)
-                            .header(HttpHeaders.AUTHORIZATION, auth(token))
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(request)))
-                    .andExpect(status().isNoContent());
-        }
-
-        @Test
         void whenPriceIsNegative_thenStatus400() throws Exception {
             expect400WithInvalidBody(TestPhone.INVALID_PRICE_NEGATIVE);
-        }
-
-        @Test
-        void whenBrandIsNull_thenStatus204() throws Exception {
-            PhoneUpdateRequestDto request = buildPhoneUpdateRequestDto(TestPhone.INVALID_BRAND_NULL);
-
-            mockMvc.perform(put(URL, phone1)
-                            .header(HttpHeaders.AUTHORIZATION, auth(token))
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(request)))
-                    .andExpect(status().isNoContent());
         }
 
         @Test
@@ -1025,17 +1051,6 @@ class PhoneControllerTest {
         }
 
         @Test
-        void whenReleaseYearIsNull_thenStatus204() throws Exception {
-            PhoneUpdateRequestDto request = buildPhoneUpdateRequestDto(TestPhone.INVALID_YEAR_NULL);
-
-            mockMvc.perform(put(URL, phone1)
-                            .header(HttpHeaders.AUTHORIZATION, auth(token))
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(request)))
-                    .andExpect(status().isNoContent());
-        }
-
-        @Test
         void whenReleaseYearTooEarly_thenStatus400() throws Exception {
             expect400WithInvalidBody(TestPhone.INVALID_YEAR_TOO_EARLY);
         }
@@ -1043,6 +1058,116 @@ class PhoneControllerTest {
         @Test
         void whenReleaseYearInFuture_thenStatus400() throws Exception {
             expect400WithInvalidBody(TestPhone.INVALID_YEAR_FUTURE);
+        }
+
+        @Test
+        void whenCpuIsBlank_thenStatus400() throws Exception {
+            expect400WithInvalidBody(TestPhone.INVALID_CPU_BLANK);
+        }
+
+        @Test
+        void whenCpuIsTooLong_thenStatus400() throws Exception {
+            expect400WithInvalidBody(TestPhone.INVALID_CPU_TOO_LONG);
+        }
+
+        @Test
+        void whenCoresNumberIsTooSmall_thenStatus400() throws Exception {
+            expect400WithInvalidBody(TestPhone.INVALID_CORES_TOO_SMALL);
+        }
+
+        @Test
+        void whenCoresNumberIsTooBig_thenStatus400() throws Exception {
+            expect400WithInvalidBody(TestPhone.INVALID_CORES_TOO_BIG);
+        }
+
+        @Test
+        void whenScreenSizeIsBlank_thenStatus400() throws Exception {
+            expect400WithInvalidBody(TestPhone.INVALID_SCREEN_BLANK);
+        }
+
+        @Test
+        void whenScreenSizeWithoutQuotes_thenStatus400() throws Exception {
+            expect400WithInvalidBody(TestPhone.INVALID_SCREEN_NO_QUOTES);
+        }
+
+        @Test
+        void whenScreenSizeWithText_thenStatus400() throws Exception {
+            expect400WithInvalidBody(TestPhone.INVALID_SCREEN_WITH_TEXT);
+        }
+
+        @Test
+        void whenScreenSizeTooLong_thenStatus400() throws Exception {
+            expect400WithInvalidBody(TestPhone.INVALID_SCREEN_TOO_LONG);
+        }
+
+        @Test
+        void whenFrontCameraIsBlank_thenStatus400() throws Exception {
+            expect400WithInvalidBody(TestPhone.INVALID_FRONT_CAMERA_BLANK);
+        }
+
+        @Test
+        void whenFrontCameraIsDecimal_thenStatus400() throws Exception {
+            expect400WithInvalidBody(TestPhone.INVALID_FRONT_CAMERA_DECIMAL);
+        }
+
+        @Test
+        void whenFrontCameraWithoutUnit_thenStatus400() throws Exception {
+            expect400WithInvalidBody(TestPhone.INVALID_FRONT_CAMERA_NO_UNIT);
+        }
+
+        @Test
+        void whenFrontCameraWrongFormat_thenStatus400() throws Exception {
+            expect400WithInvalidBody(TestPhone.INVALID_FRONT_CAMERA_WRONG_FORMAT);
+        }
+
+        @Test
+        void whenFrontCameraTooLong_thenStatus400() throws Exception {
+            expect400WithInvalidBody(TestPhone.INVALID_FRONT_CAMERA_TOO_LONG);
+        }
+
+        @Test
+        void whenMainCameraIsBlank_thenStatus400() throws Exception {
+            expect400WithInvalidBody(TestPhone.INVALID_MAIN_CAMERA_BLANK);
+        }
+
+        @Test
+        void whenMainCameraIsDecimal_thenStatus400() throws Exception {
+            expect400WithInvalidBody(TestPhone.INVALID_MAIN_CAMERA_DECIMAL);
+        }
+
+        @Test
+        void whenMainCameraWithoutUnit_thenStatus400() throws Exception {
+            expect400WithInvalidBody(TestPhone.INVALID_MAIN_CAMERA_NO_UNIT);
+        }
+
+        @Test
+        void whenMainCameraWithWrongFormat_thenStatus400() throws Exception {
+            expect400WithInvalidBody(TestPhone.INVALID_MAIN_CAMERA_WRONG_FORMAT);
+        }
+
+        @Test
+        void whenMainCameraTooLong_thenStatus400() throws Exception {
+            expect400WithInvalidBody(TestPhone.INVALID_MAIN_CAMERA_TOO_LONG);
+        }
+
+        @Test
+        void whenBatteryCapacityIsBlank_thenStatus400() throws Exception {
+            expect400WithInvalidBody(TestPhone.INVALID_BATTERY_BLANK);
+        }
+
+        @Test
+        void whenBatteryCapacityWithoutUnit_thenStatus400() throws Exception {
+            expect400WithInvalidBody(TestPhone.INVALID_BATTERY_NO_UNIT);
+        }
+
+        @Test
+        void whenBatteryCapacityWithWrongUnit_thenStatus400() throws Exception {
+            expect400WithInvalidBody(TestPhone.INVALID_BATTERY_WRONG_UNIT);
+        }
+
+        @Test
+        void whenBatteryCapacityTooLong_thenStatus400() throws Exception {
+            expect400WithInvalidBody(TestPhone.INVALID_BATTERY_TOO_LONG);
         }
 
         private void expect400WithInvalidBody(TestPhone phone) throws Exception {
@@ -1556,6 +1681,9 @@ class PhoneControllerTest {
                 "Phone", "description", new BigDecimal("100.00"), "Brand", 2020,
                 "Snapdragon 8 Gen 3", 8, "6.7 inch", "12 MP", "50-12 MP", "5000 mAh"),
 
+        INVALID_SCREEN_TOO_LONG(
+                "Phone", "description", new BigDecimal("100.00"), "Brand", 2020,
+                "Snapdragon 8 Gen 3", 8, "66.777", "12 MP", "50-12 MP", "5000 mAh"),
 
         // Invalid frontCamera
         INVALID_FRONT_CAMERA_NULL(
@@ -1573,6 +1701,14 @@ class PhoneControllerTest {
         INVALID_FRONT_CAMERA_NO_UNIT(
                 "Phone", "description", new BigDecimal("100.00"), "Brand", 2020,
                 "Snapdragon 8 Gen 3", 8, "6.7\"", "12", "50-12 MP", "5000 mAh"),
+
+        INVALID_FRONT_CAMERA_WRONG_FORMAT(
+                "Phone", "description", new BigDecimal("100.00"), "Brand", 2020,
+                "Snapdragon 8 Gen 3", 8, "6.7\"", "12MP", "50-12 MP", "5000 mAh"),
+
+        INVALID_FRONT_CAMERA_TOO_LONG(
+                "Phone", "description", new BigDecimal("100.00"), "Brand", 2020,
+                "Snapdragon 8 Gen 3", 8, "6.7\"", "12121212 MP", "50-12 MP", "5000 mAh"),
 
 
         // Invalid mainCamera
@@ -1597,6 +1733,10 @@ class PhoneControllerTest {
                 "Phone", "description", new BigDecimal("100.00"), "Brand", 2020,
                 "Snapdragon 8 Gen 3", 8, "6.7\"", "12 MP", "50,12 MP", "5000 mAh"),
 
+        INVALID_MAIN_CAMERA_TOO_LONG(
+                "Phone", "description", new BigDecimal("100.00"), "Brand", 2020,
+                "Snapdragon 8 Gen 3", 8, "6.7\"", "12 MP", "500000000-12000000 MP", "5000 mAh"),
+
 
         // Invalid batteryCapacity
         INVALID_BATTERY_NULL(
@@ -1613,7 +1753,11 @@ class PhoneControllerTest {
 
         INVALID_BATTERY_WRONG_UNIT(
                 "Phone", "description", new BigDecimal("100.00"), "Brand", 2020,
-                "Snapdragon 8 Gen 3", 8, "6.7\"", "12 MP", "50-12 MP", "5000 mah");
+                "Snapdragon 8 Gen 3", 8, "6.7\"", "12 MP", "50-12 MP", "5000 mah"),
+
+        INVALID_BATTERY_TOO_LONG(
+                "Phone", "description", new BigDecimal("100.00"), "Brand", 2020,
+                "Snapdragon 8 Gen 3", 8, "6.7\"", "12 MP", "50-12 MP", "5000000 mAh");
 
 
 

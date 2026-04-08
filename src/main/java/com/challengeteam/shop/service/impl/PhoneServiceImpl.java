@@ -16,18 +16,17 @@ import com.challengeteam.shop.service.PhoneService;
 import com.challengeteam.shop.service.impl.merger.PhoneMerger;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.*;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -45,17 +44,30 @@ public class PhoneServiceImpl implements PhoneService {
         Objects.requireNonNull(id, "id");
 
         log.debug("Get phone by id: {}", id);
-        return phoneRepository.findById(id);
+        return phoneRepository.findByIdWithImages(id);
     }
 
     @Transactional(readOnly = true)
     @Override
     public Page<Phone> getPhones(int page, int size, PhoneFilterDto filterDto) {
-        log.debug("Get phones page={}, size={}, filters={}", page, size, filterDto);
-
         Pageable pageable = PageRequest.of(page, size, buildSort(filterDto.sort()));
         Specification<Phone> spec = PhoneSpecification.build(filterDto);
-        return phoneRepository.findAll(spec, pageable);
+
+        Page<Phone> phonePage = phoneRepository.findAll(spec, pageable);
+
+        List<Phone> orderedIds = phonePage.getContent();
+
+        List<Phone> phonesWithImages = phoneRepository.findAllWithImages(orderedIds);
+
+        Map<Long, Phone> phonesById = phonesWithImages.stream()
+                .collect(Collectors.toMap(Phone::getId, p -> p));
+
+        List<Phone> sorted = orderedIds.stream()
+                .map(p -> phonesById.get(p.getId()))
+                .filter(Objects::nonNull)
+                .toList();
+
+        return new PageImpl<>(sorted, pageable, phonePage.getTotalElements());
     }
 
     private Sort buildSort(String sortParam) {

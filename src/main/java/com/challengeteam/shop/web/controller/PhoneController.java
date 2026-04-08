@@ -41,15 +41,13 @@ public class PhoneController {
 
     @Operation(
             summary = "Get paginated list of phones",
-            description = "Returns a paginated list of phones. " +
-                          "Use 'page' and 'size' query parameters to control pagination."
+            description = "Returns a paginated list of phones. Use 'page' and 'size' query parameters to control pagination."
     )
     @GetMapping
     public ResponseEntity<PageResponseDto<PhoneResponseDto>> getAllPhones(
             @Valid PageRequestDto pageRequestDto,
             @Valid PhoneFilterDto filterDto
     ) {
-
         int page = pageRequestDto.page() - 1;
         int size = pageRequestDto.size();
 
@@ -58,6 +56,7 @@ public class PhoneController {
 
         return ResponseEntity.ok(PageResponseDto.of(response));
     }
+
 
     @Operation(
             summary = "Get phone by id",

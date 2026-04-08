@@ -1,4 +1,4 @@
-package com.challengeteam.shop.dto.user;
+package com.challengeteam.shop.dto.auth;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
@@ -15,6 +15,8 @@ public record UserLoginRequestDto(
                 regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[!@#$%^&*])[a-zA-Z0-9!@#$%^&*]+$",
                 message = "Password must contains: capital letter, small letter, number and special symbol (!@#$%^&*)"
         )
-        String password
+        String password,
+
+        boolean rememberMe
 ) {
 }

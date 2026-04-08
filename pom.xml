@@ -6,7 +6,11 @@
 	
 	<groupId>com.challengeteam</groupId>
 	<artifactId>phone-shop</artifactId>
+<<<<<<< HEAD
 	<version>0.0.19</version>
+=======
+	<version>0.0.23</version>
+>>>>>>> develop
 	<description>
 		Team Challenge project
 		Started: 08.09.2025
@@ -26,6 +30,7 @@
 		<minio.version>8.5.17</minio.version>
 		<testcontainers.minio.version>2.0.1</testcontainers.minio.version>
 		<testcontainers.postgres.version>2.0.1</testcontainers.postgres.version>
+		<jacoco.version>0.8.11</jacoco.version>
 	</properties>
 	
 	<parent>
@@ -87,6 +92,12 @@
 			<version>${jjwt.version}</version>
 			<scope>runtime</scope>
 		</dependency>
+
+		<!-- MAIL -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-mail</artifactId>
+		</dependency>
 		
 		<!-- TEST -->
 		<dependency>
@@ -139,6 +150,25 @@
 	<build>
 		<plugins>
 			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<configuration>
+					<release>${maven.compiler.source}</release>
+					<annotationProcessorPaths>
+						<path>
+							<groupId>org.projectlombok</groupId>
+							<artifactId>lombok</artifactId>
+							<version>${lombok.version}</version>
+						</path>
+						<path>
+							<groupId>org.mapstruct</groupId>
+							<artifactId>mapstruct-processor</artifactId>
+							<version>${mapstruct.version}</version>
+						</path>
+					</annotationProcessorPaths>
+				</configuration>
+			</plugin>
+			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
 				<version>3.5.0</version>
@@ -153,6 +183,67 @@
 					<password>pass1234</password>
 					<cleanDisabled>false</cleanDisabled>
 				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.jacoco</groupId>
+				<artifactId>jacoco-maven-plugin</artifactId>
+				<version>${jacoco.version}</version>
+
+				<executions>
+					<execution>
+						<goals>
+							<goal>prepare-agent</goal>
+						</goals>
+					</execution>
+
+					<execution>
+						<id>report</id>
+						<phase>verify</phase>
+						<goals>
+							<goal>report</goal>
+						</goals>
+						<configuration>
+							<excludes>
+								<exclude>**/entity/**</exclude>
+								<exclude>**/dto/**</exclude>
+								<exclude>**/config/**</exclude>
+								<exclude>**/mapper/**</exclude>
+								<exclude>**/properties/**</exclude>
+								<exclude>**/TestDataServiceImpl*</exclude>
+							</excludes>
+						</configuration>
+					</execution>
+
+					<execution>
+						<id>check</id>
+						<phase>verify</phase>
+						<goals>
+							<goal>check</goal>
+						</goals>
+						<configuration>
+							<rules>
+								<rule>
+									<element>BUNDLE</element>
+									<limits>
+										<limit>
+											<counter>LINE</counter>
+											<value>COVEREDRATIO</value>
+											<minimum>0.70</minimum>
+										</limit>
+									</limits>
+									<excludes>
+										<exclude>**/entity/**</exclude>
+										<exclude>**/dto/**</exclude>
+										<exclude>**/config/**</exclude>
+										<exclude>**/mapper/**</exclude>
+										<exclude>**/properties/**</exclude>
+										<exclude>**/TestDataServiceImpl*</exclude>
+									</excludes>
+								</rule>
+							</rules>
+						</configuration>
+					</execution>
+				</executions>
 			</plugin>
 		</plugins>
 	</build>

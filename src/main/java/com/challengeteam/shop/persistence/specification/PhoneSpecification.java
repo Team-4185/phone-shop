@@ -8,7 +8,7 @@ import java.math.BigDecimal;
 
 public class PhoneSpecification {
 
-    public static Specification<Phone> hasBrand(String brand) {
+    private static Specification<Phone> hasBrand(String brand) {
         return (root, query, criteriaBuilder) ->
                 criteriaBuilder.equal(
                         criteriaBuilder.lower(root.get("brand")),
@@ -16,32 +16,28 @@ public class PhoneSpecification {
                 );
     }
 
-    public static Specification<Phone> priceGreaterThanOrEqual(BigDecimal minPrice) {
+    private static Specification<Phone> priceGreaterThanOrEqual(BigDecimal minPrice) {
         return (root, query, criteriaBuilder) ->
                 criteriaBuilder.greaterThanOrEqualTo(root.get("price"), minPrice);
     }
 
-    public static Specification<Phone> priceLessThanOrEqual(BigDecimal maxPrice) {
+    private static Specification<Phone> priceLessThanOrEqual(BigDecimal maxPrice) {
         return (root, query, criteriaBuilder) ->
                 criteriaBuilder.lessThanOrEqualTo(root.get("price"), maxPrice);
     }
 
     public static Specification<Phone> build(PhoneFilterDto requestDto) {
-        Specification<Phone> spec = (root, query, cb) -> cb.conjunction();
+        Specification<Phone> spec = (root, query, cb) -> cb.conjunction();;
 
         if (requestDto.brand() != null && !requestDto.brand().isBlank()) {
-            spec = spec.and(PhoneSpecification.hasBrand(requestDto.brand()));
+            spec = spec.and(hasBrand(requestDto.brand()));
         }
-
         if (requestDto.minPrice() != null) {
-            spec = spec.and(PhoneSpecification.priceGreaterThanOrEqual(requestDto.minPrice()));
+            spec = spec.and(priceGreaterThanOrEqual(requestDto.minPrice()));
         }
-
         if (requestDto.maxPrice() != null) {
-            spec = spec.and(PhoneSpecification.priceLessThanOrEqual(requestDto.maxPrice()));
+            spec = spec.and(priceLessThanOrEqual(requestDto.maxPrice()));
         }
-
         return spec;
     }
-
 }
