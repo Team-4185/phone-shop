@@ -16,6 +16,10 @@ import java.util.Optional;
 @Repository
 public interface PhoneRepository extends JpaRepository<Phone, Long>, JpaSpecificationExecutor<Phone> {
 
+    boolean existsBySku(String sku);
+
+    boolean existsBySkuAndIdNot(String sku, Long id);
+
     @Query(value = """
             SELECT EXISTS(
                   SELECT 1
