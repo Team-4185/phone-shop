@@ -15,7 +15,10 @@ import java.util.List;
 @NoArgsConstructor
 @SuperBuilder
 @Entity
-@Table(name = "phones")
+@Table(
+        name = "phones",
+        uniqueConstraints = @UniqueConstraint(name = "uk_phones_sku", columnNames = "sku")
+)
 public class Phone extends BaseEntity {
 
     @Column(nullable = false)
@@ -33,6 +36,16 @@ public class Phone extends BaseEntity {
     @Column(nullable = false)
     private Integer releaseYear;
 
+    @Column(nullable = false)
+    private String sku;
+
+    @Column(nullable = false)
+    private Integer stock;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private ProductStatus status;
+
     @Embedded
     private PhoneCharacteristics phoneCharacteristics;
 
@@ -47,6 +60,9 @@ public class Phone extends BaseEntity {
                 ", price='" + price + '\'' +
                 ", brand='" + brand + '\'' +
                 ", releaseYear='" + releaseYear + '\'' +
+                ", sku='" + sku + '\'' +
+                ", stock='" + stock +
+                ", status='" + status +
                 ", phoneCharacteristics='" + phoneCharacteristics + '\'' +
                 "} " + super.toString();
     }

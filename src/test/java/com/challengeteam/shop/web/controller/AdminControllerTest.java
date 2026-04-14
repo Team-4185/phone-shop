@@ -2,6 +2,7 @@ package com.challengeteam.shop.web.controller;
 
 import com.challengeteam.shop.dto.phone.PhoneCreateRequestDto;
 import com.challengeteam.shop.entity.phone.Phone;
+import com.challengeteam.shop.entity.phone.ProductStatus;
 import com.challengeteam.shop.entity.user.Role;
 import com.challengeteam.shop.entity.user.User;
 import com.challengeteam.shop.persistence.repository.PhoneRepository;
@@ -135,9 +136,11 @@ class AdminControllerTest {
           .andExpect(jsonPath("$.content", hasSize(1)))
           .andExpect(jsonPath("$.content[0].id").isNumber())
           .andExpect(jsonPath("$.content[0].name").value("Admin Test Phone"))
+          .andExpect(jsonPath("$.content[0].sku").value("ADMIN-TEST-001"))
           .andExpect(jsonPath("$.content[0].brand").value("AdminBrand"))
           .andExpect(jsonPath("$.content[0].price").value(799.99))
-          .andExpect(jsonPath("$.content[0].releaseYear").value(2024))
+          .andExpect(jsonPath("$.content[0].stock").value(45))
+          .andExpect(jsonPath("$.content[0].status").value("IN_STOCK"))
           .andExpect(jsonPath("$.content[0].previewImage").doesNotExist());
     }
 
@@ -206,10 +209,13 @@ class AdminControllerTest {
           .andExpect(content().contentType(MediaType.APPLICATION_JSON))
           .andExpect(jsonPath("$.id").value(phone.getId()))
           .andExpect(jsonPath("$.name").value("Admin Test Phone"))
+          .andExpect(jsonPath("$.sku").value("ADMIN-TEST-001"))
           .andExpect(jsonPath("$.description").value("Phone prepared for admin controller tests"))
           .andExpect(jsonPath("$.brand").value("AdminBrand"))
           .andExpect(jsonPath("$.price").value(799.99))
           .andExpect(jsonPath("$.releaseYear").value(2024))
+          .andExpect(jsonPath("$.stock").value(45))
+          .andExpect(jsonPath("$.status").value("IN_STOCK"))
           .andExpect(jsonPath("$.cpu").value("Admin Chip"))
           .andExpect(jsonPath("$.coresNumber").value(8))
           .andExpect(jsonPath("$.screenSize").value("6.5\""))
@@ -281,6 +287,9 @@ class AdminControllerTest {
         new BigDecimal("799.99"),
         "AdminBrand",
         2024,
+        "ADMIN-TEST-001",
+        45,
+        ProductStatus.IN_STOCK,
         "Admin Chip",
         8,
         "6.5\"",
@@ -296,6 +305,9 @@ class AdminControllerTest {
         new BigDecimal("499.99"),
         "OtherBrand",
         2023,
+        "OTHER-DEVICE-001",
+        12,
+        ProductStatus.LOW_STOCK,
         "Other CPU",
         6,
         "6.1\"",
@@ -311,6 +323,9 @@ class AdminControllerTest {
         new BigDecimal("1499.99"),
         "PremiumBrand",
         2025,
+        "PREMIUM-TEST-001",
+        100,
+        ProductStatus.IN_STOCK,
         "Premium CPU",
         10,
         "6.8\"",

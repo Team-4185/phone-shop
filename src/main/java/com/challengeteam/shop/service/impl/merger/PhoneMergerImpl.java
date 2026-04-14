@@ -12,8 +12,8 @@ public class PhoneMergerImpl implements PhoneMerger {
 
     @Override
     public void mergePhone(Phone phone, PhoneUpdateRequestDto newPhone) {
-        Objects.requireNonNull(phone,"phone");
-        Objects.requireNonNull(newPhone,"newPhone");
+        Objects.requireNonNull(phone, "phone");
+        Objects.requireNonNull(newPhone, "newPhone");
 
         String newName = newPhone.name();
         if (newName != null) {
@@ -38,6 +38,20 @@ public class PhoneMergerImpl implements PhoneMerger {
         Integer newReleaseYear = newPhone.releaseYear();
         if (newReleaseYear != null) {
             phone.setReleaseYear(newReleaseYear);
+        }
+
+        String newSku = newPhone.sku();
+        if (newSku != null) {
+            phone.setSku(newSku.trim().toUpperCase());
+        }
+
+        Integer newStock = newPhone.stock();
+        if (newStock != null) {
+            phone.setStock(newStock);
+        }
+
+        if (newPhone.status() != null) {
+            phone.setStatus(newPhone.status());
         }
 
         String cpu = newPhone.cpu();
@@ -70,5 +84,4 @@ public class PhoneMergerImpl implements PhoneMerger {
             phone.getPhoneCharacteristics().setBatteryCapacity(batteryCapacity.trim());
         }
     }
-
 }
