@@ -4,6 +4,7 @@ import com.challengeteam.shop.dto.phone.PhoneCreateRequestDto;
 import com.challengeteam.shop.dto.user.CreateUserDto;
 import com.challengeteam.shop.dto.user.UpdateProfileDto;
 import com.challengeteam.shop.entity.user.User;
+import com.challengeteam.shop.entity.phone.ProductStatus;
 import com.challengeteam.shop.exceptionHandling.exception.CriticalSystemException;
 import com.challengeteam.shop.exceptionHandling.exception.InvalidAPIRequestException;
 import com.challengeteam.shop.exceptionHandling.exception.TestDataGeneratorOutOfLimitException;
@@ -206,6 +207,14 @@ public class TestDataServiceImpl implements TestDataService {
                 "4500 mAh", "4800 mAh", "5000 mAh", "5200 mAh"
         };
 
+        private final int[] stockValues = {0, 3, 8, 12, 25, 50, 100};
+
+        private final ProductStatus[] statuses = {
+                ProductStatus.IN_STOCK,
+                ProductStatus.LOW_STOCK,
+                ProductStatus.OUT_OF_STOCK
+        };
+
 
         public List<PhoneCreateRequestDto> generatePhones(int amount) {
             List<PhoneCreateRequestDto> result = new ArrayList<>(amount);
@@ -216,6 +225,9 @@ public class TestDataServiceImpl implements TestDataService {
                 String description = getRandomDescription(name);
                 BigDecimal price = getRandomPrice();
                 int releaseYear = getRandomReleaseYear();
+                String sku = getRandomSku(brand, i);
+                int stock = getRandomStock();
+                ProductStatus status = getRandomStatus();
                 String cpu = getRandomCpu();
                 int coresNumber = getRandomCoresNumber();
                 String screenSize = getRandomScreenSize();
@@ -229,6 +241,9 @@ public class TestDataServiceImpl implements TestDataService {
                         price,
                         brand.name(),
                         releaseYear,
+                        sku,
+                        stock,
+                        status,
                         cpu,
                         coresNumber,
                         screenSize,
@@ -240,6 +255,18 @@ public class TestDataServiceImpl implements TestDataService {
             }
 
             return result;
+        }
+
+        private String getRandomSku(PhoneBrand brand, int index) {
+            return (brand.name() + "-" + (index + 1)).toUpperCase();
+        }
+
+        private int getRandomStock() {
+            return stockValues[random.nextInt(stockValues.length)];
+        }
+
+        private ProductStatus getRandomStatus() {
+            return statuses[random.nextInt(statuses.length)];
         }
 
         private String getRandomBatteryCapacity() {

@@ -55,7 +55,21 @@ public class PhoneServiceImpl implements PhoneService {
 
         Pageable pageable = PageRequest.of(page, size, buildSort(filterDto.sort()));
         Specification<Phone> spec = PhoneSpecification.build(filterDto);
-        return phoneRepository.findAll(spec, pageable);
+        Page<Phone> phonesPage = phoneRepository.findAll(spec, pageable);
+
+        if (phonesPage.isEmpty()) {
+            return phonesPage;
+        }
+
+        List<Phone> phonesWithImages = phoneRepository.findAllWithImages(phonesPage.getContent());
+        Map<Long, Phone> phonesById = phonesWithImages.stream()
+                .collect(Collectors.toMap(Phone::getId, phone -> phone));
+
+        List<Phone> orderedPhones = phonesPage.getContent().stream()
+                .map(phone -> phonesById.getOrDefault(phone.getId(), phone))
+                .toList();
+
+        return new PageImpl<>(orderedPhones, pageable, phonesPage.getTotalElements());
     }
 
     private Sort buildSort(String sortParam) {
