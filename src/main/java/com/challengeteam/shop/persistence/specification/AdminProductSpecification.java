@@ -2,6 +2,7 @@ package com.challengeteam.shop.persistence.specification;
 
 import com.challengeteam.shop.dto.admin.product.AdminProductFilterDto;
 import com.challengeteam.shop.entity.phone.Phone;
+import com.challengeteam.shop.entity.phone.ProductStatus;
 import jakarta.persistence.criteria.JoinType;
 import org.springframework.data.jpa.domain.Specification;
 
@@ -18,6 +19,7 @@ public final class AdminProductSpecification {
 
     spec = addIfHasText(spec, filterDto.search(), AdminProductSpecification::matchesSearch);
     spec = addIfHasText(spec, filterDto.brand(), AdminProductSpecification::hasBrand);
+    spec = addIfPresent(spec, filterDto.status(), AdminProductSpecification::hasStatus);
     spec =
         addIfPresent(
             spec, filterDto.minPrice(), AdminProductSpecification::priceGreaterThanOrEqual);
@@ -46,6 +48,7 @@ public final class AdminProductSpecification {
 
       return cb.or(
           cb.like(cb.lower(root.get("name")), pattern),
+          cb.like(cb.lower(root.get("sku")), pattern),
           cb.like(cb.lower(root.get("brand")), pattern),
           cb.like(cb.lower(root.get("description")), pattern));
     };
@@ -53,6 +56,10 @@ public final class AdminProductSpecification {
 
   private static Specification<Phone> hasBrand(String brand) {
     return (root, query, cb) -> cb.equal(cb.lower(root.get("brand")), brand.toLowerCase());
+  }
+
+  private static Specification<Phone> hasStatus(ProductStatus status) {
+    return (root, query, cb) -> cb.equal(root.get("status"), status);
   }
 
   private static Specification<Phone> priceGreaterThanOrEqual(BigDecimal minPrice) {
