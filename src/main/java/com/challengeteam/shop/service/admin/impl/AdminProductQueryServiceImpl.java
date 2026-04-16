@@ -54,6 +54,10 @@ public class AdminProductQueryServiceImpl implements AdminProductQueryService {
       case "releaseYear_desc" -> Sort.by("releaseYear").descending();
       case "brand_asc" -> Sort.by("brand").ascending();
       case "brand_desc" -> Sort.by("brand").descending();
+      case "sku_asc" -> Sort.by("sku").ascending();
+      case "sku_desc" -> Sort.by("sku").descending();
+      case "stock_asc" -> Sort.by("stock").ascending();
+      case "stock_desc" -> Sort.by("stock").descending();
       default -> Sort.by("name").ascending();
     };
   }
