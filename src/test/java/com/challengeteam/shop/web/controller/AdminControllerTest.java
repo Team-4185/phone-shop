@@ -333,4 +333,69 @@ class AdminControllerTest {
         "108 MP",
         "5000 mAh");
   }
+
+  @Test
+  void whenSearchMatchesSku_thenReturnFilteredList() throws Exception {
+    phoneService.create(buildOtherPhoneCreateRequestDto(), new ArrayList<>());
+
+    mockMvc
+        .perform(
+            get(ADMIN_PRODUCTS_URL)
+                .param("search", "ADMIN-TEST-001")
+                .header(HttpHeaders.AUTHORIZATION, auth(adminToken)))
+        .andExpect(status().isOk())
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andExpect(jsonPath("$.content", hasSize(1)))
+        .andExpect(jsonPath("$.content[0].sku").value("ADMIN-TEST-001"));
+  }
+
+  @Test
+  void whenStatusFilterMatchesProduct_thenReturnFilteredList() throws Exception {
+    phoneService.create(buildOtherPhoneCreateRequestDto(), new ArrayList<>());
+
+    mockMvc
+        .perform(
+            get(ADMIN_PRODUCTS_URL)
+                .param("status", "IN_STOCK")
+                .header(HttpHeaders.AUTHORIZATION, auth(adminToken)))
+        .andExpect(status().isOk())
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andExpect(jsonPath("$.content", hasSize(1)))
+        .andExpect(jsonPath("$.content[0].status").value("IN_STOCK"))
+        .andExpect(jsonPath("$.content[0].name").value("Admin Test Phone"));
+  }
+
+  @Test
+  void whenSortByStockDesc_thenReturnProductsInSortedOrder() throws Exception {
+    phoneService.create(buildOtherPhoneCreateRequestDto(), new ArrayList<>());
+
+    mockMvc
+        .perform(
+            get(ADMIN_PRODUCTS_URL)
+                .param("sort", "stock_desc")
+                .header(HttpHeaders.AUTHORIZATION, auth(adminToken)))
+        .andExpect(status().isOk())
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andExpect(jsonPath("$.content", hasSize(2)))
+        .andExpect(jsonPath("$.content[0].sku").value("ADMIN-TEST-001"))
+        .andExpect(jsonPath("$.content[0].stock").value(45))
+        .andExpect(jsonPath("$.content[1].sku").value("OTHER-DEVICE-001"))
+        .andExpect(jsonPath("$.content[1].stock").value(12));
+  }
+
+  @Test
+  void whenSortBySkuDesc_thenReturnProductsInSortedOrder() throws Exception {
+    phoneService.create(buildOtherPhoneCreateRequestDto(), new ArrayList<>());
+
+    mockMvc
+        .perform(
+            get(ADMIN_PRODUCTS_URL)
+                .param("sort", "sku_desc")
+                .header(HttpHeaders.AUTHORIZATION, auth(adminToken)))
+        .andExpect(status().isOk())
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andExpect(jsonPath("$.content", hasSize(2)))
+        .andExpect(jsonPath("$.content[0].sku").value("OTHER-DEVICE-001"))
+        .andExpect(jsonPath("$.content[1].sku").value("ADMIN-TEST-001"));
+  }
 }
