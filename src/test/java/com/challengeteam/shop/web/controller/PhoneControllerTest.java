@@ -3,6 +3,7 @@ package com.challengeteam.shop.web.controller;
 import com.challengeteam.shop.dto.phone.PhoneCreateRequestDto;
 import com.challengeteam.shop.dto.phone.PhoneUpdateRequestDto;
 import com.challengeteam.shop.entity.image.Image;
+import com.challengeteam.shop.entity.phone.ProductStatus;
 import com.challengeteam.shop.persistence.repository.PhoneRepository;
 import com.challengeteam.shop.service.PhoneService;
 import com.challengeteam.shop.testContainer.ContainerExtension;
@@ -1483,6 +1484,9 @@ class PhoneControllerTest {
                     testPhone.price,
                     testPhone.brand,
                     testPhone.releaseYear,
+                    buildSku(testPhone),
+                    10,
+                    ProductStatus.IN_STOCK,
                     testPhone.cpu,
                     testPhone.coresNumber,
                     testPhone.screenSize,
@@ -1500,6 +1504,9 @@ class PhoneControllerTest {
                     testPhone.price,
                     testPhone.brand,
                     testPhone.releaseYear,
+                    buildSku(testPhone),
+                    10,
+                    ProductStatus.IN_STOCK,
                     testPhone.cpu,
                     testPhone.coresNumber,
                     testPhone.screenSize,
@@ -1535,6 +1542,10 @@ class PhoneControllerTest {
                     "application/json",
                     content
             );
+        }
+
+        private static String buildSku(TestPhone testPhone) {
+            return ("SKU-" + testPhone.name()).replace('_', '-');
         }
 
     }

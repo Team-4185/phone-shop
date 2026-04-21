@@ -1,5 +1,6 @@
 package com.challengeteam.shop.dto.phone;
 
+import com.challengeteam.shop.entity.phone.ProductStatus;
 import jakarta.validation.constraints.*;
 
 import java.math.BigDecimal;
@@ -21,6 +22,18 @@ public record PhoneUpdateRequestDto(
         @Min(value = 1970, message = "Release year must be no earlier than {value}")
         @Max(value = 2026, message = "Release year must be no later than {value}")
         Integer releaseYear,
+
+        @Size(min = 3, max = 64, message = "Sku must be between {min} and {max} characters")
+        @Pattern(
+                regexp = "^[A-Z0-9]+(?:-[A-Z0-9]+)*$",
+                message = "Sku must contain only uppercase letters, numbers and hyphens"
+        )
+        String sku,
+
+        @Min(value = 0, message = "Stock must be greater than or equal to {value}")
+        Integer stock,
+
+        ProductStatus status,
 
         @Pattern(regexp = "^[A-Za-z0-9\\s\\-]+$", message = "CPU must contain only letters, numbers, spaces and hyphens")
         @Size(max = 50, message = "CPU must be at most {max} characters long")

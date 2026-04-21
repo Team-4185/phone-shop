@@ -7,6 +7,7 @@ import com.challengeteam.shop.entity.image.Image;
 import com.challengeteam.shop.entity.phone.Phone;
 import com.challengeteam.shop.entity.phone.PhoneCharacteristics;
 import com.challengeteam.shop.exceptionHandling.exception.CriticalSystemException;
+import com.challengeteam.shop.exceptionHandling.exception.InvalidAPIRequestException;
 import com.challengeteam.shop.exceptionHandling.exception.ResourceNotFoundException;
 import com.challengeteam.shop.persistence.repository.ImageRepository;
 import com.challengeteam.shop.persistence.repository.PhoneRepository;
@@ -50,24 +51,25 @@ public class PhoneServiceImpl implements PhoneService {
     @Transactional(readOnly = true)
     @Override
     public Page<Phone> getPhones(int page, int size, PhoneFilterDto filterDto) {
+        log.debug("Get phones page={}, size={}, filters={}", page, size, filterDto);
+
         Pageable pageable = PageRequest.of(page, size, buildSort(filterDto.sort()));
         Specification<Phone> spec = PhoneSpecification.build(filterDto);
+        Page<Phone> phonesPage = phoneRepository.findAll(spec, pageable);
 
-        Page<Phone> phonePage = phoneRepository.findAll(spec, pageable);
+        if (phonesPage.isEmpty()) {
+            return phonesPage;
+        }
 
-        List<Phone> orderedIds = phonePage.getContent();
-
-        List<Phone> phonesWithImages = phoneRepository.findAllWithImages(orderedIds);
-
+        List<Phone> phonesWithImages = phoneRepository.findAllWithImages(phonesPage.getContent());
         Map<Long, Phone> phonesById = phonesWithImages.stream()
-                .collect(Collectors.toMap(Phone::getId, p -> p));
+                .collect(Collectors.toMap(Phone::getId, phone -> phone));
 
-        List<Phone> sorted = orderedIds.stream()
-                .map(p -> phonesById.get(p.getId()))
-                .filter(Objects::nonNull)
+        List<Phone> orderedPhones = phonesPage.getContent().stream()
+                .map(phone -> phonesById.getOrDefault(phone.getId(), phone))
                 .toList();
 
-        return new PageImpl<>(sorted, pageable, phonePage.getTotalElements());
+        return new PageImpl<>(orderedPhones, pageable, phonesPage.getTotalElements());
     }
 
     private Sort buildSort(String sortParam) {
@@ -85,7 +87,9 @@ public class PhoneServiceImpl implements PhoneService {
         Objects.requireNonNull(phoneCreateRequestDto, "phoneCreateRequestDto");
         Objects.requireNonNull(images, "images");
 
-        // create phone characteristics
+        String normalizedSku = normalizeSku(phoneCreateRequestDto.sku());
+        validateSkuForCreate(normalizedSku);
+
         PhoneCharacteristics phoneCharacteristics = PhoneCharacteristics.builder()
                 .cpu(phoneCreateRequestDto.cpu())
                 .coresNumber(phoneCreateRequestDto.coresNumber())
@@ -95,19 +99,20 @@ public class PhoneServiceImpl implements PhoneService {
                 .batteryCapacity(phoneCreateRequestDto.batteryCapacity())
                 .build();
 
-        // create phone
         var phone = Phone.builder()
                 .name(phoneCreateRequestDto.name().trim())
                 .description(phoneCreateRequestDto.description())
                 .price(phoneCreateRequestDto.price())
                 .brand(phoneCreateRequestDto.brand().trim())
                 .releaseYear(phoneCreateRequestDto.releaseYear())
+                .sku(normalizedSku)
+                .stock(phoneCreateRequestDto.stock())
+                .status(phoneCreateRequestDto.status())
                 .phoneCharacteristics(phoneCharacteristics)
                 .build();
 
         phone = phoneRepository.save(phone);
 
-        // add images
         for (MultipartFile file : images) {
             Image image = imageService.uploadImage(file);
             image.setPhone(phone);
@@ -127,9 +132,31 @@ public class PhoneServiceImpl implements PhoneService {
         Phone phone = phoneRepository
                 .findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Not found phone with id: " + id));
+
+        if (phoneUpdateRequestDto.sku() != null) {
+            String normalizedSku = normalizeSku(phoneUpdateRequestDto.sku());
+            validateSkuForUpdate(normalizedSku, id);
+        }
+
         phoneMerger.mergePhone(phone, phoneUpdateRequestDto);
         phoneRepository.save(phone);
         log.debug("Updated phone: {}", phone);
+    }
+
+    private String normalizeSku(String sku) {
+        return sku.trim().toUpperCase();
+    }
+
+    private void validateSkuForCreate(String sku) {
+        if (phoneRepository.existsBySku(sku)) {
+            throw new InvalidAPIRequestException("Phone with sku '%s' already exists".formatted(sku));
+        }
+    }
+
+    private void validateSkuForUpdate(String sku, Long phoneId) {
+        if (phoneRepository.existsBySkuAndIdNot(sku, phoneId)) {
+            throw new InvalidAPIRequestException("Phone with sku '%s' already exists".formatted(sku));
+        }
     }
 
     @Transactional

@@ -20,9 +20,11 @@ public class AdminProductMapper {
     return new AdminProductListItemResponseDto(
         phone.getId(),
         phone.getName(),
+        phone.getSku(),
         phone.getBrand(),
         phone.getPrice(),
-        phone.getReleaseYear(),
+        phone.getStock(),
+        phone.getStatus(),
         toPreviewImage(phone.getImages()));
   }
 
@@ -32,10 +34,13 @@ public class AdminProductMapper {
     return new AdminProductDetailsResponseDto(
         phone.getId(),
         phone.getName(),
+        phone.getSku(),
         phone.getDescription(),
         phone.getPrice(),
         phone.getBrand(),
         phone.getReleaseYear(),
+        phone.getStock(),
+        phone.getStatus(),
         characteristics != null ? characteristics.getCpu() : null,
         characteristics != null ? characteristics.getCoresNumber() : null,
         characteristics != null ? characteristics.getScreenSize() : null,
