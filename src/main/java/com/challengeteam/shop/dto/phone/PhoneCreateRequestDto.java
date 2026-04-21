@@ -1,5 +1,6 @@
 package com.challengeteam.shop.dto.phone;
 
+import com.challengeteam.shop.entity.phone.ProductStatus;
 import jakarta.validation.constraints.*;
 
 import java.math.BigDecimal;
@@ -26,6 +27,21 @@ public record PhoneCreateRequestDto(
         @Max(value = 2026, message = "Release year must be no later than {value}")
         Integer releaseYear,
 
+        @NotBlank(message = "Sku must not be empty")
+        @Size(min = 3, max = 64, message = "Sku must be between {min} and {max} characters")
+        @Pattern(
+                regexp = "^[A-Z0-9]+(?:-[A-Z0-9]+)*$",
+                message = "Sku must contain only uppercase letters, numbers and hyphens"
+        )
+        String sku,
+
+        @NotNull(message = "Stock must not be null")
+        @Min(value = 0, message = "Stock must be greater than or equal to {value}")
+        Integer stock,
+
+        @NotNull(message = "Status must not be null")
+        ProductStatus status,
+
         @NotBlank(message = "Cpu must not be empty")
         @Pattern(regexp = "^[A-Za-z0-9\\s\\-]+$", message = "CPU must contain only letters, numbers, spaces and hyphens")
         @Size(max = 50, message = "CPU must be at most {max} characters long")
@@ -37,19 +53,23 @@ public record PhoneCreateRequestDto(
         Integer coresNumber,
 
         @NotBlank(message = "Screen size must not be empty")
-        @Pattern(regexp = "^\\d+(\\.\\d+)?\"$", message = "Screen size must be in format: number followed by \" (e.g., 6.7\")")
+        @Pattern(regexp = "^\\d+(\\.\\d+)?\"$", message = "Format: 6.7\"")
+        @Size(max = 5, message = "Screen size must be at most {max} characters long")
         String screenSize,
 
         @NotBlank(message = "Front camera must not be empty")
-        @Pattern(regexp = "^\\d+\\s*MP$", message = "Front camera must be in format: number followed by MP (e.g., 12 MP)")
+        @Pattern(regexp = "^\\d+ MP$", message = "Format: 12 MP")
+        @Size(max = 10, message = "Front camera must be at most {max} characters long")
         String frontCamera,
 
         @NotBlank(message = "Main camera must not be empty")
-        @Pattern(regexp = "^\\d+(-\\d+)*\\s*(-\\d+\\s*)?MP$", message = "Main camera must be in format: numbers separated by hyphens followed by MP (e.g., 48-12-12 MP)")
+        @Pattern(regexp = "^\\d+(-\\d+)* MP$", message = "Format: 48-12-12 MP")
+        @Size(max = 20, message = "Main camera must be at most {max} characters long")
         String mainCamera,
 
         @NotBlank(message = "Battery capacity must not be empty")
-        @Pattern(regexp = "^\\d+\\s*mAh$", message = "Battery capacity must be in format: number followed by mAh (e.g., 4323 mAh)")
+        @Pattern(regexp = "^\\d+ mAh$", message = "Format: 4323 mAh")
+        @Size(max = 10, message = "Battery capacity must be at most {max} characters long")
         String batteryCapacity
 ) {
 }

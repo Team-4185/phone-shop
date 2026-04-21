@@ -3,6 +3,7 @@ package com.challengeteam.shop.web.controller;
 import com.challengeteam.shop.dto.phone.PhoneCreateRequestDto;
 import com.challengeteam.shop.dto.phone.PhoneUpdateRequestDto;
 import com.challengeteam.shop.entity.image.Image;
+import com.challengeteam.shop.entity.phone.ProductStatus;
 import com.challengeteam.shop.persistence.repository.PhoneRepository;
 import com.challengeteam.shop.service.PhoneService;
 import com.challengeteam.shop.testContainer.ContainerExtension;
@@ -781,6 +782,11 @@ class PhoneControllerTest {
         }
 
         @Test
+        void whenScreenSizeTooLong_thenStatus400() throws Exception {
+            expect400WithInvalidBody(TestPhone.INVALID_SCREEN_TOO_LONG);
+        }
+
+        @Test
         void whenFrontCameraIsNull_thenStatus400() throws Exception {
             expect400WithInvalidBody(TestPhone.INVALID_FRONT_CAMERA_NULL);
         }
@@ -798,6 +804,16 @@ class PhoneControllerTest {
         @Test
         void whenFrontCameraWithoutUnit_thenStatus400() throws Exception {
             expect400WithInvalidBody(TestPhone.INVALID_FRONT_CAMERA_NO_UNIT);
+        }
+
+        @Test
+        void whenFrontCameraWrongFormat_thenStatus400() throws Exception {
+            expect400WithInvalidBody(TestPhone.INVALID_FRONT_CAMERA_WRONG_FORMAT);
+        }
+
+        @Test
+        void whenFrontCameraTooLong_thenStatus400() throws Exception {
+            expect400WithInvalidBody(TestPhone.INVALID_FRONT_CAMERA_TOO_LONG);
         }
 
         @Test
@@ -826,6 +842,11 @@ class PhoneControllerTest {
         }
 
         @Test
+        void whenMainCameraTooLong_thenStatus400() throws Exception {
+            expect400WithInvalidBody(TestPhone.INVALID_MAIN_CAMERA_TOO_LONG);
+        }
+
+        @Test
         void whenBatteryCapacityIsNull_thenStatus400() throws Exception {
             expect400WithInvalidBody(TestPhone.INVALID_BATTERY_NULL);
         }
@@ -843,6 +864,11 @@ class PhoneControllerTest {
         @Test
         void whenBatteryCapacityWithWrongUnit_thenStatus400() throws Exception {
             expect400WithInvalidBody(TestPhone.INVALID_BATTERY_WRONG_UNIT);
+        }
+
+        @Test
+        void whenBatteryCapacityTooLong_thenStatus400() throws Exception {
+            expect400WithInvalidBody(TestPhone.INVALID_BATTERY_TOO_LONG);
         }
 
         @Test
@@ -986,17 +1012,6 @@ class PhoneControllerTest {
 
         // Validation tests
         @Test
-        void whenNameIsNull_thenStatus204() throws Exception {
-            PhoneUpdateRequestDto request = buildPhoneUpdateRequestDto(TestPhone.INVALID_NAME_NULL);
-
-            mockMvc.perform(put(URL, phone1)
-                            .header(HttpHeaders.AUTHORIZATION, auth(token))
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(request)))
-                    .andExpect(status().isNoContent());
-        }
-
-        @Test
         void whenNameIsBlank_thenStatus400() throws Exception {
             expect400WithInvalidBody(TestPhone.INVALID_NAME_BLANK);
         }
@@ -1017,30 +1032,8 @@ class PhoneControllerTest {
         }
 
         @Test
-        void whenPriceIsNull_thenStatus204() throws Exception {
-            PhoneUpdateRequestDto request = buildPhoneUpdateRequestDto(TestPhone.INVALID_PRICE_NULL);
-
-            mockMvc.perform(put(URL, phone1)
-                            .header(HttpHeaders.AUTHORIZATION, auth(token))
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(request)))
-                    .andExpect(status().isNoContent());
-        }
-
-        @Test
         void whenPriceIsNegative_thenStatus400() throws Exception {
             expect400WithInvalidBody(TestPhone.INVALID_PRICE_NEGATIVE);
-        }
-
-        @Test
-        void whenBrandIsNull_thenStatus204() throws Exception {
-            PhoneUpdateRequestDto request = buildPhoneUpdateRequestDto(TestPhone.INVALID_BRAND_NULL);
-
-            mockMvc.perform(put(URL, phone1)
-                            .header(HttpHeaders.AUTHORIZATION, auth(token))
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(request)))
-                    .andExpect(status().isNoContent());
         }
 
         @Test
@@ -1059,17 +1052,6 @@ class PhoneControllerTest {
         }
 
         @Test
-        void whenReleaseYearIsNull_thenStatus204() throws Exception {
-            PhoneUpdateRequestDto request = buildPhoneUpdateRequestDto(TestPhone.INVALID_YEAR_NULL);
-
-            mockMvc.perform(put(URL, phone1)
-                            .header(HttpHeaders.AUTHORIZATION, auth(token))
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(request)))
-                    .andExpect(status().isNoContent());
-        }
-
-        @Test
         void whenReleaseYearTooEarly_thenStatus400() throws Exception {
             expect400WithInvalidBody(TestPhone.INVALID_YEAR_TOO_EARLY);
         }
@@ -1077,6 +1059,116 @@ class PhoneControllerTest {
         @Test
         void whenReleaseYearInFuture_thenStatus400() throws Exception {
             expect400WithInvalidBody(TestPhone.INVALID_YEAR_FUTURE);
+        }
+
+        @Test
+        void whenCpuIsBlank_thenStatus400() throws Exception {
+            expect400WithInvalidBody(TestPhone.INVALID_CPU_BLANK);
+        }
+
+        @Test
+        void whenCpuIsTooLong_thenStatus400() throws Exception {
+            expect400WithInvalidBody(TestPhone.INVALID_CPU_TOO_LONG);
+        }
+
+        @Test
+        void whenCoresNumberIsTooSmall_thenStatus400() throws Exception {
+            expect400WithInvalidBody(TestPhone.INVALID_CORES_TOO_SMALL);
+        }
+
+        @Test
+        void whenCoresNumberIsTooBig_thenStatus400() throws Exception {
+            expect400WithInvalidBody(TestPhone.INVALID_CORES_TOO_BIG);
+        }
+
+        @Test
+        void whenScreenSizeIsBlank_thenStatus400() throws Exception {
+            expect400WithInvalidBody(TestPhone.INVALID_SCREEN_BLANK);
+        }
+
+        @Test
+        void whenScreenSizeWithoutQuotes_thenStatus400() throws Exception {
+            expect400WithInvalidBody(TestPhone.INVALID_SCREEN_NO_QUOTES);
+        }
+
+        @Test
+        void whenScreenSizeWithText_thenStatus400() throws Exception {
+            expect400WithInvalidBody(TestPhone.INVALID_SCREEN_WITH_TEXT);
+        }
+
+        @Test
+        void whenScreenSizeTooLong_thenStatus400() throws Exception {
+            expect400WithInvalidBody(TestPhone.INVALID_SCREEN_TOO_LONG);
+        }
+
+        @Test
+        void whenFrontCameraIsBlank_thenStatus400() throws Exception {
+            expect400WithInvalidBody(TestPhone.INVALID_FRONT_CAMERA_BLANK);
+        }
+
+        @Test
+        void whenFrontCameraIsDecimal_thenStatus400() throws Exception {
+            expect400WithInvalidBody(TestPhone.INVALID_FRONT_CAMERA_DECIMAL);
+        }
+
+        @Test
+        void whenFrontCameraWithoutUnit_thenStatus400() throws Exception {
+            expect400WithInvalidBody(TestPhone.INVALID_FRONT_CAMERA_NO_UNIT);
+        }
+
+        @Test
+        void whenFrontCameraWrongFormat_thenStatus400() throws Exception {
+            expect400WithInvalidBody(TestPhone.INVALID_FRONT_CAMERA_WRONG_FORMAT);
+        }
+
+        @Test
+        void whenFrontCameraTooLong_thenStatus400() throws Exception {
+            expect400WithInvalidBody(TestPhone.INVALID_FRONT_CAMERA_TOO_LONG);
+        }
+
+        @Test
+        void whenMainCameraIsBlank_thenStatus400() throws Exception {
+            expect400WithInvalidBody(TestPhone.INVALID_MAIN_CAMERA_BLANK);
+        }
+
+        @Test
+        void whenMainCameraIsDecimal_thenStatus400() throws Exception {
+            expect400WithInvalidBody(TestPhone.INVALID_MAIN_CAMERA_DECIMAL);
+        }
+
+        @Test
+        void whenMainCameraWithoutUnit_thenStatus400() throws Exception {
+            expect400WithInvalidBody(TestPhone.INVALID_MAIN_CAMERA_NO_UNIT);
+        }
+
+        @Test
+        void whenMainCameraWithWrongFormat_thenStatus400() throws Exception {
+            expect400WithInvalidBody(TestPhone.INVALID_MAIN_CAMERA_WRONG_FORMAT);
+        }
+
+        @Test
+        void whenMainCameraTooLong_thenStatus400() throws Exception {
+            expect400WithInvalidBody(TestPhone.INVALID_MAIN_CAMERA_TOO_LONG);
+        }
+
+        @Test
+        void whenBatteryCapacityIsBlank_thenStatus400() throws Exception {
+            expect400WithInvalidBody(TestPhone.INVALID_BATTERY_BLANK);
+        }
+
+        @Test
+        void whenBatteryCapacityWithoutUnit_thenStatus400() throws Exception {
+            expect400WithInvalidBody(TestPhone.INVALID_BATTERY_NO_UNIT);
+        }
+
+        @Test
+        void whenBatteryCapacityWithWrongUnit_thenStatus400() throws Exception {
+            expect400WithInvalidBody(TestPhone.INVALID_BATTERY_WRONG_UNIT);
+        }
+
+        @Test
+        void whenBatteryCapacityTooLong_thenStatus400() throws Exception {
+            expect400WithInvalidBody(TestPhone.INVALID_BATTERY_TOO_LONG);
         }
 
         private void expect400WithInvalidBody(TestPhone phone) throws Exception {
@@ -1392,6 +1484,9 @@ class PhoneControllerTest {
                     testPhone.price,
                     testPhone.brand,
                     testPhone.releaseYear,
+                    buildSku(testPhone),
+                    10,
+                    ProductStatus.IN_STOCK,
                     testPhone.cpu,
                     testPhone.coresNumber,
                     testPhone.screenSize,
@@ -1409,6 +1504,9 @@ class PhoneControllerTest {
                     testPhone.price,
                     testPhone.brand,
                     testPhone.releaseYear,
+                    buildSku(testPhone),
+                    10,
+                    ProductStatus.IN_STOCK,
                     testPhone.cpu,
                     testPhone.coresNumber,
                     testPhone.screenSize,
@@ -1444,6 +1542,10 @@ class PhoneControllerTest {
                     "application/json",
                     content
             );
+        }
+
+        private static String buildSku(TestPhone testPhone) {
+            return ("SKU-" + testPhone.name()).replace('_', '-');
         }
 
     }
@@ -1590,6 +1692,9 @@ class PhoneControllerTest {
                 "Phone", "description", new BigDecimal("100.00"), "Brand", 2020,
                 "Snapdragon 8 Gen 3", 8, "6.7 inch", "12 MP", "50-12 MP", "5000 mAh"),
 
+        INVALID_SCREEN_TOO_LONG(
+                "Phone", "description", new BigDecimal("100.00"), "Brand", 2020,
+                "Snapdragon 8 Gen 3", 8, "66.777", "12 MP", "50-12 MP", "5000 mAh"),
 
         // Invalid frontCamera
         INVALID_FRONT_CAMERA_NULL(
@@ -1607,6 +1712,14 @@ class PhoneControllerTest {
         INVALID_FRONT_CAMERA_NO_UNIT(
                 "Phone", "description", new BigDecimal("100.00"), "Brand", 2020,
                 "Snapdragon 8 Gen 3", 8, "6.7\"", "12", "50-12 MP", "5000 mAh"),
+
+        INVALID_FRONT_CAMERA_WRONG_FORMAT(
+                "Phone", "description", new BigDecimal("100.00"), "Brand", 2020,
+                "Snapdragon 8 Gen 3", 8, "6.7\"", "12MP", "50-12 MP", "5000 mAh"),
+
+        INVALID_FRONT_CAMERA_TOO_LONG(
+                "Phone", "description", new BigDecimal("100.00"), "Brand", 2020,
+                "Snapdragon 8 Gen 3", 8, "6.7\"", "12121212 MP", "50-12 MP", "5000 mAh"),
 
 
         // Invalid mainCamera
@@ -1631,6 +1744,10 @@ class PhoneControllerTest {
                 "Phone", "description", new BigDecimal("100.00"), "Brand", 2020,
                 "Snapdragon 8 Gen 3", 8, "6.7\"", "12 MP", "50,12 MP", "5000 mAh"),
 
+        INVALID_MAIN_CAMERA_TOO_LONG(
+                "Phone", "description", new BigDecimal("100.00"), "Brand", 2020,
+                "Snapdragon 8 Gen 3", 8, "6.7\"", "12 MP", "500000000-12000000 MP", "5000 mAh"),
+
 
         // Invalid batteryCapacity
         INVALID_BATTERY_NULL(
@@ -1647,7 +1764,11 @@ class PhoneControllerTest {
 
         INVALID_BATTERY_WRONG_UNIT(
                 "Phone", "description", new BigDecimal("100.00"), "Brand", 2020,
-                "Snapdragon 8 Gen 3", 8, "6.7\"", "12 MP", "50-12 MP", "5000 mah");
+                "Snapdragon 8 Gen 3", 8, "6.7\"", "12 MP", "50-12 MP", "5000 mah"),
+
+        INVALID_BATTERY_TOO_LONG(
+                "Phone", "description", new BigDecimal("100.00"), "Brand", 2020,
+                "Snapdragon 8 Gen 3", 8, "6.7\"", "12 MP", "50-12 MP", "5000000 mAh");
 
 
 

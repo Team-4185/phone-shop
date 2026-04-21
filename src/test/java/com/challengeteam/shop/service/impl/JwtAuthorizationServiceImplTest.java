@@ -2,8 +2,8 @@ package com.challengeteam.shop.service.impl;
 
 import com.challengeteam.shop.dto.jwt.JwtResponseDto;
 import com.challengeteam.shop.dto.user.CreateUserDto;
-import com.challengeteam.shop.dto.user.UserLoginRequestDto;
-import com.challengeteam.shop.dto.user.UserRegisterRequestDto;
+import com.challengeteam.shop.dto.auth.UserLoginRequestDto;
+import com.challengeteam.shop.dto.auth.UserRegisterRequestDto;
 import com.challengeteam.shop.entity.user.User;
 import com.challengeteam.shop.exceptionHandling.exception.EmailOrPasswordWrongException;
 import com.challengeteam.shop.exceptionHandling.exception.InvalidAPIRequestException;

@@ -4,6 +4,7 @@ import com.challengeteam.shop.dto.cart.CartItemAddRequestDto;
 import com.challengeteam.shop.dto.cart.CartItemRemoveRequestDto;
 import com.challengeteam.shop.entity.phone.Phone;
 import com.challengeteam.shop.entity.phone.PhoneCharacteristics;
+import com.challengeteam.shop.entity.phone.ProductStatus;
 import com.challengeteam.shop.persistence.repository.CartRepository;
 import com.challengeteam.shop.persistence.repository.PhoneRepository;
 import com.challengeteam.shop.service.UserCartService;
@@ -85,6 +86,9 @@ class UserCartControllerTest {
         phone.setPrice(testPhone.price);
         phone.setBrand(testPhone.brand);
         phone.setReleaseYear(testPhone.releaseYear);
+        phone.setSku(buildSku(testPhone));
+        phone.setStock(10);
+        phone.setStatus(ProductStatus.IN_STOCK);
         phone.setPhoneCharacteristics(
                 PhoneCharacteristics.builder()
                         .cpu(testPhone.cpu)
@@ -96,6 +100,10 @@ class UserCartControllerTest {
                         .build()
         );
         return phoneRepository.save(phone).getId();
+    }
+
+    private String buildSku(TestPhone testPhone) {
+        return ("SKU-" + testPhone.name()).replace('_', '-');
     }
 
     @Nested

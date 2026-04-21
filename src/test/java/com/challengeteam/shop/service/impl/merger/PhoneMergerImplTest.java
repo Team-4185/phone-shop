@@ -3,6 +3,7 @@ package com.challengeteam.shop.service.impl.merger;
 import com.challengeteam.shop.dto.phone.PhoneUpdateRequestDto;
 import com.challengeteam.shop.entity.phone.Phone;
 import com.challengeteam.shop.entity.phone.PhoneCharacteristics;
+import com.challengeteam.shop.entity.phone.ProductStatus;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
@@ -34,6 +35,9 @@ class PhoneMergerImplTest {
                     null,
                     null,
                     null,
+                    null,
+                    null,
+                    null,
                     null
             );
 
@@ -50,6 +54,9 @@ class PhoneMergerImplTest {
             assertEquals(dto.price(), phone.getPrice());
             assertNotEquals(dto.brand(), phone.getBrand());
             assertNotEquals(dto.releaseYear(), phone.getReleaseYear());
+            assertNotEquals(dto.sku(), phone.getSku());
+            assertNotEquals(dto.stock(), phone.getStock());
+            assertNotEquals(dto.status(), phone.getStatus());
             assertNotEquals(dto.cpu(), phone.getPhoneCharacteristics().getCpu());
             assertNotEquals(dto.coresNumber(), phone.getPhoneCharacteristics().getCoresNumber());
             assertNotEquals(dto.screenSize(), phone.getPhoneCharacteristics().getScreenSize());
@@ -68,6 +75,9 @@ class PhoneMergerImplTest {
                     SAMSUNG_PRICE,
                     "  " + SAMSUNG_BRAND + "  ",
                     SAMSUNG_RELEASE_YEAR,
+                    "  " + SAMSUNG_SKU + "  ",
+                    SAMSUNG_STOCK,
+                    SAMSUNG_STATUS,
                     "  " + SAMSUNG_CPU + "  ",
                     SAMSUNG_CORES_NUMBER,
                     "  " + SAMSUNG_SCREEN_SIZE + "  ",
@@ -85,6 +95,9 @@ class PhoneMergerImplTest {
             assertEquals(SAMSUNG_PRICE, phone.getPrice());
             assertEquals(SAMSUNG_BRAND, phone.getBrand());
             assertEquals(SAMSUNG_RELEASE_YEAR, phone.getReleaseYear());
+            assertEquals(SAMSUNG_SKU, phone.getSku());
+            assertEquals(SAMSUNG_STOCK, phone.getStock());
+            assertEquals(SAMSUNG_STATUS, phone.getStatus());
             assertEquals(SAMSUNG_CPU, phone.getPhoneCharacteristics().getCpu());
             assertEquals(SAMSUNG_CORES_NUMBER, phone.getPhoneCharacteristics().getCoresNumber());
             assertEquals(SAMSUNG_SCREEN_SIZE, phone.getPhoneCharacteristics().getScreenSize());
@@ -100,6 +113,9 @@ class PhoneMergerImplTest {
                     "new iphone",
                     "new description",
                     BigDecimal.valueOf(1999.99),
+                    null,
+                    null,
+                    null,
                     null,
                     null,
                     null,
@@ -139,6 +155,9 @@ class PhoneMergerImplTest {
         public static final String IPHONE_BRAND = "Apple";
         public static final BigDecimal IPHONE_PRICE = BigDecimal.valueOf(1499.99);
         public static final int IPHONE_RELEASE_YEAR = 2023;
+        public static final String IPHONE_SKU = "IPHONE-15-001";
+        public static final Integer IPHONE_STOCK = 45;
+        public static final ProductStatus IPHONE_STATUS = ProductStatus.IN_STOCK;
         public static final String IPHONE_CPU = "Apple A16 Bionic";
         public static final Integer IPHONE_CORES_NUMBER = 6;
         public static final String IPHONE_SCREEN_SIZE = "6.1\"";
@@ -152,6 +171,9 @@ class PhoneMergerImplTest {
         public static final String SAMSUNG_BRAND = "Samsung";
         public static final BigDecimal SAMSUNG_PRICE = BigDecimal.valueOf(1399.00);
         public static final int SAMSUNG_RELEASE_YEAR = 2024;
+        public static final String SAMSUNG_SKU = "SAMSUNG-S24-001";
+        public static final Integer SAMSUNG_STOCK = 8;
+        public static final ProductStatus SAMSUNG_STATUS = ProductStatus.LOW_STOCK;
         public static final String SAMSUNG_CPU = "Exynos 2400";
         public static final Integer SAMSUNG_CORES_NUMBER = 10;
         public static final String SAMSUNG_SCREEN_SIZE = "6.2\"";
@@ -165,6 +187,9 @@ class PhoneMergerImplTest {
         public static final String XIAOMI_BRAND = "Xiaomi";
         public static final BigDecimal XIAOMI_PRICE = BigDecimal.valueOf(899.50);
         public static final int XIAOMI_RELEASE_YEAR = 2023;
+        public static final String XIAOMI_SKU = "XIAOMI-14P-001";
+        public static final Integer XIAOMI_STOCK = 0;
+        public static final ProductStatus XIAOMI_STATUS = ProductStatus.OUT_OF_STOCK;
         public static final String XIAOMI_CPU = "Snapdragon 8 Gen 3";
         public static final Integer XIAOMI_CORES_NUMBER = 8;
         public static final String XIAOMI_SCREEN_SIZE = "6.73\"";
@@ -178,6 +203,9 @@ class PhoneMergerImplTest {
         public static final String GOOGLE_BRAND = "Google";
         public static final BigDecimal GOOGLE_PRICE = BigDecimal.valueOf(1199.00);
         public static final int GOOGLE_RELEASE_YEAR = 2024;
+        public static final String GOOGLE_SKU = "PIXEL-9-001";
+        public static final Integer GOOGLE_STOCK = 12;
+        public static final ProductStatus GOOGLE_STATUS = ProductStatus.IN_STOCK;
         public static final String GOOGLE_CPU = "Google Tensor G4";
         public static final Integer GOOGLE_CORES_NUMBER = 8;
         public static final String GOOGLE_SCREEN_SIZE = "6.3\"";
@@ -192,6 +220,9 @@ class PhoneMergerImplTest {
                     .brand(IPHONE_BRAND)
                     .price(IPHONE_PRICE)
                     .releaseYear(IPHONE_RELEASE_YEAR)
+                    .sku(IPHONE_SKU)
+                    .stock(IPHONE_STOCK)
+                    .status(IPHONE_STATUS)
                     .phoneCharacteristics(
                             PhoneCharacteristics.builder()
                                     .cpu(IPHONE_CPU)
@@ -214,6 +245,9 @@ class PhoneMergerImplTest {
                     .brand(SAMSUNG_BRAND)
                     .price(SAMSUNG_PRICE)
                     .releaseYear(SAMSUNG_RELEASE_YEAR)
+                    .sku(SAMSUNG_SKU)
+                    .stock(SAMSUNG_STOCK)
+                    .status(SAMSUNG_STATUS)
                     .phoneCharacteristics(
                             PhoneCharacteristics.builder()
                                     .cpu(SAMSUNG_CPU)
@@ -236,6 +270,9 @@ class PhoneMergerImplTest {
                     .brand(XIAOMI_BRAND)
                     .price(XIAOMI_PRICE)
                     .releaseYear(XIAOMI_RELEASE_YEAR)
+                    .sku(XIAOMI_SKU)
+                    .stock(XIAOMI_STOCK)
+                    .status(XIAOMI_STATUS)
                     .phoneCharacteristics(
                             PhoneCharacteristics.builder()
                                     .cpu(XIAOMI_CPU)
@@ -258,6 +295,9 @@ class PhoneMergerImplTest {
                     .brand(GOOGLE_BRAND)
                     .price(GOOGLE_PRICE)
                     .releaseYear(GOOGLE_RELEASE_YEAR)
+                    .sku(GOOGLE_SKU)
+                    .stock(GOOGLE_STOCK)
+                    .status(GOOGLE_STATUS)
                     .phoneCharacteristics(
                             PhoneCharacteristics.builder()
                                     .cpu(GOOGLE_CPU)

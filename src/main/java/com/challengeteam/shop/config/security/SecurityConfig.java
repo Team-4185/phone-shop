@@ -40,7 +40,6 @@ public class SecurityConfig {
 
     @Bean("mainCorsConfig")
     public CorsConfigurationSource corsConfigurationSource(CorsProperties corsProperties) {
-        // create common cors configuration
         CorsConfiguration commonCorsConfig = new CorsConfiguration();
         commonCorsConfig.setAllowedOriginPatterns(corsProperties.getAllowedOrigins());
         commonCorsConfig.setAllowedMethods(corsProperties.getAllowedMethods());
@@ -48,14 +47,12 @@ public class SecurityConfig {
         commonCorsConfig.setAllowCredentials(corsProperties.isAllowCredentials());
         commonCorsConfig.setMaxAge(corsProperties.getMaxCacheAge());
 
-        // Set common cors configuration for any request pattern
         UrlBasedCorsConfigurationSource corsConfigurationSource = new UrlBasedCorsConfigurationSource();
         corsConfigurationSource.registerCorsConfiguration("/**", commonCorsConfig);
 
         return corsConfigurationSource;
     }
 
-    // SECURITY CONFIG
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http,
                                                    JwtTokenFilter jwtTokenFilter,
@@ -64,10 +61,11 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .cors(corsConfigurer -> corsConfigurer.configurationSource(corsConfig))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()             // critical for CORS
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/docs/**", "/swagger-ui/**").permitAll()
                         .requestMatchers("/api/v1/test-data/**").permitAll()
+                        .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtTokenFilter, UsernamePasswordAuthenticationFilter.class)
