@@ -312,6 +312,44 @@ public class AuthControllerTest {
         }
 
         @Test
+        void whenRememberMeIsString_thenReturn400() throws Exception {
+            String json = """
+        {
+          "email": "existing.email@valid.com",
+          "password": "Password123!",
+          "rememberMe": "true"
+        }
+    """;
+
+            var request = post(URL)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(json)
+                    .accept(MediaType.APPLICATION_JSON);
+
+            mockMvc.perform(request)
+                    .andExpect(status().isBadRequest());
+        }
+
+        @Test
+        void whenRememberMeIsNumber_thenReturn400() throws Exception {
+            String json = """
+        {
+          "email": "existing.email@valid.com",
+          "password": "Password123!",
+          "rememberMe": 1
+        }
+    """;
+
+            var request = post(URL)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(json)
+                    .accept(MediaType.APPLICATION_JSON);
+
+            mockMvc.perform(request)
+                    .andExpect(status().isBadRequest());
+        }
+
+        @Test
         void whenEmailIsNotRegistered_thenReturn401() throws Exception {
             UserLoginRequestDto body = buildUserLoginRequestDto(TestUserCredentials.NOT_EXISTING_CREDENTIALS);
 
