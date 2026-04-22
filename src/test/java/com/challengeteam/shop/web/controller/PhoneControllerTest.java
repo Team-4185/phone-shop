@@ -315,6 +315,23 @@ class PhoneControllerTest {
         }
 
         @Test
+        void whenMinPriceIsGreaterThanMaxPrice_thenStatus400() throws Exception {
+            mockMvc.perform(get(URL)
+                            .param("minPrice", "100")
+                            .param("maxPrice", "10")
+                            .header(HttpHeaders.AUTHORIZATION, auth(token)))
+                    .andExpect(status().isBadRequest());
+        }
+
+        @Test
+        void whenBrandTooLong_thenStatus400() throws Exception {
+            mockMvc.perform(get(URL)
+                            .param("brand", "a".repeat(6000))
+                            .header(HttpHeaders.AUTHORIZATION, auth(token)))
+                    .andExpect(status().isBadRequest());
+        }
+
+        @Test
         void whenSortByNameAsc_thenReturnSortedPhones() throws Exception {
             mockMvc.perform(get(URL)
                             .param("sort", "name_asc")

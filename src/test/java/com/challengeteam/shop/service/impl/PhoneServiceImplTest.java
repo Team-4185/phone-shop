@@ -1176,7 +1176,6 @@ class PhoneServiceImplTest {
             );
         }
 
-
         static MultipartFile buildMultipartFile() {
             return new MockMultipartFile(
                     FILENAME,

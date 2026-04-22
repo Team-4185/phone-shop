@@ -9,6 +9,7 @@ import com.challengeteam.shop.dto.phone.PhoneResponseDto;
 import com.challengeteam.shop.dto.phone.PhoneUpdateRequestDto;
 import com.challengeteam.shop.entity.image.Image;
 import com.challengeteam.shop.entity.phone.Phone;
+import com.challengeteam.shop.exceptionHandling.exception.InvalidPriceRangeException;
 import com.challengeteam.shop.exceptionHandling.exception.ResourceNotFoundException;
 import com.challengeteam.shop.mapper.ImageMapper;
 import com.challengeteam.shop.mapper.PhoneMapper;
@@ -50,6 +51,9 @@ public class PhoneController {
     ) {
         int page = pageRequestDto.page() - 1;
         int size = pageRequestDto.size();
+
+        if (filterDto.minPrice() != null && filterDto.maxPrice() != null && filterDto.minPrice().compareTo(filterDto.maxPrice()) > 0)
+            throw new InvalidPriceRangeException("minPrice cannot be greater than maxPrice");
 
         Page<Phone> phones = phoneService.getPhones(page, size, filterDto);
         Page<PhoneResponseDto> response = phones.map(phoneMapper::toResponse);
