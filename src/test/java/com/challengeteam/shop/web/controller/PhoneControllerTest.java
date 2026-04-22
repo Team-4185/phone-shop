@@ -325,7 +325,10 @@ class PhoneControllerTest {
 
         @Test
         void whenBrandTooLong_thenStatus400() throws Exception {
-            expect400WithInvalidBody(TestPhone.INVALID_BRAND_TOO_LONG);
+            mockMvc.perform(get(URL)
+                            .param("brand", "a".repeat(6000))
+                            .header(HttpHeaders.AUTHORIZATION, auth(token)))
+                    .andExpect(status().isBadRequest());
         }
 
         @Test
@@ -506,19 +509,6 @@ class PhoneControllerTest {
                     .andExpect(jsonPath("$.content[1].name").value("Samsung Galaxy S24"))
                     .andExpect(jsonPath("$.content[1].price").value(899.99))
                     .andExpect(jsonPath("$.content[*].images").exists());
-        }
-
-        private void expect400WithInvalidBody(TestPhone phone) throws Exception {
-            PhoneCreateRequestDto json = buildPhoneCreateRequestDto(phone);
-            byte[] content = objectMapper.writeValueAsBytes(json);
-
-            var request = multipart(URL)
-                    .file((MockMultipartFile) buildJsonLikeMultipartFile(content, "phone"))
-                    .file((MockMultipartFile) buildMultipartFile("images"))
-                    .header(HttpHeaders.AUTHORIZATION, auth(token));
-
-            mockMvc.perform(request)
-                    .andExpect(status().isBadRequest());
         }
     }
 
