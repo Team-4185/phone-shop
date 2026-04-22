@@ -5,6 +5,7 @@ import com.challengeteam.shop.dto.admin.product.AdminProductFilterDto;
 import com.challengeteam.shop.dto.admin.product.AdminProductListItemResponseDto;
 import com.challengeteam.shop.dto.pagination.PageRequestDto;
 import com.challengeteam.shop.dto.pagination.PageResponseDto;
+import com.challengeteam.shop.exceptionHandling.exception.InvalidPriceRangeException;
 import com.challengeteam.shop.service.admin.AdminProductQueryService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -25,30 +26,33 @@ import org.springframework.web.bind.annotation.RestController;
 @Validated
 public class AdminProductController {
 
-  private final AdminProductQueryService adminProductQueryService;
+    private final AdminProductQueryService adminProductQueryService;
 
-  @Operation(
-      summary = "Get admin product list",
-      description =
-          "Returns a paginated list of products for admin section with admin-specific filtering and sorting.")
-  @GetMapping
-  public ResponseEntity<PageResponseDto<AdminProductListItemResponseDto>> getAllProducts(
-      @Valid PageRequestDto pageRequestDto, @Valid AdminProductFilterDto filterDto) {
-    int page = pageRequestDto.page() - 1;
-    int size = pageRequestDto.size();
+    @Operation(
+            summary = "Get admin product list",
+            description =
+                    "Returns a paginated list of products for admin section with admin-specific filtering and sorting.")
+    @GetMapping
+    public ResponseEntity<PageResponseDto<AdminProductListItemResponseDto>> getAllProducts(
+            @Valid PageRequestDto pageRequestDto, @Valid AdminProductFilterDto filterDto) {
+        int page = pageRequestDto.page() - 1;
+        int size = pageRequestDto.size();
 
-    Page<AdminProductListItemResponseDto> products =
-        adminProductQueryService.getProducts(page, size, filterDto);
+        if (filterDto.minPrice() != null && filterDto.maxPrice() != null && filterDto.minPrice().compareTo(filterDto.maxPrice()) > 0)
+            throw new InvalidPriceRangeException("minPrice cannot be greater than maxPrice");
 
-    return ResponseEntity.ok(PageResponseDto.of(products));
-  }
+        Page<AdminProductListItemResponseDto> products =
+                adminProductQueryService.getProducts(page, size, filterDto);
 
-  @Operation(
-      summary = "Get admin product details by id",
-      description =
-          "Returns full product details required for admin overview and future edit form.")
-  @GetMapping("/{id:\\d+}")
-  public ResponseEntity<AdminProductDetailsResponseDto> getProductById(@PathVariable Long id) {
-    return ResponseEntity.ok(adminProductQueryService.getProductById(id));
-  }
+        return ResponseEntity.ok(PageResponseDto.of(products));
+    }
+
+    @Operation(
+            summary = "Get admin product details by id",
+            description =
+                    "Returns full product details required for admin overview and future edit form.")
+    @GetMapping("/{id:\\d+}")
+    public ResponseEntity<AdminProductDetailsResponseDto> getProductById(@PathVariable Long id) {
+        return ResponseEntity.ok(adminProductQueryService.getProductById(id));
+    }
 }
