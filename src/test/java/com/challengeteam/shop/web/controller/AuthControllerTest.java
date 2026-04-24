@@ -68,7 +68,6 @@ public class AuthControllerTest {
     private JwtProperties jwtProperties;
     @TestBean
     private JavaMailSender javaMailSender;
-
     private JwtResponseDto token;
 
 
@@ -331,6 +330,44 @@ public class AuthControllerTest {
                     .andExpect(jsonPath("$.accessToken").isNotEmpty())
                     .andExpect(cookie().exists("refreshToken"))
                     .andExpect(cookie().maxAge("refreshToken", (int) jwtProperties.getRememberMeRefreshTokenExpiration().toSeconds()));
+        }
+
+        @Test
+        void whenRememberMeIsString_thenReturn400() throws Exception {
+            String json = """
+        {
+          "email": "existing.email@valid.com",
+          "password": "Password123!",
+          "rememberMe": "true"
+        }
+    """;
+
+            var request = post(URL)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(json)
+                    .accept(MediaType.APPLICATION_JSON);
+
+            mockMvc.perform(request)
+                    .andExpect(status().isBadRequest());
+        }
+
+        @Test
+        void whenRememberMeIsNumber_thenReturn400() throws Exception {
+            String json = """
+        {
+          "email": "existing.email@valid.com",
+          "password": "Password123!",
+          "rememberMe": 1
+        }
+    """;
+
+            var request = post(URL)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(json)
+                    .accept(MediaType.APPLICATION_JSON);
+
+            mockMvc.perform(request)
+                    .andExpect(status().isBadRequest());
         }
 
         @Test
