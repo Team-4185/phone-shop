@@ -1,6 +1,6 @@
 package com.challengeteam.shop.service.impl;
 
-import com.challengeteam.shop.dto.pagination.PhoneFilterDto;
+import com.challengeteam.shop.dto.pagination.paginationRequest.PhoneFilterDto;
 import com.challengeteam.shop.dto.phone.PhoneCreateRequestDto;
 import com.challengeteam.shop.dto.phone.PhoneUpdateRequestDto;
 import com.challengeteam.shop.entity.image.Image;

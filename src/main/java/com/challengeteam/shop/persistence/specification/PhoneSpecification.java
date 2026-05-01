@@ -1,6 +1,6 @@
 package com.challengeteam.shop.persistence.specification;
 
-import com.challengeteam.shop.dto.pagination.PhoneFilterDto;
+import com.challengeteam.shop.dto.pagination.paginationRequest.PhoneFilterDto;
 import com.challengeteam.shop.entity.phone.Phone;
 import org.springframework.data.jpa.domain.Specification;
 

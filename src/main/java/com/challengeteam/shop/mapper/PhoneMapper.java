@@ -4,10 +4,37 @@ import com.challengeteam.shop.dto.phone.PhoneResponseDto;
 import com.challengeteam.shop.entity.phone.Phone;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import org.mapstruct.MappingConstants;
 
-@Mapper(componentModel = "spring", uses = {ImageMapper.class})
+import java.util.List;
+
+/**
+ * Mapper interface for converting between {@link Phone} entities and {@link PhoneResponseDto} data transfer objects.
+ * <p>
+ * This MapStruct mapper is configured as a Spring component and uses {@link ImageMapper} for mapping
+ * phone images. It handles the mapping of phone characteristics from the embedded {@code PhoneCharacteristics}
+ * object to the flat structure of the response DTO.
+ * </p>
+ *
+ * @see Phone
+ * @see PhoneResponseDto
+ * @see ImageMapper
+ */
+@Mapper(componentModel = MappingConstants.ComponentModel.SPRING,
+        uses = {ImageMapper.class})
 public interface PhoneMapper {
 
+    /**
+     * Converts a {@link Phone} entity to a {@link PhoneResponseDto}.
+     * <p>
+     * This method maps phone characteristics from the embedded {@code phoneCharacteristics} object
+     * to individual fields in the response DTO, including CPU, cores number, screen size, camera
+     * specifications, and battery capacity. Phone images are mapped using the {@link ImageMapper}.
+     * </p>
+     *
+     * @param phone the phone entity to convert
+     * @return a {@link PhoneResponseDto} containing the phone data with flattened characteristics
+     */
     @Mapping(source = "phoneCharacteristics.cpu", target = "cpu")
     @Mapping(source = "phoneCharacteristics.coresNumber", target = "coresNumber")
     @Mapping(source = "phoneCharacteristics.screenSize", target = "screenSize")
@@ -17,4 +44,14 @@ public interface PhoneMapper {
     @Mapping(source = "images", target = "images")
     PhoneResponseDto toResponse(Phone phone);
 
+    /**
+     * Converts a list of {@link Phone} entities to a list of {@link PhoneResponseDto} objects.
+     * <p>
+     * This method applies the {@link #toResponse(Phone)} mapping to each phone in the provided list.
+     * </p>
+     *
+     * @param phones the list of phone entities to convert
+     * @return a list of {@link PhoneResponseDto} objects corresponding to the input phones
+     */
+    List<PhoneResponseDto> toResponseList(List<Phone> phones);
 }
