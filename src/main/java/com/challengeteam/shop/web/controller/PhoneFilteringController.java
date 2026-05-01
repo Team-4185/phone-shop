@@ -18,7 +18,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -50,7 +49,6 @@ public class PhoneFilteringController {
                     description = "Invalid filter parameters or pagination values"
             )
     })
-    @PreAuthorize("permitAll()")
     @GetMapping("/by")
     public ResponseEntity<PageResponseDto<PhoneResponseDto>>
     filterPhones(@Parameter(description = "Filter criteria for phones", required = true)
