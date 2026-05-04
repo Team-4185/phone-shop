@@ -5,7 +5,6 @@ import com.challengeteam.shop.dto.pagination.paginationResponse.PageResponseDto;
 import com.challengeteam.shop.dto.phone.PhoneResponseDto;
 import com.challengeteam.shop.entity.phone.Phone;
 import com.challengeteam.shop.entity.phone.Phone_;
-import com.challengeteam.shop.entity.phone.ProductStatus;
 import com.challengeteam.shop.mapper.PhoneMapper;
 import com.challengeteam.shop.persistence.repository.PhoneRepository;
 import com.challengeteam.shop.utility.pagination.filter.sort.SortResolver;
@@ -61,7 +60,7 @@ public class PhoneFilteringAndSortingServiceImpl implements PhoneFilteringAndSor
                 .add(filterDto.inStock(), () -> (root, query, builder)
                         -> builder.greaterThan(root.get(Phone_.STOCK), 0))
                 .add(filterDto.preOrder(), () -> (root, query, builder)
-                        -> builder.equal(root.get(Phone_.status), ProductStatus.OUT_OF_STOCK))
+                        -> builder.equal(root.get(Phone_.STOCK), 0))
                 .buildAnd();
         log.debug("Specification: {}", specification);
         Sort sort = SortResolver.resolve(filterDto.sort());
