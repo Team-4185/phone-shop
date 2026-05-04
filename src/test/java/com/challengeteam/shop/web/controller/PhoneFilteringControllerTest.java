@@ -217,6 +217,19 @@ class PhoneFilteringControllerTest {
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.totalElements").value(0));
         }
+
+        @Test
+        @DisplayName("Min price greater max price -> exception")
+        void shouldThrowException_whenMinPriceGreaterMaxPrice() throws Exception {
+            mockMvc.perform(get("/api/v1/filter/by")
+                            .header("Authorization", "Bearer " + token)
+                            .param("minPrice", "200")
+                            .param("maxPrice", "100")
+                            .param("page", "1").param("size", "10"))
+                    .andExpect(status().isBadRequest());
+        }
+
+
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -550,5 +563,20 @@ class PhoneFilteringControllerTest {
                         .frontCamera("12MP")
                         .build())
                 .build();
+    }
+
+    @Nested
+    @DisplayName("anonymous user - > valid response")
+    class AnonymousUserTest {
+        @Test
+        void shouldReturnValidResponse_whenAnonymousUser() throws Exception {
+            mockMvc.perform(get("/api/v1/filter/by")
+                            .param("brands", "Samsung")
+                            .param("inStock", "true")
+                            .param("page", "1").param("size", "10"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.totalElements").value(1))
+                    .andExpect(jsonPath("$.content[0].name").value("Galaxy S24"));
+        }
     }
 }

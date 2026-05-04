@@ -1,6 +1,7 @@
 package com.challengeteam.shop.dto.pagination.paginationRequest;
 
 import com.challengeteam.shop.constraints.filter.FilterRequestConstraints;
+import com.challengeteam.shop.constraints.filter.validation.annotation.MinPriceNotExceedMaxPrice;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Pattern;
 
@@ -15,13 +16,17 @@ import java.util.List;
  * the results by different fields and orders.
  * </p>
  * <p>
+ * The record is annotated with {@link MinPriceNotExceedMaxPrice} to ensure that the minimum
+ * price does not exceed the maximum price when both values are provided.
+ * </p>
+ * <p>
  * The compact constructor provides default values for the sort parameter, ensuring that
  * if no sort order is specified, results are sorted by name in ascending order.
  * </p>
  *
  * @param brands   a list of brand names to filter by; if null or empty, no brand filtering is applied
- * @param minPrice the minimum price threshold for filtering phones; must not be negative
- * @param maxPrice the maximum price threshold for filtering phones; must not be negative
+ * @param minPrice the minimum price threshold for filtering phones; must not be negative and must not exceed maxPrice
+ * @param maxPrice the maximum price threshold for filtering phones; must not be negative and must not be less than minPrice
  * @param inStock  a flag indicating whether to filter for phones that are in stock (quantity >= 1);
  *                 if null, no stock filtering is applied
  * @param preOrder a flag indicating whether to filter for phones available for pre-order;
@@ -29,7 +34,9 @@ import java.util.List;
  * @param sort     the sort order for the results; must be one of: name_asc, name_desc, price_asc, price_desc;
  *                 defaults to name_asc if null or blank
  * @see com.challengeteam.shop.constraints.filter.FilterRequestConstraints
+ * @see MinPriceNotExceedMaxPrice
  */
+@MinPriceNotExceedMaxPrice
 public record PhoneMultipleFilterRequest(
         List<String> brands,
 
