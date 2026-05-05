@@ -3,11 +3,9 @@ package com.challengeteam.shop.persistence.specification;
 import com.challengeteam.shop.dto.admin.product.AdminProductFilterDto;
 import com.challengeteam.shop.entity.phone.Phone;
 import com.challengeteam.shop.entity.phone.ProductStatus;
-import jakarta.persistence.criteria.JoinType;
 import org.springframework.data.jpa.domain.Specification;
 
 import java.math.BigDecimal;
-import java.util.Objects;
 import java.util.function.Function;
 
 public final class AdminProductSpecification {
@@ -15,7 +13,7 @@ public final class AdminProductSpecification {
   private AdminProductSpecification() {}
 
   public static Specification<Phone> build(AdminProductFilterDto filterDto) {
-    Specification<Phone> spec = fetchImages();
+    Specification<Phone> spec = (root, query, cb) -> cb.conjunction();
 
     spec = addIfHasText(spec, filterDto.search(), AdminProductSpecification::matchesSearch);
     spec = addIfHasText(spec, filterDto.brand(), AdminProductSpecification::hasBrand);
@@ -27,19 +25,6 @@ public final class AdminProductSpecification {
         addIfPresent(spec, filterDto.maxPrice(), AdminProductSpecification::priceLessThanOrEqual);
 
     return spec;
-  }
-
-  private static Specification<Phone> fetchImages() {
-    return (root, query, cb) -> {
-      Objects.requireNonNull(query);
-
-      if (query.getResultType() != Long.class && query.getResultType() != long.class) {
-        root.fetch("images", JoinType.LEFT);
-        query.distinct(true);
-      }
-
-      return cb.conjunction();
-    };
   }
 
   private static Specification<Phone> matchesSearch(String search) {

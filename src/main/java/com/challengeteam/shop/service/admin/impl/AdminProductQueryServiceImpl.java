@@ -11,12 +11,17 @@ import com.challengeteam.shop.persistence.specification.AdminProductSpecificatio
 import com.challengeteam.shop.service.admin.AdminProductQueryService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -31,8 +36,22 @@ public class AdminProductQueryServiceImpl implements AdminProductQueryService {
       int page, int size, AdminProductFilterDto filterDto) {
     Pageable pageable = PageRequest.of(page, size, buildSort(filterDto.sort()));
     Specification<Phone> specification = AdminProductSpecification.build(filterDto);
+    Page<Phone> productsPage = phoneRepository.findAll(specification, pageable);
 
-    return phoneRepository.findAll(specification, pageable).map(adminProductMapper::toListItem);
+    if (productsPage.isEmpty()) {
+      return productsPage.map(adminProductMapper::toListItem);
+    }
+
+    List<Phone> productsWithImages = phoneRepository.findAllWithImages(productsPage.getContent());
+    Map<Long, Phone> productsById =
+        productsWithImages.stream().collect(Collectors.toMap(Phone::getId, product -> product));
+    List<AdminProductListItemResponseDto> orderedProducts =
+        productsPage.getContent().stream()
+            .map(product -> productsById.getOrDefault(product.getId(), product))
+            .map(adminProductMapper::toListItem)
+            .toList();
+
+    return new PageImpl<>(orderedProducts, pageable, productsPage.getTotalElements());
   }
 
   @Override
