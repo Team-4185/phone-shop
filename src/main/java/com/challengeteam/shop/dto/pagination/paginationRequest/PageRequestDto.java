@@ -1,4 +1,4 @@
-package com.challengeteam.shop.dto.pagination;
+package com.challengeteam.shop.dto.pagination.paginationRequest;
 
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
