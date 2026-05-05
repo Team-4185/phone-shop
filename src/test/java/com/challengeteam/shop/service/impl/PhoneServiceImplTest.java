@@ -1,6 +1,6 @@
 package com.challengeteam.shop.service.impl;
 
-import com.challengeteam.shop.dto.pagination.PhoneFilterDto;
+import com.challengeteam.shop.dto.pagination.paginationRequest.PhoneFilterDto;
 import com.challengeteam.shop.dto.phone.PhoneCreateRequestDto;
 import com.challengeteam.shop.dto.phone.PhoneUpdateRequestDto;
 import com.challengeteam.shop.entity.image.Image;
@@ -36,7 +36,8 @@ import java.util.Optional;
 import java.util.stream.LongStream;
 
 import static com.challengeteam.shop.service.impl.PhoneServiceImplTest.TestResources.*;
-import static org.assertj.core.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 
 @ExtendWith(MockitoExtension.class)

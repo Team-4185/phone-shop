@@ -1,9 +1,9 @@
 package com.challengeteam.shop.web.controller;
 
 import com.challengeteam.shop.dto.image.ImageMetadataResponseDto;
-import com.challengeteam.shop.dto.pagination.PageRequestDto;
-import com.challengeteam.shop.dto.pagination.PageResponseDto;
-import com.challengeteam.shop.dto.pagination.PhoneFilterDto;
+import com.challengeteam.shop.dto.pagination.paginationRequest.PageRequestDto;
+import com.challengeteam.shop.dto.pagination.paginationRequest.PhoneFilterDto;
+import com.challengeteam.shop.dto.pagination.paginationResponse.PageResponseDto;
 import com.challengeteam.shop.dto.phone.PhoneCreateRequestDto;
 import com.challengeteam.shop.dto.phone.PhoneResponseDto;
 import com.challengeteam.shop.dto.phone.PhoneUpdateRequestDto;
@@ -17,7 +17,7 @@ import com.challengeteam.shop.service.PhoneService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
-import lombok.*;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
