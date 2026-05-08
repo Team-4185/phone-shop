@@ -11,6 +11,12 @@ import jakarta.validation.constraints.Size;
 
 import java.math.BigDecimal;
 
+/**
+ * Admin-only request contract for creating products from the Product Management panel.
+ *
+ * <p>This DTO intentionally stays separate from public catalog DTOs so admin workflows can evolve
+ * without changing storefront response/request contracts.
+ */
 public record AdminProductCreateRequestDto(
     @NotBlank(message = "Name must not be empty")
         @Size(min = 3, max = 255, message = "Name must be between {min} and {max} characters")

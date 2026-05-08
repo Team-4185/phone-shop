@@ -14,6 +14,12 @@ import org.springframework.stereotype.Component;
 import java.util.List;
 import java.util.Objects;
 
+/**
+ * Maps between admin product DTOs and {@link Phone} entities.
+ *
+ * <p>This mapper keeps admin Product Management contracts separate from public phone DTOs and
+ * centralizes flattening/expanding of {@link PhoneCharacteristics}.
+ */
 @Component
 @RequiredArgsConstructor
 public class AdminProductMapper {

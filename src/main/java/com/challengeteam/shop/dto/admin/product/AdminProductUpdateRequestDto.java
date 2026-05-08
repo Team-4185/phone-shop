@@ -9,6 +9,12 @@ import jakarta.validation.constraints.Size;
 
 import java.math.BigDecimal;
 
+/**
+ * Admin-only partial update contract for Product Management.
+ *
+ * <p>All fields are optional; null values mean that the corresponding product field must remain
+ * unchanged.
+ */
 public record AdminProductUpdateRequestDto(
     @Size(min = 3, max = 255, message = "Name must be between {min} and {max} characters")
         String name,

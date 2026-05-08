@@ -17,6 +17,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -37,11 +38,18 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Admin Product Management API.
+ *
+ * <p>Exposes admin-only product list/details contracts plus product mutation and image-management
+ * endpoints. Public catalog product endpoints intentionally use separate DTOs and controllers.
+ */
 @RestController
 @RequestMapping("/api/v1/admin/products")
 @RequiredArgsConstructor
 @SecurityRequirement(name = "bearer-jwt")
 @Validated
+@Slf4j
 public class AdminProductController {
 
     private final AdminProductQueryService adminProductQueryService;
@@ -57,6 +65,7 @@ public class AdminProductController {
             @Valid PageRequestDto pageRequestDto, @Valid AdminProductFilterDto filterDto) {
         int page = pageRequestDto.page() - 1;
         int size = pageRequestDto.size();
+        log.debug("Get admin products page={} size={} filters={}", page, size, filterDto);
 
         if (filterDto.minPrice() != null && filterDto.maxPrice() != null && filterDto.minPrice().compareTo(filterDto.maxPrice()) > 0)
             throw new InvalidPriceRangeException("minPrice cannot be greater than maxPrice");
@@ -73,6 +82,7 @@ public class AdminProductController {
                     "Returns full product details required for admin overview and future edit form.")
     @GetMapping("/{id:\\d+}")
     public ResponseEntity<AdminProductDetailsResponseDto> getProductById(@PathVariable Long id) {
+        log.debug("Get admin product details id={}", id);
         return ResponseEntity.ok(adminProductQueryService.getProductById(id));
     }
 
@@ -84,6 +94,7 @@ public class AdminProductController {
             @Valid @RequestPart("product") AdminProductCreateRequestDto request,
             @RequestPart(value = "images", required = false) List<MultipartFile> images) {
         List<MultipartFile> safeImages = images == null ? new ArrayList<>() : images;
+        log.debug("Create admin product request sku={} imageCount={}", request.sku(), safeImages.size());
         Long id = adminProductCommandService.createProduct(request, safeImages);
         URI location = ServletUriComponentsBuilder
                 .fromCurrentRequest()
@@ -100,6 +111,7 @@ public class AdminProductController {
     @PutMapping("/{id:\\d+}")
     public ResponseEntity<Void> updateProduct(
             @PathVariable Long id, @Valid @RequestBody AdminProductUpdateRequestDto request) {
+        log.debug("Update admin product request id={}", id);
         adminProductCommandService.updateProduct(id, request);
         return ResponseEntity.noContent().build();
     }
@@ -107,6 +119,7 @@ public class AdminProductController {
     @Operation(summary = "Delete admin product", description = "Deletes a product by id.")
     @DeleteMapping("/{id:\\d+}")
     public ResponseEntity<Void> deleteProduct(@PathVariable Long id) {
+        log.debug("Delete admin product request id={}", id);
         adminProductCommandService.deleteProduct(id);
         return ResponseEntity.noContent().build();
     }
@@ -116,6 +129,7 @@ public class AdminProductController {
             description = "Returns image metadata for a product.")
     @GetMapping("/{id:\\d+}/images")
     public ResponseEntity<List<ImageMetadataResponseDto>> getProductImages(@PathVariable Long id) {
+        log.debug("Get admin product images request id={}", id);
         List<Image> images = adminProductCommandService.getProductImages(id);
         return ResponseEntity.ok(imageMapper.toListOfMetadata(images));
     }
@@ -126,6 +140,7 @@ public class AdminProductController {
     @PostMapping(value = "/{id:\\d+}/images", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Void> addProductImages(
             @PathVariable Long id, @RequestPart("images") List<MultipartFile> images) {
+        log.debug("Add admin product images request id={} imageCount={}", id, images.size());
         adminProductCommandService.addProductImages(id, images);
         return ResponseEntity.noContent().build();
     }
@@ -133,6 +148,7 @@ public class AdminProductController {
     @Operation(summary = "Delete admin product image", description = "Deletes a product image by id.")
     @DeleteMapping("/{id:\\d+}/images/{imageId:\\d+}")
     public ResponseEntity<Void> deleteProductImage(@PathVariable Long id, @PathVariable Long imageId) {
+        log.debug("Delete admin product image request productId={} imageId={}", id, imageId);
         adminProductCommandService.deleteProductImage(id, imageId);
         return ResponseEntity.noContent().build();
     }

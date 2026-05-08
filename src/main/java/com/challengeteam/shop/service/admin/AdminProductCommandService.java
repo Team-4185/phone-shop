@@ -7,6 +7,12 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
+/**
+ * Write-side service for admin product management.
+ *
+ * <p>Owns product mutations and product image management for the admin panel while keeping admin
+ * commands separate from storefront phone services.
+ */
 public interface AdminProductCommandService {
   Long createProduct(AdminProductCreateRequestDto request, List<MultipartFile> images);
 

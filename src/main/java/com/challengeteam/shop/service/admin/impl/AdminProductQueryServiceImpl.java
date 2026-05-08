@@ -10,6 +10,7 @@ import com.challengeteam.shop.persistence.repository.PhoneRepository;
 import com.challengeteam.shop.persistence.specification.AdminProductSpecification;
 import com.challengeteam.shop.service.admin.AdminProductQueryService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -23,9 +24,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+/**
+ * Default read-side service for the admin Product Management section.
+ *
+ * <p>Builds admin filters/sorts and loads images in a second query to keep database pagination
+ * applied to products instead of paginating a collection fetch in memory.
+ */
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
+@Slf4j
 public class AdminProductQueryServiceImpl implements AdminProductQueryService {
 
   private final PhoneRepository phoneRepository;
@@ -34,11 +42,13 @@ public class AdminProductQueryServiceImpl implements AdminProductQueryService {
   @Override
   public Page<AdminProductListItemResponseDto> getProducts(
       int page, int size, AdminProductFilterDto filterDto) {
+    log.debug("Get admin products page={} size={} filters={}", page, size, filterDto);
     Pageable pageable = PageRequest.of(page, size, buildSort(filterDto.sort()));
     Specification<Phone> specification = AdminProductSpecification.build(filterDto);
     Page<Phone> productsPage = phoneRepository.findAll(specification, pageable);
 
     if (productsPage.isEmpty()) {
+      log.debug("No admin products found for page={} size={}", page, size);
       return productsPage.map(adminProductMapper::toListItem);
     }
 
@@ -51,15 +61,25 @@ public class AdminProductQueryServiceImpl implements AdminProductQueryService {
             .map(adminProductMapper::toListItem)
             .toList();
 
+    log.debug(
+        "Found admin products page={} size={} totalElements={}",
+        page,
+        size,
+        productsPage.getTotalElements());
     return new PageImpl<>(orderedProducts, pageable, productsPage.getTotalElements());
   }
 
   @Override
   public AdminProductDetailsResponseDto getProductById(Long id) {
+    log.debug("Get admin product details id={}", id);
     Phone phone =
         phoneRepository
             .findByIdWithImages(id)
-            .orElseThrow(() -> new ResourceNotFoundException("Not found product with id: " + id));
+            .orElseThrow(
+                () -> {
+                  log.warn("Admin product id={} was not found", id);
+                  return new ResourceNotFoundException("Not found product with id: " + id);
+                });
 
     return adminProductMapper.toDetails(phone);
   }
