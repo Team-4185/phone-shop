@@ -1,10 +1,14 @@
 package com.challengeteam.shop.web.controller;
 
+import com.challengeteam.shop.dto.admin.product.AdminProductCreateRequestDto;
+import com.challengeteam.shop.dto.admin.product.AdminProductUpdateRequestDto;
 import com.challengeteam.shop.dto.phone.PhoneCreateRequestDto;
+import com.challengeteam.shop.entity.image.Image;
 import com.challengeteam.shop.entity.phone.Phone;
 import com.challengeteam.shop.entity.phone.ProductStatus;
 import com.challengeteam.shop.entity.user.Role;
 import com.challengeteam.shop.entity.user.User;
+import com.challengeteam.shop.persistence.repository.ImageRepository;
 import com.challengeteam.shop.persistence.repository.PhoneRepository;
 import com.challengeteam.shop.persistence.repository.RoleRepository;
 import com.challengeteam.shop.persistence.repository.UserRepository;
@@ -13,6 +17,7 @@ import com.challengeteam.shop.service.PhoneService;
 import com.challengeteam.shop.testContainer.ContainerExtension;
 import com.challengeteam.shop.testContainer.TestContextConfigurator;
 import com.challengeteam.shop.web.TestAuthHelper;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -21,8 +26,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
@@ -31,9 +38,14 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 
+import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.hasSize;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -49,6 +61,8 @@ class AdminControllerTest {
 
   @Autowired private MockMvc mockMvc;
 
+  @Autowired private ObjectMapper objectMapper;
+
   @Autowired private TestAuthHelper testAuthHelper;
 
   @Autowired private JwtService jwtService;
@@ -58,6 +72,8 @@ class AdminControllerTest {
   @Autowired private RoleRepository roleRepository;
 
   @Autowired private PhoneRepository phoneRepository;
+
+  @Autowired private ImageRepository imageRepository;
 
   @Autowired private PhoneService phoneService;
 
@@ -73,6 +89,7 @@ class AdminControllerTest {
 
   @BeforeEach
   void setup() {
+    imageRepository.deleteAll();
     phoneRepository.deleteAll();
     userRepository.deleteAll();
 
@@ -80,6 +97,140 @@ class AdminControllerTest {
     adminToken = createAdminAccessToken();
 
     phoneService.create(buildAdminTestPhoneCreateRequestDto(), new ArrayList<>());
+  }
+
+  @Nested
+  @DisplayName("Admin product mutations")
+  class AdminProductMutationsTest {
+
+    @Test
+    void whenAdminCreatesProductWithImage_thenStatus201AndProductCanBeFetched() throws Exception {
+      AdminProductCreateRequestDto request =
+          buildAdminProductCreateRequestDto("Created Admin Product", "CREATED-ADMIN-001");
+
+      mockMvc
+          .perform(
+              multipart(ADMIN_PRODUCTS_URL)
+                  .file(jsonPart("product", request))
+                  .file(imagePart("images", "image_1.jpg"))
+                  .header(HttpHeaders.AUTHORIZATION, auth(adminToken)))
+          .andExpect(status().isCreated())
+          .andExpect(header().string(HttpHeaders.LOCATION, containsString(ADMIN_PRODUCTS_URL)));
+
+      Phone created = findPhoneBySku("CREATED-ADMIN-001");
+
+      mockMvc
+          .perform(
+              get(ADMIN_PRODUCTS_URL + "/{id}", created.getId())
+                  .header(HttpHeaders.AUTHORIZATION, auth(adminToken)))
+          .andExpect(status().isOk())
+          .andExpect(jsonPath("$.name").value("Created Admin Product"))
+          .andExpect(jsonPath("$.sku").value("CREATED-ADMIN-001"))
+          .andExpect(jsonPath("$.images", hasSize(1)));
+    }
+
+    @Test
+    void whenAdminUpdatesProduct_thenStatus204AndDetailsReflectChanges() throws Exception {
+      Phone phone = phoneRepository.findAll().getFirst();
+      AdminProductUpdateRequestDto request =
+          new AdminProductUpdateRequestDto(
+              "Updated Admin Phone",
+              "Updated admin description",
+              new BigDecimal("899.99"),
+              "UpdatedBrand",
+              2025,
+              "UPDATED-ADMIN-001",
+              7,
+              ProductStatus.LOW_STOCK,
+              "Updated Chip",
+              10,
+              "6.8\"",
+              "16 MP",
+              "108 MP",
+              "5000 mAh");
+
+      mockMvc
+          .perform(
+              put(ADMIN_PRODUCTS_URL + "/{id}", phone.getId())
+                  .contentType(MediaType.APPLICATION_JSON)
+                  .content(objectMapper.writeValueAsBytes(request))
+                  .header(HttpHeaders.AUTHORIZATION, auth(adminToken)))
+          .andExpect(status().isNoContent());
+
+      mockMvc
+          .perform(
+              get(ADMIN_PRODUCTS_URL + "/{id}", phone.getId())
+                  .header(HttpHeaders.AUTHORIZATION, auth(adminToken)))
+          .andExpect(status().isOk())
+          .andExpect(jsonPath("$.name").value("Updated Admin Phone"))
+          .andExpect(jsonPath("$.sku").value("UPDATED-ADMIN-001"))
+          .andExpect(jsonPath("$.brand").value("UpdatedBrand"))
+          .andExpect(jsonPath("$.stock").value(7))
+          .andExpect(jsonPath("$.status").value("LOW_STOCK"))
+          .andExpect(jsonPath("$.cpu").value("Updated Chip"));
+    }
+
+    @Test
+    void whenAdminDeletesProduct_thenStatus204AndProductIsGone() throws Exception {
+      Phone phone = phoneRepository.findAll().getFirst();
+
+      mockMvc
+          .perform(
+              delete(ADMIN_PRODUCTS_URL + "/{id}", phone.getId())
+                  .header(HttpHeaders.AUTHORIZATION, auth(adminToken)))
+          .andExpect(status().isNoContent());
+
+      mockMvc
+          .perform(
+              get(ADMIN_PRODUCTS_URL + "/{id}", phone.getId())
+                  .header(HttpHeaders.AUTHORIZATION, auth(adminToken)))
+          .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void whenAdminAddsProductImage_thenImageIsVisibleInAdminImagesEndpoint() throws Exception {
+      Phone phone = phoneRepository.findAll().getFirst();
+
+      mockMvc
+          .perform(
+              multipart(ADMIN_PRODUCTS_URL + "/{id}/images", phone.getId())
+                  .file(imagePart("images", "image_1.jpg"))
+                  .header(HttpHeaders.AUTHORIZATION, auth(adminToken)))
+          .andExpect(status().isNoContent());
+
+      mockMvc
+          .perform(
+              get(ADMIN_PRODUCTS_URL + "/{id}/images", phone.getId())
+                  .header(HttpHeaders.AUTHORIZATION, auth(adminToken)))
+          .andExpect(status().isOk())
+          .andExpect(jsonPath("$", hasSize(1)))
+          .andExpect(jsonPath("$[0].name").value("image_1.jpg"));
+    }
+
+    @Test
+    void whenAdminDeletesProductImage_thenImageIsRemovedFromProduct() throws Exception {
+      Phone phone = phoneRepository.findAll().getFirst();
+      mockMvc
+          .perform(
+              multipart(ADMIN_PRODUCTS_URL + "/{id}/images", phone.getId())
+                  .file(imagePart("images", "image_1.jpg"))
+                  .header(HttpHeaders.AUTHORIZATION, auth(adminToken)))
+          .andExpect(status().isNoContent());
+      Image image = imageRepository.getImagesByPhone_Id(phone.getId()).getFirst();
+
+      mockMvc
+          .perform(
+              delete(ADMIN_PRODUCTS_URL + "/{id}/images/{imageId}", phone.getId(), image.getId())
+                  .header(HttpHeaders.AUTHORIZATION, auth(adminToken)))
+          .andExpect(status().isNoContent());
+
+      mockMvc
+          .perform(
+              get(ADMIN_PRODUCTS_URL + "/{id}/images", phone.getId())
+                  .header(HttpHeaders.AUTHORIZATION, auth(adminToken)))
+          .andExpect(status().isOk())
+          .andExpect(jsonPath("$", hasSize(0)));
+    }
   }
 
   @Nested
@@ -332,6 +483,43 @@ class AdminControllerTest {
         "16 MP",
         "108 MP",
         "5000 mAh");
+  }
+
+  private AdminProductCreateRequestDto buildAdminProductCreateRequestDto(String name, String sku) {
+    return new AdminProductCreateRequestDto(
+        name,
+        "Created through admin product management",
+        new BigDecimal("699.99"),
+        "CreatedBrand",
+        2024,
+        sku,
+        15,
+        ProductStatus.IN_STOCK,
+        "Created Chip",
+        8,
+        "6.4\"",
+        "12 MP",
+        "64 MP",
+        "4300 mAh");
+  }
+
+  private MockMultipartFile jsonPart(String name, Object value) throws Exception {
+    return new MockMultipartFile(
+        name, "", MediaType.APPLICATION_JSON_VALUE, objectMapper.writeValueAsBytes(value));
+  }
+
+  private MockMultipartFile imagePart(String name, String filename) throws Exception {
+    ClassPathResource resource =
+        new ClassPathResource("web/controller/imageController/" + filename);
+    return new MockMultipartFile(
+        name, filename, MediaType.IMAGE_JPEG_VALUE, resource.getInputStream());
+  }
+
+  private Phone findPhoneBySku(String sku) {
+    return phoneRepository.findAll().stream()
+        .filter(phone -> phone.getSku().equals(sku))
+        .findFirst()
+        .orElseThrow();
   }
 
   @Test
