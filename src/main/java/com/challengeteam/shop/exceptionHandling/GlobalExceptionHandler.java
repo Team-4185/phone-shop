@@ -417,6 +417,20 @@ public class GlobalExceptionHandler {
                 .body(problem);
     }
 
+    @ExceptionHandler(InvalidOrderStatusTransitionException.class)
+    public ResponseEntity<ProblemDetail> handleInvalidOrderStatusTransitionException(InvalidOrderStatusTransitionException e) {
+        log.warn("400  Invalid order transition: {}", e.getMessage());
+
+        var problem = ProblemDetail.forStatus(HttpStatus.BAD_REQUEST.value());
+        problem.setTitle("Invalid Order Status Transition");
+        problem.setDetail(e.getMessage());
+
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(problem);
+    }
+
     @ExceptionHandler(MissingRequestCookieException.class)
     public ResponseEntity<ProblemDetail> handleMissingRequestCookieException(MissingRequestCookieException e) {
         log.warn("400  Missing cookie: {}", e.getMessage());

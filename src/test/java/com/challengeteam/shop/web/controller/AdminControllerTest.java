@@ -4,11 +4,15 @@ import com.challengeteam.shop.dto.admin.product.AdminProductCreateRequestDto;
 import com.challengeteam.shop.dto.admin.product.AdminProductUpdateRequestDto;
 import com.challengeteam.shop.dto.phone.PhoneCreateRequestDto;
 import com.challengeteam.shop.entity.image.Image;
+import com.challengeteam.shop.entity.order.Order;
+import com.challengeteam.shop.entity.order.OrderItem;
+import com.challengeteam.shop.entity.order.OrderStatus;
 import com.challengeteam.shop.entity.phone.Phone;
 import com.challengeteam.shop.entity.phone.ProductStatus;
 import com.challengeteam.shop.entity.user.Role;
 import com.challengeteam.shop.entity.user.User;
 import com.challengeteam.shop.persistence.repository.ImageRepository;
+import com.challengeteam.shop.persistence.repository.OrderRepository;
 import com.challengeteam.shop.persistence.repository.PhoneRepository;
 import com.challengeteam.shop.persistence.repository.RoleRepository;
 import com.challengeteam.shop.persistence.repository.UserRepository;
@@ -43,6 +47,7 @@ import static org.hamcrest.Matchers.hasSize;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
@@ -75,6 +80,8 @@ class AdminControllerTest {
 
   @Autowired private ImageRepository imageRepository;
 
+  @Autowired private OrderRepository orderRepository;
+
   @Autowired private PhoneService phoneService;
 
   @Autowired private PasswordEncoder passwordEncoder;
@@ -89,6 +96,7 @@ class AdminControllerTest {
 
   @BeforeEach
   void setup() {
+    orderRepository.deleteAll();
     imageRepository.deleteAll();
     phoneRepository.deleteAll();
     userRepository.deleteAll();
@@ -262,7 +270,7 @@ class AdminControllerTest {
           .andExpect(jsonPath("$.sections[0].implemented").value(true))
           .andExpect(jsonPath("$.sections[1].name").value("orders"))
           .andExpect(jsonPath("$.sections[1].path").value("/api/v1/admin/orders"))
-          .andExpect(jsonPath("$.sections[1].implemented").value(false));
+          .andExpect(jsonPath("$.sections[1].implemented").value(true));
     }
   }
 
@@ -403,10 +411,134 @@ class AdminControllerTest {
   class GetAdminOrdersTest {
 
     @Test
-    void whenAuthenticatedUserIsAdmin_thenStatus501() throws Exception {
+    void whenAuthenticatedUserHasNoAdminRole_thenStatus403() throws Exception {
+      mockMvc
+          .perform(get(ADMIN_ORDERS_URL).header(HttpHeaders.AUTHORIZATION, auth(userToken)))
+          .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void whenAuthenticatedUserIsAdmin_thenStatus200AndReturnAdminOrderList() throws Exception {
+      createOrder(OrderStatus.NEW, "2499.98", 2);
+
       mockMvc
           .perform(get(ADMIN_ORDERS_URL).header(HttpHeaders.AUTHORIZATION, auth(adminToken)))
-          .andExpect(status().isNotImplemented());
+          .andExpect(status().isOk())
+          .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+          .andExpect(jsonPath("$.content").isArray())
+          .andExpect(jsonPath("$.content", hasSize(1)))
+          .andExpect(jsonPath("$.content[0].id").isNumber())
+          .andExpect(jsonPath("$.content[0].customerEmail").exists())
+          .andExpect(jsonPath("$.content[0].status").value("NEW"))
+          .andExpect(jsonPath("$.content[0].total").value(2499.98))
+          .andExpect(jsonPath("$.content[0].itemsCount").value(2));
+    }
+
+    @Test
+    void whenStatusFilterMatchesOrder_thenReturnFilteredList() throws Exception {
+      createOrder(OrderStatus.NEW, "799.99", 1);
+      createOrder(OrderStatus.SHIPPED, "1499.99", 1);
+
+      mockMvc
+          .perform(
+              get(ADMIN_ORDERS_URL)
+                  .param("status", "SHIPPED")
+                  .header(HttpHeaders.AUTHORIZATION, auth(adminToken)))
+          .andExpect(status().isOk())
+          .andExpect(jsonPath("$.content", hasSize(1)))
+          .andExpect(jsonPath("$.content[0].status").value("SHIPPED"))
+          .andExpect(jsonPath("$.content[0].total").value(1499.99));
+    }
+
+    @Test
+    void whenSortByTotalDesc_thenReturnOrdersInSortedOrder() throws Exception {
+      createOrder(OrderStatus.NEW, "799.99", 1);
+      createOrder(OrderStatus.CONFIRMED, "1499.99", 1);
+
+      mockMvc
+          .perform(
+              get(ADMIN_ORDERS_URL)
+                  .param("sort", "total_desc")
+                  .header(HttpHeaders.AUTHORIZATION, auth(adminToken)))
+          .andExpect(status().isOk())
+          .andExpect(jsonPath("$.content", hasSize(2)))
+          .andExpect(jsonPath("$.content[0].total").value(1499.99))
+          .andExpect(jsonPath("$.content[1].total").value(799.99));
+    }
+
+    @Test
+    void whenTotalRangeIsReversed_thenStatus400() throws Exception {
+      mockMvc
+          .perform(
+              get(ADMIN_ORDERS_URL)
+                  .param("minTotal", "1000")
+                  .param("maxTotal", "100")
+                  .header(HttpHeaders.AUTHORIZATION, auth(adminToken)))
+          .andExpect(status().isBadRequest());
+    }
+  }
+
+  @Nested
+  @DisplayName("GET /api/v1/admin/orders/{id}")
+  class GetAdminOrderDetailsTest {
+
+    @Test
+    void whenOrderExists_thenReturnFullAdminDetails() throws Exception {
+      Order order = createOrder(OrderStatus.NEW, "2499.98", 2);
+
+      mockMvc
+          .perform(
+              get(ADMIN_ORDERS_URL + "/{id}", order.getId())
+                  .header(HttpHeaders.AUTHORIZATION, auth(adminToken)))
+          .andExpect(status().isOk())
+          .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+          .andExpect(jsonPath("$.id").value(order.getId()))
+          .andExpect(jsonPath("$.customerEmail").exists())
+          .andExpect(jsonPath("$.status").value("NEW"))
+          .andExpect(jsonPath("$.total").value(2499.98))
+          .andExpect(jsonPath("$.availableActions", hasSize(2)))
+          .andExpect(jsonPath("$.items", hasSize(1)))
+          .andExpect(jsonPath("$.items[0].productName").value("Admin Test Phone"))
+          .andExpect(jsonPath("$.items[0].sku").value("ADMIN-TEST-001"))
+          .andExpect(jsonPath("$.items[0].quantity").value(2));
+    }
+
+    @Test
+    void whenOrderDoesNotExist_thenReturn404() throws Exception {
+      mockMvc
+          .perform(
+              get(ADMIN_ORDERS_URL + "/{id}", 999999L)
+                  .header(HttpHeaders.AUTHORIZATION, auth(adminToken)))
+          .andExpect(status().isNotFound());
+    }
+  }
+
+  @Nested
+  @DisplayName("POST /api/v1/admin/orders/{id}/actions")
+  class AdminOrderActionsTest {
+
+    @Test
+    void whenConfirmNewOrder_thenStatusChangesToConfirmed() throws Exception {
+      Order order = createOrder(OrderStatus.NEW, "799.99", 1);
+
+      mockMvc
+          .perform(
+              post(ADMIN_ORDERS_URL + "/{id}/confirm", order.getId())
+                  .header(HttpHeaders.AUTHORIZATION, auth(adminToken)))
+          .andExpect(status().isOk())
+          .andExpect(jsonPath("$.status").value("CONFIRMED"))
+          .andExpect(jsonPath("$.availableActions", hasSize(2)));
+    }
+
+    @Test
+    void whenUnsupportedActionForCurrentStatus_thenStatus400() throws Exception {
+      Order order = createOrder(OrderStatus.NEW, "799.99", 1);
+
+      mockMvc
+          .perform(
+              post(ADMIN_ORDERS_URL + "/{id}/deliver", order.getId())
+                  .header(HttpHeaders.AUTHORIZATION, auth(adminToken)))
+          .andExpect(status().isBadRequest());
     }
   }
 
@@ -520,6 +652,33 @@ class AdminControllerTest {
         .filter(phone -> phone.getSku().equals(sku))
         .findFirst()
         .orElseThrow();
+  }
+
+  private Order createOrder(OrderStatus status, String total, int quantity) {
+    Phone phone = findPhoneBySku("ADMIN-TEST-001");
+    User customer =
+        userRepository.findAll().stream()
+            .filter(user -> !ADMIN_EMAIL.equals(user.getEmail()))
+            .findFirst()
+            .orElseThrow();
+
+    Order order =
+        Order.builder()
+            .user(customer)
+            .status(status)
+            .total(new BigDecimal(total))
+            .build();
+    order.addItem(
+        OrderItem.builder()
+            .phone(phone)
+            .productName(phone.getName())
+            .sku(phone.getSku())
+            .unitPrice(phone.getPrice())
+            .quantity(quantity)
+            .totalPrice(phone.getPrice().multiply(BigDecimal.valueOf(quantity)))
+            .build());
+
+    return orderRepository.save(order);
   }
 
   @Test
