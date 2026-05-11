@@ -32,12 +32,35 @@ import lombok.experimental.SuperBuilder;
 public class Order extends BaseEntity {
 
   @ManyToOne
-  @JoinColumn(nullable = false, name = "fk_user_id")
+  @JoinColumn(name = "fk_user_id")
   private User user;
+
+  @Column(nullable = false)
+  private String customerEmail;
+
+  @Column(nullable = true)
+  private String customerFirstName;
+
+  @Column(nullable = true)
+  private String customerLastName;
+
+  @Column(nullable = true)
+  private String customerPhoneNumber;
+
+  @Column(nullable = true)
+  private String customerCity;
 
   @Enumerated(EnumType.STRING)
   @Column(nullable = false)
   private OrderStatus status;
+
+  @Enumerated(EnumType.STRING)
+  @Column(nullable = false)
+  private PaymentMethod paymentMethod;
+
+  @Enumerated(EnumType.STRING)
+  @Column(nullable = false)
+  private DeliveryMethod deliveryMethod;
 
   @Column(nullable = false, precision = 10, scale = 2)
   private BigDecimal total;

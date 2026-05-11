@@ -14,7 +14,7 @@ public interface OrderRepository extends JpaRepository<Order, Long>, JpaSpecific
 
   @Query(
       "SELECT DISTINCT o FROM CustomerOrder o "
-          + "JOIN FETCH o.user "
+          + "LEFT JOIN FETCH o.user "
           + "LEFT JOIN FETCH o.items i "
           + "LEFT JOIN FETCH i.phone "
           + "WHERE o.id = :id")
@@ -22,7 +22,7 @@ public interface OrderRepository extends JpaRepository<Order, Long>, JpaSpecific
 
   @Query(
       "SELECT DISTINCT o FROM CustomerOrder o "
-          + "JOIN FETCH o.user "
+          + "LEFT JOIN FETCH o.user "
           + "LEFT JOIN FETCH o.items i "
           + "LEFT JOIN FETCH i.phone "
           + "WHERE o IN :orders")

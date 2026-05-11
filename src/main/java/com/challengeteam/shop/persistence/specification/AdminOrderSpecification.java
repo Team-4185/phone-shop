@@ -31,10 +31,11 @@ public final class AdminOrderSpecification {
     return (root, query, cb) -> {
       query.distinct(true);
       String pattern = "%" + search.toLowerCase() + "%";
-      Join<Order, User> user = root.join("user");
+      Join<Order, User> user = root.join("user", JoinType.LEFT);
       Join<Order, OrderItem> items = root.join("items", JoinType.LEFT);
 
       return cb.or(
+          cb.like(cb.lower(root.get("customerEmail")), pattern),
           cb.like(cb.lower(user.get("email")), pattern),
           cb.like(cb.lower(items.get("sku")), pattern),
           cb.like(cb.lower(items.get("productName")), pattern),

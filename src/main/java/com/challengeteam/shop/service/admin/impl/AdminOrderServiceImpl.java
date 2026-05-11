@@ -53,7 +53,12 @@ public class AdminOrderServiceImpl implements AdminOrderService {
     Page<Order> ordersPage = orderRepository.findAll(specification, pageable);
 
     if (ordersPage.isEmpty()) {
-      log.debug("No admin orders found for page={} size={}", page, size);
+      log.debug(
+          "No admin orders found for page={} size={} filters={} specification={}",
+          page,
+          size,
+          filterDto,
+          specification);
       return ordersPage.map(adminOrderMapper::toListItem);
     }
 
@@ -125,8 +130,8 @@ public class AdminOrderServiceImpl implements AdminOrderService {
       case "total_desc" -> Sort.by("total").descending();
       case "status_asc" -> Sort.by("status").ascending();
       case "status_desc" -> Sort.by("status").descending();
-      case "customerEmail_asc" -> Sort.by("user.email").ascending();
-      case "customerEmail_desc" -> Sort.by("user.email").descending();
+      case "customerEmail_asc" -> Sort.by("customerEmail").ascending();
+      case "customerEmail_desc" -> Sort.by("customerEmail").descending();
       case "id_asc" -> Sort.by("id").ascending();
       case "id_desc" -> Sort.by("id").descending();
       default -> Sort.by("createdAt").descending();

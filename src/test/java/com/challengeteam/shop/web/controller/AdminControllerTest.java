@@ -4,9 +4,11 @@ import com.challengeteam.shop.dto.admin.product.AdminProductCreateRequestDto;
 import com.challengeteam.shop.dto.admin.product.AdminProductUpdateRequestDto;
 import com.challengeteam.shop.dto.phone.PhoneCreateRequestDto;
 import com.challengeteam.shop.entity.image.Image;
+import com.challengeteam.shop.entity.order.DeliveryMethod;
 import com.challengeteam.shop.entity.order.Order;
 import com.challengeteam.shop.entity.order.OrderItem;
 import com.challengeteam.shop.entity.order.OrderStatus;
+import com.challengeteam.shop.entity.order.PaymentMethod;
 import com.challengeteam.shop.entity.phone.Phone;
 import com.challengeteam.shop.entity.phone.ProductStatus;
 import com.challengeteam.shop.entity.user.Role;
@@ -430,6 +432,8 @@ class AdminControllerTest {
           .andExpect(jsonPath("$.content[0].id").isNumber())
           .andExpect(jsonPath("$.content[0].customerEmail").exists())
           .andExpect(jsonPath("$.content[0].status").value("NEW"))
+          .andExpect(jsonPath("$.content[0].paymentMethod").value("CARD"))
+          .andExpect(jsonPath("$.content[0].deliveryMethod").value("COURIER"))
           .andExpect(jsonPath("$.content[0].total").value(2499.98))
           .andExpect(jsonPath("$.content[0].itemsCount").value(2));
     }
@@ -495,6 +499,8 @@ class AdminControllerTest {
           .andExpect(jsonPath("$.id").value(order.getId()))
           .andExpect(jsonPath("$.customerEmail").exists())
           .andExpect(jsonPath("$.status").value("NEW"))
+          .andExpect(jsonPath("$.paymentMethod").value("CARD"))
+          .andExpect(jsonPath("$.deliveryMethod").value("COURIER"))
           .andExpect(jsonPath("$.total").value(2499.98))
           .andExpect(jsonPath("$.availableActions", hasSize(2)))
           .andExpect(jsonPath("$.items", hasSize(1)))
@@ -665,7 +671,14 @@ class AdminControllerTest {
     Order order =
         Order.builder()
             .user(customer)
+            .customerEmail(customer.getEmail())
+            .customerFirstName(customer.getFirstName())
+            .customerLastName(customer.getLastName())
+            .customerPhoneNumber(customer.getPhoneNumber())
+            .customerCity(customer.getCity())
             .status(status)
+            .paymentMethod(PaymentMethod.CARD)
+            .deliveryMethod(DeliveryMethod.COURIER)
             .total(new BigDecimal(total))
             .build();
     order.addItem(
