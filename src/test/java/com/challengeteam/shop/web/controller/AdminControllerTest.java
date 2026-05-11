@@ -9,6 +9,7 @@ import com.challengeteam.shop.entity.order.Order;
 import com.challengeteam.shop.entity.order.OrderItem;
 import com.challengeteam.shop.entity.order.OrderStatus;
 import com.challengeteam.shop.entity.order.PaymentMethod;
+import com.challengeteam.shop.entity.order.PaymentStatus;
 import com.challengeteam.shop.entity.phone.Phone;
 import com.challengeteam.shop.entity.phone.ProductStatus;
 import com.challengeteam.shop.entity.user.Role;
@@ -433,6 +434,7 @@ class AdminControllerTest {
           .andExpect(jsonPath("$.content[0].customerEmail").exists())
           .andExpect(jsonPath("$.content[0].status").value("NEW"))
           .andExpect(jsonPath("$.content[0].paymentMethod").value("CARD"))
+          .andExpect(jsonPath("$.content[0].paymentStatus").value("PENDING"))
           .andExpect(jsonPath("$.content[0].deliveryMethod").value("COURIER"))
           .andExpect(jsonPath("$.content[0].total").value(2499.98))
           .andExpect(jsonPath("$.content[0].itemsCount").value(2));
@@ -451,6 +453,22 @@ class AdminControllerTest {
           .andExpect(status().isOk())
           .andExpect(jsonPath("$.content", hasSize(1)))
           .andExpect(jsonPath("$.content[0].status").value("SHIPPED"))
+          .andExpect(jsonPath("$.content[0].total").value(1499.99));
+    }
+
+    @Test
+    void whenPaymentStatusFilterMatchesOrder_thenReturnFilteredList() throws Exception {
+      createOrder(OrderStatus.NEW, PaymentStatus.PENDING, "799.99", 1);
+      createOrder(OrderStatus.CONFIRMED, PaymentStatus.PAID, "1499.99", 1);
+
+      mockMvc
+          .perform(
+              get(ADMIN_ORDERS_URL)
+                  .param("paymentStatus", "PAID")
+                  .header(HttpHeaders.AUTHORIZATION, auth(adminToken)))
+          .andExpect(status().isOk())
+          .andExpect(jsonPath("$.content", hasSize(1)))
+          .andExpect(jsonPath("$.content[0].paymentStatus").value("PAID"))
           .andExpect(jsonPath("$.content[0].total").value(1499.99));
     }
 
@@ -500,6 +518,7 @@ class AdminControllerTest {
           .andExpect(jsonPath("$.customerEmail").exists())
           .andExpect(jsonPath("$.status").value("NEW"))
           .andExpect(jsonPath("$.paymentMethod").value("CARD"))
+          .andExpect(jsonPath("$.paymentStatus").value("PENDING"))
           .andExpect(jsonPath("$.deliveryMethod").value("COURIER"))
           .andExpect(jsonPath("$.total").value(2499.98))
           .andExpect(jsonPath("$.availableActions", hasSize(2)))
@@ -661,6 +680,11 @@ class AdminControllerTest {
   }
 
   private Order createOrder(OrderStatus status, String total, int quantity) {
+    return createOrder(status, PaymentStatus.PENDING, total, quantity);
+  }
+
+  private Order createOrder(
+      OrderStatus status, PaymentStatus paymentStatus, String total, int quantity) {
     Phone phone = findPhoneBySku("ADMIN-TEST-001");
     User customer =
         userRepository.findAll().stream()
@@ -678,6 +702,7 @@ class AdminControllerTest {
             .customerCity(customer.getCity())
             .status(status)
             .paymentMethod(PaymentMethod.CARD)
+            .paymentStatus(paymentStatus)
             .deliveryMethod(DeliveryMethod.COURIER)
             .total(new BigDecimal(total))
             .build();
