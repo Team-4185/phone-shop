@@ -3,6 +3,7 @@ package com.challengeteam.shop.dto.admin.order;
 import com.challengeteam.shop.entity.order.DeliveryMethod;
 import com.challengeteam.shop.entity.order.OrderStatus;
 import com.challengeteam.shop.entity.order.PaymentMethod;
+import com.challengeteam.shop.entity.order.PaymentStatus;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
@@ -18,6 +19,7 @@ public record AdminOrderDetailsResponseDto(
     String customerCity,
     OrderStatus status,
     PaymentMethod paymentMethod,
+    PaymentStatus paymentStatus,
     DeliveryMethod deliveryMethod,
     BigDecimal total,
     List<String> availableActions,

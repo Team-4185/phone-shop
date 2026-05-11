@@ -130,6 +130,8 @@ public class AdminOrderServiceImpl implements AdminOrderService {
       case "total_desc" -> Sort.by("total").descending();
       case "status_asc" -> Sort.by("status").ascending();
       case "status_desc" -> Sort.by("status").descending();
+      case "paymentStatus_asc" -> Sort.by("paymentStatus").ascending();
+      case "paymentStatus_desc" -> Sort.by("paymentStatus").descending();
       case "customerEmail_asc" -> Sort.by("customerEmail").ascending();
       case "customerEmail_desc" -> Sort.by("customerEmail").descending();
       case "id_asc" -> Sort.by("id").ascending();

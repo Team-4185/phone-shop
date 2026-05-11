@@ -60,6 +60,10 @@ public class Order extends BaseEntity {
 
   @Enumerated(EnumType.STRING)
   @Column(nullable = false)
+  private PaymentStatus paymentStatus;
+
+  @Enumerated(EnumType.STRING)
+  @Column(nullable = false)
   private DeliveryMethod deliveryMethod;
 
   @Column(nullable = false, precision = 10, scale = 2)

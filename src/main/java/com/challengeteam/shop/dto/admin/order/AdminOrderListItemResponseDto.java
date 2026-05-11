@@ -1,8 +1,9 @@
 package com.challengeteam.shop.dto.admin.order;
 
+import com.challengeteam.shop.entity.order.DeliveryMethod;
 import com.challengeteam.shop.entity.order.OrderStatus;
 import com.challengeteam.shop.entity.order.PaymentMethod;
-import com.challengeteam.shop.entity.order.DeliveryMethod;
+import com.challengeteam.shop.entity.order.PaymentStatus;
 import java.math.BigDecimal;
 import java.time.Instant;
 
@@ -13,6 +14,7 @@ public record AdminOrderListItemResponseDto(
     String customerEmail,
     OrderStatus status,
     PaymentMethod paymentMethod,
+    PaymentStatus paymentStatus,
     DeliveryMethod deliveryMethod,
     BigDecimal total,
     Integer itemsCount,

@@ -4,6 +4,7 @@ import com.challengeteam.shop.dto.admin.order.AdminOrderFilterDto;
 import com.challengeteam.shop.entity.order.Order;
 import com.challengeteam.shop.entity.order.OrderItem;
 import com.challengeteam.shop.entity.order.OrderStatus;
+import com.challengeteam.shop.entity.order.PaymentStatus;
 import com.challengeteam.shop.entity.user.User;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.JoinType;
@@ -21,6 +22,9 @@ public final class AdminOrderSpecification {
 
     spec = addIfHasText(spec, filterDto.search(), AdminOrderSpecification::matchesSearch);
     spec = addIfPresent(spec, filterDto.status(), AdminOrderSpecification::hasStatus);
+    spec =
+        addIfPresent(
+            spec, filterDto.paymentStatus(), AdminOrderSpecification::hasPaymentStatus);
     spec = addIfPresent(spec, filterDto.minTotal(), AdminOrderSpecification::totalGreaterOrEqual);
     spec = addIfPresent(spec, filterDto.maxTotal(), AdminOrderSpecification::totalLessOrEqual);
 
@@ -45,6 +49,10 @@ public final class AdminOrderSpecification {
 
   private static Specification<Order> hasStatus(OrderStatus status) {
     return (root, query, cb) -> cb.equal(root.get("status"), status);
+  }
+
+  private static Specification<Order> hasPaymentStatus(PaymentStatus paymentStatus) {
+    return (root, query, cb) -> cb.equal(root.get("paymentStatus"), paymentStatus);
   }
 
   private static Specification<Order> totalGreaterOrEqual(BigDecimal minTotal) {
