@@ -1,4 +1,4 @@
-package com.challengeteam.shop.mapper;
+package com.challengeteam.shop.mapper.admin;
 
 import com.challengeteam.shop.dto.admin.product.AdminProductDetailsResponseDto;
 import com.challengeteam.shop.dto.admin.product.AdminProductCreateRequestDto;
@@ -8,6 +8,7 @@ import com.challengeteam.shop.dto.image.ImageMetadataResponseDto;
 import com.challengeteam.shop.entity.image.Image;
 import com.challengeteam.shop.entity.phone.Phone;
 import com.challengeteam.shop.entity.phone.PhoneCharacteristics;
+import com.challengeteam.shop.mapper.image.ImageMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 

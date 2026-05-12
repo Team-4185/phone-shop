@@ -10,7 +10,7 @@ import com.challengeteam.shop.dto.pagination.paginationRequest.PageRequestDto;
 import com.challengeteam.shop.dto.pagination.paginationResponse.PageResponseDto;
 import com.challengeteam.shop.entity.image.Image;
 import com.challengeteam.shop.exceptionHandling.exception.InvalidPriceRangeException;
-import com.challengeteam.shop.mapper.ImageMapper;
+import com.challengeteam.shop.mapper.image.ImageMapper;
 import com.challengeteam.shop.service.admin.AdminProductCommandService;
 import com.challengeteam.shop.service.admin.AdminProductQueryService;
 import io.swagger.v3.oas.annotations.Operation;

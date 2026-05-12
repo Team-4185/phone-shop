@@ -7,7 +7,7 @@ import com.challengeteam.shop.entity.phone.Phone;
 import com.challengeteam.shop.exceptionHandling.exception.CriticalSystemException;
 import com.challengeteam.shop.exceptionHandling.exception.InvalidAPIRequestException;
 import com.challengeteam.shop.exceptionHandling.exception.ResourceNotFoundException;
-import com.challengeteam.shop.mapper.AdminProductMapper;
+import com.challengeteam.shop.mapper.admin.AdminProductMapper;
 import com.challengeteam.shop.persistence.repository.ImageRepository;
 import com.challengeteam.shop.persistence.repository.PhoneRepository;
 import com.challengeteam.shop.service.ImageService;

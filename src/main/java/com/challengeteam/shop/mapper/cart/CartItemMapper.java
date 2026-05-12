@@ -1,4 +1,4 @@
-package com.challengeteam.shop.mapper;
+package com.challengeteam.shop.mapper.cart;
 
 import com.challengeteam.shop.dto.cart.CartItemResponseDto;
 import com.challengeteam.shop.entity.cart.CartItem;

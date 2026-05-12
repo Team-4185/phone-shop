@@ -5,7 +5,7 @@ import com.challengeteam.shop.dto.admin.product.AdminProductFilterDto;
 import com.challengeteam.shop.dto.admin.product.AdminProductListItemResponseDto;
 import com.challengeteam.shop.entity.phone.Phone;
 import com.challengeteam.shop.exceptionHandling.exception.ResourceNotFoundException;
-import com.challengeteam.shop.mapper.AdminProductMapper;
+import com.challengeteam.shop.mapper.admin.AdminProductMapper;
 import com.challengeteam.shop.persistence.repository.PhoneRepository;
 import com.challengeteam.shop.persistence.specification.AdminProductSpecification;
 import com.challengeteam.shop.service.admin.AdminProductQueryService;

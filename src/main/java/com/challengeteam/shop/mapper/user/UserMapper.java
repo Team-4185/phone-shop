@@ -1,4 +1,4 @@
-package com.challengeteam.shop.mapper;
+package com.challengeteam.shop.mapper.user;
 
 import com.challengeteam.shop.dto.auth.UserRegisterRequestDto;
 import com.challengeteam.shop.dto.user.UserResponseDto;

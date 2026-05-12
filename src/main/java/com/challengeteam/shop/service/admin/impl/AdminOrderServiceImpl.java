@@ -7,7 +7,7 @@ import com.challengeteam.shop.entity.order.Order;
 import com.challengeteam.shop.entity.order.OrderStatus;
 import com.challengeteam.shop.exceptionHandling.exception.InvalidPriceRangeException;
 import com.challengeteam.shop.exceptionHandling.exception.ResourceNotFoundException;
-import com.challengeteam.shop.mapper.AdminOrderMapper;
+import com.challengeteam.shop.mapper.admin.AdminOrderMapper;
 import com.challengeteam.shop.persistence.repository.OrderRepository;
 import com.challengeteam.shop.persistence.specification.AdminOrderSpecification;
 import com.challengeteam.shop.service.admin.AdminOrderService;

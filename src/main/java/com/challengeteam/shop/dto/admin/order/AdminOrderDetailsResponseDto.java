@@ -2,8 +2,8 @@ package com.challengeteam.shop.dto.admin.order;
 
 import com.challengeteam.shop.entity.order.DeliveryMethod;
 import com.challengeteam.shop.entity.order.OrderStatus;
-import com.challengeteam.shop.entity.order.PaymentMethod;
-import com.challengeteam.shop.entity.order.PaymentStatus;
+import com.challengeteam.shop.entity.order.payment.PaymentMethod;
+import com.challengeteam.shop.entity.order.payment.PaymentStatus;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;

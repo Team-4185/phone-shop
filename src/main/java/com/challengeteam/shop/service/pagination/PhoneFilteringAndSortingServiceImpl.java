@@ -5,7 +5,7 @@ import com.challengeteam.shop.dto.pagination.paginationResponse.PageResponseDto;
 import com.challengeteam.shop.dto.phone.PhoneResponseDto;
 import com.challengeteam.shop.entity.phone.Phone;
 import com.challengeteam.shop.entity.phone.Phone_;
-import com.challengeteam.shop.mapper.PhoneMapper;
+import com.challengeteam.shop.mapper.phone.PhoneMapper;
 import com.challengeteam.shop.persistence.repository.PhoneRepository;
 import com.challengeteam.shop.utility.pagination.filter.sort.SortResolver;
 import com.challengeteam.shop.utility.pagination.filter.specefication.PhoneFilterSpecificationBuilder;

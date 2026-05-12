@@ -1,7 +1,8 @@
-package com.challengeteam.shop.mapper;
+package com.challengeteam.shop.mapper.phone;
 
 import com.challengeteam.shop.dto.phone.PhoneResponseDto;
 import com.challengeteam.shop.entity.phone.Phone;
+import com.challengeteam.shop.mapper.image.ImageMapper;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingConstants;

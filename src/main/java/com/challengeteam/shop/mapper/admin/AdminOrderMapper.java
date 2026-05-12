@@ -1,4 +1,4 @@
-package com.challengeteam.shop.mapper;
+package com.challengeteam.shop.mapper.admin;
 
 import com.challengeteam.shop.dto.admin.order.AdminOrderDetailsResponseDto;
 import com.challengeteam.shop.dto.admin.order.AdminOrderItemResponseDto;
@@ -6,7 +6,6 @@ import com.challengeteam.shop.dto.admin.order.AdminOrderListItemResponseDto;
 import com.challengeteam.shop.entity.order.Order;
 import com.challengeteam.shop.entity.order.OrderItem;
 import com.challengeteam.shop.service.admin.AdminOrderWorkflowService;
-import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -24,7 +23,7 @@ public class AdminOrderMapper {
         order.getCustomerEmail(),
         order.getStatus(),
         order.getPaymentMethod(),
-        order.getPaymentStatus(),
+        order.getPaymentDetails().getPaymentStatus(),
         order.getDeliveryMethod(),
         order.getTotal(),
         order.getItems().stream().mapToInt(OrderItem::getQuantity).sum(),
@@ -43,7 +42,7 @@ public class AdminOrderMapper {
         order.getCustomerCity(),
         order.getStatus(),
         order.getPaymentMethod(),
-        order.getPaymentStatus(),
+        order.getPaymentDetails().getPaymentStatus(),
         order.getDeliveryMethod(),
         order.getTotal(),
         adminOrderWorkflowService.getAvailableActions(order.getStatus()),

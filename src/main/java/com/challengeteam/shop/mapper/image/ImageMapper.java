@@ -1,4 +1,4 @@
-package com.challengeteam.shop.mapper;
+package com.challengeteam.shop.mapper.image;
 
 import com.challengeteam.shop.dto.image.ImageDataDto;
 import com.challengeteam.shop.dto.image.ImageMetadataResponseDto;

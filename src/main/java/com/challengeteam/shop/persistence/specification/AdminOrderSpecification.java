@@ -4,7 +4,7 @@ import com.challengeteam.shop.dto.admin.order.AdminOrderFilterDto;
 import com.challengeteam.shop.entity.order.Order;
 import com.challengeteam.shop.entity.order.OrderItem;
 import com.challengeteam.shop.entity.order.OrderStatus;
-import com.challengeteam.shop.entity.order.PaymentStatus;
+import com.challengeteam.shop.entity.order.payment.PaymentStatus;
 import com.challengeteam.shop.entity.user.User;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.JoinType;

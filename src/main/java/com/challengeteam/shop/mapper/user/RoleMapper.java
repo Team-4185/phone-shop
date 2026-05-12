@@ -1,4 +1,4 @@
-package com.challengeteam.shop.mapper;
+package com.challengeteam.shop.mapper.user;
 
 import com.challengeteam.shop.dto.role.RoleResponseDto;
 import com.challengeteam.shop.entity.user.Role;
