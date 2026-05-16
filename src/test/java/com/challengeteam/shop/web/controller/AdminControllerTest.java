@@ -64,6 +64,8 @@ class AdminControllerTest {
   private static final String ADMIN_ROOT_URL = "/api/v1/admin";
   private static final String ADMIN_PRODUCTS_URL = "/api/v1/admin/products";
   private static final String ADMIN_ORDERS_URL = "/api/v1/admin/orders";
+  private static final String ADMIN_CUSTOMERS_URL = "/api/v1/admin/customers";
+  private static final String ADMIN_DASHBOARD_URL = "/api/v1/admin/dashboard";
   private static final String ADMIN_EMAIL = "admin.test@valid.com";
   private static final String ADMIN_PASSWORD = "AdminPassword123!";
 
@@ -267,13 +269,19 @@ class AdminControllerTest {
           .andExpect(status().isOk())
           .andExpect(content().contentType(MediaType.APPLICATION_JSON))
           .andExpect(jsonPath("$.sections").isArray())
-          .andExpect(jsonPath("$.sections", hasSize(2)))
+          .andExpect(jsonPath("$.sections", hasSize(4)))
           .andExpect(jsonPath("$.sections[0].name").value("products"))
           .andExpect(jsonPath("$.sections[0].path").value("/api/v1/admin/products"))
           .andExpect(jsonPath("$.sections[0].implemented").value(true))
           .andExpect(jsonPath("$.sections[1].name").value("orders"))
           .andExpect(jsonPath("$.sections[1].path").value("/api/v1/admin/orders"))
-          .andExpect(jsonPath("$.sections[1].implemented").value(true));
+          .andExpect(jsonPath("$.sections[1].implemented").value(true))
+          .andExpect(jsonPath("$.sections[2].name").value("customers"))
+          .andExpect(jsonPath("$.sections[2].path").value("/api/v1/admin/customers"))
+          .andExpect(jsonPath("$.sections[2].implemented").value(true))
+          .andExpect(jsonPath("$.sections[3].name").value("dashboard"))
+          .andExpect(jsonPath("$.sections[3].path").value("/api/v1/admin/dashboard"))
+          .andExpect(jsonPath("$.sections[3].implemented").value(true));
     }
   }
 
@@ -567,6 +575,139 @@ class AdminControllerTest {
     }
   }
 
+  @Nested
+  @DisplayName("GET /api/v1/admin/customers")
+  class GetAdminCustomersTest {
+
+    @Test
+    void whenAuthenticatedUserHasNoAdminRole_thenStatus403() throws Exception {
+      mockMvc
+          .perform(get(ADMIN_CUSTOMERS_URL).header(HttpHeaders.AUTHORIZATION, auth(userToken)))
+          .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void whenAuthenticatedUserIsAdmin_thenStatus200AndReturnCustomersList() throws Exception {
+      createOrder(OrderStatus.DELIVERED, PaymentStatus.PAID, "2499.98", 2);
+
+      mockMvc
+          .perform(get(ADMIN_CUSTOMERS_URL).header(HttpHeaders.AUTHORIZATION, auth(adminToken)))
+          .andExpect(status().isOk())
+          .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+          .andExpect(jsonPath("$.content", hasSize(1)))
+          .andExpect(jsonPath("$.content[0].email").exists())
+          .andExpect(jsonPath("$.content[0].status").value("ACTIVE"))
+          .andExpect(jsonPath("$.content[0].totalOrders").value(1))
+          .andExpect(jsonPath("$.content[0].totalSpent").value(2499.98));
+    }
+
+    @Test
+    void whenSearchMatchesCustomerEmail_thenReturnFilteredList() throws Exception {
+      mockMvc
+          .perform(
+              get(ADMIN_CUSTOMERS_URL)
+                  .param("search", "test@gmail.com")
+                  .header(HttpHeaders.AUTHORIZATION, auth(adminToken)))
+          .andExpect(status().isOk())
+          .andExpect(jsonPath("$.content", hasSize(1)))
+          .andExpect(jsonPath("$.content[0].email").value("test@gmail.com"));
+    }
+  }
+
+  @Nested
+  @DisplayName("GET /api/v1/admin/customers/{id}")
+  class GetAdminCustomerDetailsTest {
+
+    @Test
+    void whenCustomerExists_thenReturnCustomerDetailsWithRecentOrders() throws Exception {
+      Order order = createOrder(OrderStatus.DELIVERED, PaymentStatus.PAID, "799.99", 1);
+      User customer = order.getUser();
+
+      mockMvc
+          .perform(
+              get(ADMIN_CUSTOMERS_URL + "/{id}", customer.getId())
+                  .header(HttpHeaders.AUTHORIZATION, auth(adminToken)))
+          .andExpect(status().isOk())
+          .andExpect(jsonPath("$.id").value(customer.getId()))
+          .andExpect(jsonPath("$.email").value(customer.getEmail()))
+          .andExpect(jsonPath("$.status").value("ACTIVE"))
+          .andExpect(jsonPath("$.totalOrders").value(1))
+          .andExpect(jsonPath("$.totalSpent").value(799.99))
+          .andExpect(jsonPath("$.recentOrders", hasSize(1)))
+          .andExpect(jsonPath("$.recentOrders[0].id").value(order.getId()))
+          .andExpect(jsonPath("$.recentOrders[0].paymentStatus").value("PAID"));
+    }
+
+    @Test
+    void whenCustomerDoesNotExist_thenReturn404() throws Exception {
+      mockMvc
+          .perform(
+              get(ADMIN_CUSTOMERS_URL + "/{id}", 999999L)
+                  .header(HttpHeaders.AUTHORIZATION, auth(adminToken)))
+          .andExpect(status().isNotFound());
+    }
+  }
+
+  @Nested
+  @DisplayName("GET /api/v1/admin/dashboard")
+  class GetAdminDashboardTest {
+
+    @Test
+    void whenAuthenticatedUserHasNoAdminRole_thenStatus403() throws Exception {
+      mockMvc
+          .perform(get(ADMIN_DASHBOARD_URL + "/summary").header(HttpHeaders.AUTHORIZATION, auth(userToken)))
+          .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void whenDashboardDataExists_thenReturnAllDashboardWidgets() throws Exception {
+      createOrder(OrderStatus.DELIVERED, PaymentStatus.PAID, "2499.98", 2);
+      phoneService.create(buildLowStockPhoneCreateRequestDto(), new ArrayList<>());
+
+      mockMvc
+          .perform(get(ADMIN_DASHBOARD_URL + "/summary").header(HttpHeaders.AUTHORIZATION, auth(adminToken)))
+          .andExpect(status().isOk())
+          .andExpect(jsonPath("$.totalRevenue").value(2499.98))
+          .andExpect(jsonPath("$.totalOrders").value(1))
+          .andExpect(jsonPath("$.totalCustomers").value(1))
+          .andExpect(jsonPath("$.lowStockProducts").value(1));
+
+      mockMvc
+          .perform(get(ADMIN_DASHBOARD_URL + "/sales-analytics").header(HttpHeaders.AUTHORIZATION, auth(adminToken)))
+          .andExpect(status().isOk())
+          .andExpect(jsonPath("$", hasSize(1)))
+          .andExpect(jsonPath("$[0].revenue").value(2499.98))
+          .andExpect(jsonPath("$[0].ordersCount").value(1));
+
+      mockMvc
+          .perform(get(ADMIN_DASHBOARD_URL + "/sales-by-brand").header(HttpHeaders.AUTHORIZATION, auth(adminToken)))
+          .andExpect(status().isOk())
+          .andExpect(jsonPath("$", hasSize(1)))
+          .andExpect(jsonPath("$[0].brand").value("AdminBrand"))
+          .andExpect(jsonPath("$[0].unitsSold").value(2));
+
+      mockMvc
+          .perform(get(ADMIN_DASHBOARD_URL + "/top-selling-products").header(HttpHeaders.AUTHORIZATION, auth(adminToken)))
+          .andExpect(status().isOk())
+          .andExpect(jsonPath("$", hasSize(1)))
+          .andExpect(jsonPath("$[0].sku").value("ADMIN-TEST-001"))
+          .andExpect(jsonPath("$[0].unitsSold").value(2));
+
+      mockMvc
+          .perform(get(ADMIN_DASHBOARD_URL + "/recent-orders").header(HttpHeaders.AUTHORIZATION, auth(adminToken)))
+          .andExpect(status().isOk())
+          .andExpect(jsonPath("$", hasSize(1)))
+          .andExpect(jsonPath("$[0].paymentStatus").value("PAID"));
+
+      mockMvc
+          .perform(get(ADMIN_DASHBOARD_URL + "/low-stock-alerts").header(HttpHeaders.AUTHORIZATION, auth(adminToken)))
+          .andExpect(status().isOk())
+          .andExpect(jsonPath("$", hasSize(1)))
+          .andExpect(jsonPath("$[0].sku").value("LOW-STOCK-001"))
+          .andExpect(jsonPath("$[0].stock").value(5));
+    }
+  }
+
   private String createAdminAccessToken() {
     Role adminRole =
         roleRepository
@@ -640,6 +781,24 @@ class AdminControllerTest {
         "16 MP",
         "108 MP",
         "5000 mAh");
+  }
+
+  private static PhoneCreateRequestDto buildLowStockPhoneCreateRequestDto() {
+    return new PhoneCreateRequestDto(
+        "Low Stock Phone",
+        "Phone prepared for dashboard low stock alerts",
+        new BigDecimal("299.99"),
+        "LowStockBrand",
+        2022,
+        "LOW-STOCK-001",
+        5,
+        ProductStatus.LOW_STOCK,
+        "Low Stock CPU",
+        4,
+        "5.9\"",
+        "8 MP",
+        "20 MP",
+        "3500 mAh");
   }
 
   private AdminProductCreateRequestDto buildAdminProductCreateRequestDto(String name, String sku) {

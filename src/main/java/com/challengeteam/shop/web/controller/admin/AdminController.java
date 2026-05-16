@@ -26,7 +26,9 @@ public class AdminController {
         new AdminEntryResponseDto(
             List.of(
                 new AdminSectionResponseDto("products", "/api/v1/admin/products", true),
-                new AdminSectionResponseDto("orders", "/api/v1/admin/orders", true)));
+                new AdminSectionResponseDto("orders", "/api/v1/admin/orders", true),
+                new AdminSectionResponseDto("customers", "/api/v1/admin/customers", true),
+                new AdminSectionResponseDto("dashboard", "/api/v1/admin/dashboard", true)));
 
     return ResponseEntity.ok(response);
   }
