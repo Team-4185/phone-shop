@@ -1,3 +1,9 @@
 spring:
   config:
     import: optional:file:.env[.properties]
+
+  jackson:
+    deserialization:
+      accept-float-as-int: false
+  flyway:
+    enabled: true

@@ -1,10 +1,10 @@
 server:
   port: ${PORT}
-  shutdown: graceful    # when application stop wait until each connection closed
+  shutdown: graceful
 
 spring:
-  config:
-    import: optional:file:.env[.properties]
+  application:
+    name: gadgetroom
   mail:
     host: smtp.gmail.com
     port: 587
@@ -28,23 +28,9 @@ spring:
       maximum-pool-size: 10
       minimum-idle: 5
   jpa:
-    open-in-view: false
     hibernate:
       ddl-auto: none
-  servlet:
-    multipart:
-      max-file-size: 5MB
-      max-request-size: 5MB
-  jackson:
-    deserialization:
-      accept-float-as-int: false
-
-springdoc:
-  api-docs:
-    path: /docs/api-docs
-  swagger-ui:
-    path: /docs
-
+    show-sql: false
 
 security:
   cors:
