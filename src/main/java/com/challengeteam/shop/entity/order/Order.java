@@ -16,6 +16,20 @@ import java.util.List;
 /**
  * Root order aggregate persisted for admin Order Management workflows.
  */
+@NamedEntityGraph(
+        name = "Order.withItems",
+        attributeNodes = {
+                @NamedAttributeNode(value = "items", subgraph = "items.phone")
+        },
+        subgraphs = {
+                @NamedSubgraph(
+                        name = "items.phone",
+                        attributeNodes = {
+                                @NamedAttributeNode("phone")
+                        }
+                )
+        }
+)
 @Getter
 @Setter
 @NoArgsConstructor
@@ -41,8 +55,6 @@ public class Order extends BaseEntity {
     @Column(nullable = true)
     private String customerPhoneNumber;
 
-    @Column(nullable = true)
-    private String customerCity;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -57,7 +69,6 @@ public class Order extends BaseEntity {
     private DeliveryMethod deliveryMethod;
 
     @Embedded
-    @Column(nullable = false)
     private ShippingAddress shippingAddress;
 
     @Embedded

@@ -3,7 +3,10 @@ package com.challengeteam.shop.entity.phone;
 import com.challengeteam.shop.entity.BaseEntity;
 import com.challengeteam.shop.entity.image.Image;
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 
 import java.math.BigDecimal;
@@ -58,7 +61,7 @@ public class Phone extends BaseEntity {
                 "name='" + name + '\'' +
                 ", description='" + description + '\'' +
                 ", price='" + price + '\'' +
-                ", brand='" + brand + '\'' +
+                ", brandName='" + brand + '\'' +
                 ", releaseYear='" + releaseYear + '\'' +
                 ", sku='" + sku + '\'' +
                 ", stock='" + stock +

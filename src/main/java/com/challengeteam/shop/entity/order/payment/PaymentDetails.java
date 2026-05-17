@@ -18,5 +18,5 @@ public class PaymentDetails {
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
     private PaymentStatus paymentStatus;
-    private String paymentId;
+    private String transactionId;
 }
