@@ -67,6 +67,8 @@ public class SecurityConfig {
                         .requestMatchers("/api/v1/test-data/**").permitAll()
                         .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
                         .requestMatchers("api/v1/filter/**").permitAll()
+                        .requestMatchers("/api/v1/orders/my").authenticated()
+                        .requestMatchers("/api/v1/orders/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtTokenFilter, UsernamePasswordAuthenticationFilter.class)
