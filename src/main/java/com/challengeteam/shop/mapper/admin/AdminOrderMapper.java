@@ -39,7 +39,7 @@ public class AdminOrderMapper {
         order.getCustomerFirstName(),
         order.getCustomerLastName(),
         order.getCustomerPhoneNumber(),
-        order.getCustomerCity(),
+        order.getShippingAddress().getCity(),
         order.getStatus(),
         order.getPaymentMethod(),
         order.getPaymentDetails().getPaymentStatus(),

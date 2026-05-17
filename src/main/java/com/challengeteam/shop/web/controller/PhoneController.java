@@ -29,6 +29,7 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 @RestController
 @RequestMapping("/api/v1/phones")
@@ -77,9 +78,18 @@ public class PhoneController {
     }
 
     @Operation(
+            summary = "Get available phone brands",
+            description = "Returns a set of all available phone brands."
+    )
+    @GetMapping("/brands")
+    public ResponseEntity<Set<String>> getBrands() {
+        return ResponseEntity.ok(phoneService.getAvailableBrands());
+    }
+
+    @Operation(
             summary = "Create new phone",
             description = "Creates a new phone based on input data and also adds provided images. " +
-                          "Images are optional."
+                    "Images are optional."
     )
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Void> createPhone(@Valid @RequestPart("phone") PhoneCreateRequestDto phoneCreateRequestDto,
@@ -99,7 +109,7 @@ public class PhoneController {
     @Operation(
             summary = "Update phone by id",
             description = "Updates phone by id, based on input data. Where field is empty," +
-                          " there will be no changes in this field."
+                    " there will be no changes in this field."
     )
     @PutMapping("/{id:\\d+}")
     public ResponseEntity<Void> updatePhone(@PathVariable Long id,

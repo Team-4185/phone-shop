@@ -219,7 +219,7 @@ class PhoneControllerTest {
         @Test
         void whenFilterByBrand_thenReturnOnlyMatchingPhones() throws Exception {
             mockMvc.perform(get(URL)
-                            .param("brand", "Apple")
+                            .param("brandName", "Apple")
                             .header(HttpHeaders.AUTHORIZATION, auth(token)))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.content").isArray())
@@ -270,7 +270,7 @@ class PhoneControllerTest {
         @Test
         void whenFilterByCombination_thenReturnMatchingPhones() throws Exception {
             mockMvc.perform(get(URL)
-                            .param("brand", "Samsung")
+                            .param("brandName", "Samsung")
                             .param("minPrice", "100.00")
                             .param("maxPrice", "2000.00")
                             .header(HttpHeaders.AUTHORIZATION, auth(token)))
@@ -326,7 +326,7 @@ class PhoneControllerTest {
         @Test
         void whenBrandTooLong_thenStatus400() throws Exception {
             mockMvc.perform(get(URL)
-                            .param("brand", "a".repeat(6000))
+                            .param("brandName", "a".repeat(6000))
                             .header(HttpHeaders.AUTHORIZATION, auth(token)))
                     .andExpect(status().isBadRequest());
         }
@@ -461,7 +461,7 @@ class PhoneControllerTest {
         @Test
         void whenCombinedFilterAndSort_thenReturnCorrectResults() throws Exception {
             mockMvc.perform(get(URL)
-                            .param("brand", "Apple")
+                            .param("brandName", "Apple")
                             .param("minPrice", "100.00")
                             .param("maxPrice", "2000.00")
                             .param("sort", "price_asc")
@@ -1632,7 +1632,7 @@ class PhoneControllerTest {
                 "Snapdragon 8 Gen 3", 8, "6.7\"", "12 MP", "50-12 MP", "5000 mAh"),
 
 
-        // Invalid brand
+        // Invalid brandName
         INVALID_BRAND_NULL(
                 "Phone", "description", new BigDecimal("100.00"), null, 2020,
                 "Snapdragon 8 Gen 3", 8, "6.7\"", "12 MP", "50-12 MP", "5000 mAh"),

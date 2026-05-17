@@ -11,6 +11,8 @@ import com.challengeteam.shop.entity.order.OrderStatus;
 import com.challengeteam.shop.entity.order.payment.PaymentDetails;
 import com.challengeteam.shop.entity.order.payment.PaymentMethod;
 import com.challengeteam.shop.entity.order.payment.PaymentStatus;
+import com.challengeteam.shop.entity.order.shipping.LogisticsCompany;
+import com.challengeteam.shop.entity.order.shipping.ShippingAddress;
 import com.challengeteam.shop.entity.phone.Phone;
 import com.challengeteam.shop.entity.phone.ProductStatus;
 import com.challengeteam.shop.entity.user.Role;
@@ -330,7 +332,7 @@ class AdminControllerTest {
             mockMvc
                     .perform(
                             get(ADMIN_PRODUCTS_URL)
-                                    .param("brand", "AdminBrand")
+                                    .param("brandName", "AdminBrand")
                                     .header(HttpHeaders.AUTHORIZATION, auth(adminToken)))
                     .andExpect(status().isOk())
                     .andExpect(content().contentType(MediaType.APPLICATION_JSON))
@@ -701,14 +703,22 @@ class AdminControllerTest {
                         .customerFirstName(customer.getFirstName())
                         .customerLastName(customer.getLastName())
                         .customerPhoneNumber(customer.getPhoneNumber())
-                        .customerCity(customer.getCity())
                         .status(status)
                         .paymentMethod(PaymentMethod.CARD)
                         .paymentDetails(
-                                new PaymentDetails(PaymentStatus.PAID,
+                                new PaymentDetails(paymentStatus,
                                         UUID.randomUUID().toString())
                         )
                         .deliveryMethod(DeliveryMethod.COURIER)
+                        .shippingAddress(ShippingAddress.builder()
+                                .houseNumber("10A")
+                                .street("Main Street")
+                                .city("Kyiv")
+                                .region("Kyiv Region")
+                                .country("Ukraine")
+                                .zipCode("01001")
+                                .logisticsCompany(LogisticsCompany.NOVA_POSHTA)
+                                .build())
                         .total(new BigDecimal(total))
                         .build();
         order.addItem(

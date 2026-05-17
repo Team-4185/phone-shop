@@ -8,9 +8,10 @@ import com.challengeteam.shop.entity.order.payment.PaymentStatus;
 import com.challengeteam.shop.entity.user.User;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.JoinType;
+import org.springframework.data.jpa.domain.Specification;
+
 import java.math.BigDecimal;
 import java.util.function.Function;
-import org.springframework.data.jpa.domain.Specification;
 
 /** Builds JPA criteria used by admin order list filters. */
 public final class AdminOrderSpecification {
@@ -52,8 +53,8 @@ public final class AdminOrderSpecification {
   }
 
   private static Specification<Order> hasPaymentStatus(PaymentStatus paymentStatus) {
-    return (root, query, cb) -> cb.equal(root.get("paymentStatus"), paymentStatus);
-  }
+    return (root, query, cb) -> cb.equal(
+            root.get("paymentDetails").get("paymentStatus"), paymentStatus);  }
 
   private static Specification<Order> totalGreaterOrEqual(BigDecimal minTotal) {
     return (root, query, cb) -> cb.greaterThanOrEqualTo(root.get("total"), minTotal);

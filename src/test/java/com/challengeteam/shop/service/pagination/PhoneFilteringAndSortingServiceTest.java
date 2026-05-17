@@ -108,8 +108,8 @@ class PhoneFilteringAndSortingServiceTest {
 
     /**
      * cases:
-     * brand was not found -> empty list;
-     * request contains only one brand -> return a list of phones with this brand;
+     * brandName was not found -> empty list;
+     * request contains only one brandName -> return a list of phones with this brandName;
      * request contains multiple brands -> return a list of phones with all brands;
      */
     @Nested

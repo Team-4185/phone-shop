@@ -34,13 +34,13 @@ public final class AdminProductSpecification {
       return cb.or(
           cb.like(cb.lower(root.get("name")), pattern),
           cb.like(cb.lower(root.get("sku")), pattern),
-          cb.like(cb.lower(root.get("brand")), pattern),
+          cb.like(cb.lower(root.get("brandName")), pattern),
           cb.like(cb.lower(root.get("description")), pattern));
     };
   }
 
   private static Specification<Phone> hasBrand(String brand) {
-    return (root, query, cb) -> cb.equal(cb.lower(root.get("brand")), brand.toLowerCase());
+    return (root, query, cb) -> cb.equal(cb.lower(root.get("brandName")), brand.toLowerCase());
   }
 
   private static Specification<Phone> hasStatus(ProductStatus status) {
