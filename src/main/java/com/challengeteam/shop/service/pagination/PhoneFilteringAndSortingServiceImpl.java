@@ -26,7 +26,7 @@ import java.util.List;
  * capabilities for phone entities.
  * <p>
  * This service uses Spring Data JPA Specifications to dynamically build complex queries based on
- * multiple filter criteria such as brand, price range, and stock availability. The filtered results
+ * multiple filter criteria such as brandName, price range, and stock availability. The filtered results
  * are returned as paginated responses with customizable sorting options.
  * </p>
  *

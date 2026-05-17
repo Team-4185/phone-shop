@@ -9,7 +9,7 @@ import org.springframework.data.domain.Pageable;
  * Service interface for filtering and sorting phone entities with pagination support.
  * <p>
  * This service provides functionality to filter phones based on multiple criteria such as
- * brand, price range, and stock availability, while supporting custom sorting options.
+ * brandName, price range, and stock availability, while supporting custom sorting options.
  * Results are returned in a paginated format for efficient data retrieval.
  * </p>
  *
@@ -21,7 +21,7 @@ public interface PhoneFilteringAndSortingService {
     /**
      * Filters and sorts phone entities based on the provided criteria and returns a paginated response.
      * <p>
-     * This method applies multiple filters including brand, price range, and stock availability,
+     * This method applies multiple filters including brandName, price range, and stock availability,
      * and sorts the results according to the specified sort criteria. The filtered and sorted
      * results are returned as a paginated response containing phone DTOs and pagination metadata.
      * </p>
