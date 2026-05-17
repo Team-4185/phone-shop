@@ -13,6 +13,9 @@ spring:
     properties:
       mail.smtp.auth: true
       mail.smtp.starttls.enable: true
+      connection-timeout: 5000
+      write-timeout: 5000
+      timeout: 3000
   datasource:
     url: ${DB_URL}
     username: ${DB_USERNAME}
