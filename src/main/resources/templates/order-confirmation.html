@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Order Confirmation – GadgetRoom</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Space+Grotesk:wght@500;700&display=swap');
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background-color: #f0f0f5;
+            font-family: 'DM Sans', Arial, sans-serif;
+            color: #1a1a2e;
+            padding: 40px 16px;
+        }
+
+        .wrapper { max-width: 620px; margin: 0 auto; }
+
+        .header {
+            background: #1a1a2e;
+            border-radius: 16px 16px 0 0;
+            padding: 28px 40px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo-text {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 22px;
+            font-weight: 700;
+            color: #ffffff;
+            letter-spacing: 0.5px;
+        }
+
+        .hero {
+            background: linear-gradient(135deg, #7C6FCD 0%, #5b4fb5 100%);
+            padding: 40px 40px 36px;
+            text-align: center;
+        }
+
+        .hero-icon { font-size: 48px; margin-bottom: 16px; display: block; }
+
+        .hero-title {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 26px;
+            font-weight: 700;
+            color: #ffffff;
+            margin-bottom: 8px;
+        }
+
+        .hero-subtitle { font-size: 15px; color: rgba(255,255,255,0.82); line-height: 1.5; }
+
+        .body-card { background: #ffffff; padding: 36px 40px; }
+
+        .greeting { font-size: 16px; color: #1a1a2e; line-height: 1.6; margin-bottom: 28px; }
+        .greeting strong { font-weight: 600; }
+
+        .order-meta {
+            background: #f7f6ff;
+            border: 1px solid #e8e5f8;
+            border-radius: 10px;
+            padding: 18px 22px;
+            margin-bottom: 28px;
+            display: flex;
+            justify-content: space-between;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .meta-item { display: flex; flex-direction: column; gap: 3px; }
+
+        .meta-label {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            color: #9b97c0;
+            font-weight: 600;
+        }
+
+        .meta-value { font-size: 14px; font-weight: 600; color: #1a1a2e; }
+        .meta-value.accent { color: #7C6FCD; }
+
+        .section-title {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 14px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #9b97c0;
+            margin-bottom: 14px;
+        }
+
+        .items-table { width: 100%; border-collapse: collapse; margin-bottom: 8px; }
+        .items-table thead tr { border-bottom: 2px solid #f0f0f5; }
+
+        .items-table th {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.7px;
+            color: #9b97c0;
+            padding: 0 0 12px;
+            text-align: left;
+        }
+
+        .items-table th.right,
+        .items-table td.right { text-align: right; }
+
+        .items-table tbody tr { border-bottom: 1px solid #f7f6ff; }
+        .items-table tbody tr:last-child { border-bottom: none; }
+
+        .items-table td { padding: 14px 0; font-size: 14px; color: #1a1a2e; vertical-align: middle; }
+
+        .product-name { font-weight: 600; margin-bottom: 3px; }
+        .product-sku { font-size: 12px; color: #9b97c0; }
+
+        .qty-badge {
+            display: inline-block;
+            background: #f0f0f5;
+            color: #5b4fb5;
+            font-weight: 600;
+            font-size: 13px;
+            border-radius: 6px;
+            padding: 3px 10px;
+        }
+
+        .item-price { font-weight: 600; white-space: nowrap; }
+
+        .totals {
+            border-top: 2px solid #f0f0f5;
+            margin-top: 4px;
+            padding-top: 18px;
+            margin-bottom: 32px;
+        }
+
+        .totals-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 14px;
+            color: #6b6b8a;
+            margin-bottom: 8px;
+        }
+
+        .totals-row.total-final {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 18px;
+            font-weight: 700;
+            color: #1a1a2e;
+            margin-top: 12px;
+            padding-top: 14px;
+            border-top: 1px solid #e8e5f8;
+        }
+
+        .totals-row.total-final span:last-child { color: #7C6FCD; }
+
+        .cta-wrap { text-align: center; margin-bottom: 32px; }
+
+        .cta-btn {
+            display: inline-block;
+            background: #7C6FCD;
+            color: #ffffff;
+            text-decoration: none;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 15px;
+            font-weight: 600;
+            padding: 14px 36px;
+            border-radius: 10px;
+            letter-spacing: 0.3px;
+        }
+
+        .divider { border: none; border-top: 1px solid #f0f0f5; margin: 0 0 28px; }
+
+        .contact-block { font-size: 13px; color: #6b6b8a; line-height: 1.7; }
+        .contact-block a { color: #7C6FCD; text-decoration: none; }
+
+        .footer {
+            background: #1a1a2e;
+            border-radius: 0 0 16px 16px;
+            padding: 24px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .footer-logo { font-family: 'Space Grotesk', sans-serif; font-size: 15px; font-weight: 700; color: #ffffff; }
+        .footer-links { display: flex; gap: 20px; }
+        .footer-links a { font-size: 12px; color: rgba(255,255,255,0.5); text-decoration: none; }
+        .footer-copy { width: 100%; font-size: 11px; color: rgba(255,255,255,0.3); margin-top: 4px; }
+    </style>
+</head>
+<body>
+<div class="wrapper">
+
+    <!-- Header -->
+    <div class="header">
+        <span style="font-size:22px">📱</span>
+        <span class="logo-text">GADGETROOM</span>
+    </div>
+
+    <!-- Hero -->
+    <div class="hero">
+        <span class="hero-icon">✅</span>
+        <div class="hero-title">Your order is confirmed!</div>
+        <div class="hero-subtitle">
+            Thank you for shopping with GadgetRoom.<br/>
+            We'll notify you once your order is on its way.
+        </div>
+    </div>
+
+    <!-- Body -->
+    <div class="body-card">
+
+        <!-- Greeting -->
+        <div class="greeting">
+            Hi <strong th:text="${customerFirstName}">John</strong>,<br/><br/>
+            We're excited to let you know that we've successfully received your order.
+            Below you'll find a summary of everything you ordered.
+        </div>
+
+        <!-- Order meta -->
+        <div class="order-meta">
+            <div class="meta-item">
+                <span class="meta-label">Order number</span>
+                <span class="meta-value accent" th:text="'#' + ${orderNumber}">#ORD-12345</span>
+            </div>
+            <div class="meta-item">
+                <span class="meta-label">Date</span>
+                <span class="meta-value" th:text="${orderDate}">01 Jan 2025, 14:30</span>
+            </div>
+            <div class="meta-item">
+                <span class="meta-label">Payment</span>
+                <span class="meta-value" th:text="${paymentMethod}">Card</span>
+            </div>
+            <div class="meta-item">
+                <span class="meta-label">Delivery</span>
+                <span class="meta-value" th:text="${deliveryMethod}">Courier</span>
+            </div>
+        </div>
+
+        <!-- Items -->
+        <div class="section-title">Order items</div>
+        <table class="items-table">
+            <thead>
+            <tr>
+                <th>Product</th>
+                <th class="right">Qty</th>
+                <th class="right">Unit price</th>
+                <th class="right">Total</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="item : ${items}">
+                <td>
+                    <div class="product-name" th:text="${item.productName}">iPhone 15 Pro</div>
+                    <div class="product-sku" th:text="'SKU: ' + ${item.sku}">SKU: APL-IP15P</div>
+                </td>
+                <td class="right">
+                    <span class="qty-badge" th:text="'×' + ${item.quantity}">×1</span>
+                </td>
+                <td class="right item-price" th:text="'€ ' + ${#numbers.formatDecimal(item.unitPrice, 1, 2)}">€ 999.00</td>
+                <td class="right item-price" th:text="'€ ' + ${#numbers.formatDecimal(item.totalPrice, 1, 2)}">€ 999.00</td>
+            </tr>
+            </tbody>
+        </table>
+
+        <!-- Totals -->
+        <div class="totals">
+            <div class="totals-row total-final">
+                <span>Total</span>
+                <span th:text="'€ ' + ${#numbers.formatDecimal(total, 1, 2)}">€ 0.00</span>
+            </div>
+        </div>
+
+        <!-- CTA -->
+        <div class="cta-wrap">
+            <a th:href="'https://gadgetroom.ua/orders/' + ${orderNumber}" class="cta-btn">
+                Track my order →
+            </a>
+        </div>
+
+        <hr class="divider"/>
+
+        <!-- Contacts -->
+        <div class="contact-block">
+            <strong>Need help?</strong><br/>
+            📍 Kyiv, Khreshchatyk St., 42<br/>
+            🕐 Mon–Sun: 09:00–21:00<br/>
+            📞 <a href="tel:+380800123456">0 800 123 456</a><br/>
+            ✉️ <a href="mailto:info@gadgetroom.ua">info@gadgetroom.ua</a>
+        </div>
+
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+        <span class="footer-logo">📱 GADGETROOM</span>
+        <div class="footer-links">
+            <a href="https://gadgetroom.ua/catalog">Catalog</a>
+            <a href="https://gadgetroom.ua/delivery">Delivery</a>
+            <a href="https://gadgetroom.ua/returns">Returns</a>
+        </div>
+        <div class="footer-copy">
+            © 2025 GadgetRoom. All rights reserved. Kyiv, Ukraine.
+        </div>
+    </div>
+
+</div>
+</body>
+</html>
