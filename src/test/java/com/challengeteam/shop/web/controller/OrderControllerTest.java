@@ -86,8 +86,6 @@ class OrderControllerTest {
         phoneRepository.deleteAll();
     }
 
-    // ── Builders ─────────────────────────────────────────────────────────────
-
     private Phone phone(String name, String brand, BigDecimal price, int stock, ProductStatus status) {
         Phone p = new Phone();
         p.setName(name);
@@ -98,7 +96,6 @@ class OrderControllerTest {
         p.setSku(name.replace(" ", "-").toLowerCase());
         p.setReleaseYear(2024);
 
-        // заполняем обязательные характеристики
         p.setPhoneCharacteristics(PhoneCharacteristics.builder()
                 .cpu("Apple A17 Pro")
                 .coresNumber(6)
@@ -191,9 +188,6 @@ class OrderControllerTest {
         return new TransactionResult(PaymentStatus.FAILED, null, "Insufficient funds");
     }
 
-    // =========================================================================
-
-    // -------------------------------------------------------------------------
     @Nested
     @DisplayName("Successful order creation")
             // Cases:
@@ -330,7 +324,6 @@ class OrderControllerTest {
         }
     }
 
-    // -------------------------------------------------------------------------
     @Nested
     @DisplayName("Payment failures")
             // Cases:
@@ -590,10 +583,10 @@ class OrderControllerTest {
         }
 
         @Test
-        @DisplayName("Unauthenticated request → 401")
+        @DisplayName("Unauthenticated request → 403")
         void unauthenticatedRequest_returns401() throws Exception {
             mockMvc.perform(get(ORDER_URL + "/my"))
-                    .andExpect(status().isUnauthorized());
+                    .andExpect(status().isForbidden());
         }
 
         @Test
@@ -625,7 +618,6 @@ class OrderControllerTest {
         }
     }
 
-    // -------------------------------------------------------------------------
     @Nested
     @DisplayName("GET /api/v1/orders/{id} — get order by ID")
             // Cases:

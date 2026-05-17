@@ -11,7 +11,7 @@ public class PhoneSpecification {
     private static Specification<Phone> hasBrand(String brand) {
         return (root, query, criteriaBuilder) ->
                 criteriaBuilder.equal(
-                        criteriaBuilder.lower(root.get("brandName")),
+                        criteriaBuilder.lower(root.get("brand")),
                         brand.toLowerCase()
                 );
     }

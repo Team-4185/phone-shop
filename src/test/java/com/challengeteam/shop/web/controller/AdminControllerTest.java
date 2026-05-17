@@ -332,7 +332,7 @@ class AdminControllerTest {
             mockMvc
                     .perform(
                             get(ADMIN_PRODUCTS_URL)
-                                    .param("brandName", "AdminBrand")
+                                    .param("brand", "AdminBrand")
                                     .header(HttpHeaders.AUTHORIZATION, auth(adminToken)))
                     .andExpect(status().isOk())
                     .andExpect(content().contentType(MediaType.APPLICATION_JSON))
