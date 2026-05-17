@@ -5,12 +5,14 @@ import com.challengeteam.shop.dto.email.Notification;
 import com.challengeteam.shop.dto.order.OrderResponseDto;
 import com.challengeteam.shop.dto.order.request.item.OrderItemRequestDto;
 import com.challengeteam.shop.dto.order.request.order.OrderRequestDto;
+import com.challengeteam.shop.dto.order.request.shippingAddress.ShippingAddressRequestDto;
 import com.challengeteam.shop.dto.payment.TransactionResult;
 import com.challengeteam.shop.entity.order.Order;
 import com.challengeteam.shop.entity.order.OrderItem;
 import com.challengeteam.shop.entity.order.OrderStatus;
 import com.challengeteam.shop.entity.order.payment.PaymentDetails;
 import com.challengeteam.shop.entity.order.payment.PaymentStatus;
+import com.challengeteam.shop.entity.order.shipping.ShippingAddress;
 import com.challengeteam.shop.entity.phone.Phone;
 import com.challengeteam.shop.entity.user.User;
 import com.challengeteam.shop.exceptionHandling.exception.PaymentFailedException;
@@ -23,6 +25,7 @@ import com.challengeteam.shop.service.mock.PaymentMockService;
 import com.challengeteam.shop.service.notification.NotificationSenderService;
 import com.challengeteam.shop.utility.AuthenticationUserExtractorHelper;
 import com.challengeteam.shop.utility.notification.email.OrderConfirmationEmailBuilder;
+import com.challengeteam.shop.utility.order.InputNormalizer;
 import com.challengeteam.shop.utility.order.OrderUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -57,7 +60,7 @@ public class OrderCreatorServiceImpl implements OrderCreatorService {
      * This method performs stock validation, processes payment, updates phone stock,
      * saves the order, and sends a confirmation notification.
      *
-     * @param request the {@code OrderRequestDto} containing order details such as items and quantities
+     * @param request        the {@code OrderRequestDto} containing order details such as items and quantities
      * @param authentication the {@code Authentication} object providing the details of the authenticated user
      * @return an {@code OrderResponseDto} containing details of the created order
      */
@@ -133,15 +136,15 @@ public class OrderCreatorServiceImpl implements OrderCreatorService {
 
         Order order = Order.builder()
                 .user(extractedUser.orElse(null))
-                .customerEmail(request.customerEmail())
-                .customerFirstName(request.customerFirstName())
-                .customerLastName(request.customerLastName())
+                .customerEmail(InputNormalizer.toEmail(request.customerEmail()))
+                .customerFirstName(InputNormalizer.toTitleCase(request.customerFirstName()))
+                .customerLastName(InputNormalizer.toTitleCase(request.customerLastName()))
                 .customerPhoneNumber(request.customerPhoneNumber())
                 .status(OrderStatus.NEW)
                 .paymentMethod(request.paymentMethod())
                 .deliveryMethod(request.deliveryMethod())
                 .shippingAddress(request.shippingAddress() != null
-                        ? shippingAddressOrderMapper.toShippingAddress(request.shippingAddress())
+                        ? normalizeShippingAddress(request.shippingAddress())
                         : null)
                 .total(totalPrice)
                 .build();
@@ -182,5 +185,14 @@ public class OrderCreatorServiceImpl implements OrderCreatorService {
                 .buildOrderConfirmationNotification(order);
         log.debug("Sending order confirmation notification to: {}", notification.to());
         notificationSenderService.sendNotification(notification, Notification_type.EMAIL);
+    }
+
+    private ShippingAddress normalizeShippingAddress(ShippingAddressRequestDto dto) {
+        ShippingAddress address = shippingAddressOrderMapper.toShippingAddress(dto);
+        address.setCity(InputNormalizer.toTitleCase(dto.city()));
+        address.setStreet(InputNormalizer.toTitleCase(dto.street()));
+        address.setRegion(InputNormalizer.toTitleCase(dto.region()));
+        address.setCountry(InputNormalizer.toTitleCase(dto.country()));
+        return address;
     }
 }
