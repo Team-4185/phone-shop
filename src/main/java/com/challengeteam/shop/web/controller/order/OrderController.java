@@ -96,7 +96,8 @@ public class OrderController {
     @GetMapping("/{id}")
     public ResponseEntity<OrderResponseDto> getByOrderNumber(
             @Parameter(description = "The unique ID of the order")
-            @PathVariable long id) {
-        return ResponseEntity.ok(orderFetchService.getByOrderNumber(id));
+            @PathVariable long id,
+            Authentication authentication) {
+        return ResponseEntity.ok(orderFetchService.getByOrderId(id, authentication));
     }
 }

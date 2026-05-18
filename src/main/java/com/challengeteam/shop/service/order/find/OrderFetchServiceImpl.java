@@ -1,6 +1,7 @@
 package com.challengeteam.shop.service.order.find;
 
 import com.challengeteam.shop.dto.order.OrderResponseDto;
+import com.challengeteam.shop.entity.order.Order;
 import com.challengeteam.shop.entity.user.User;
 import com.challengeteam.shop.exceptionHandling.exception.OrderNotFoundException;
 import com.challengeteam.shop.exceptionHandling.exception.UnauthorizedException;
@@ -57,10 +58,22 @@ public class OrderFetchServiceImpl implements OrderFetchService {
      * @throws OrderNotFoundException if no order is found with the given ID
      */
     @Override
-    public OrderResponseDto getByOrderNumber(long id) {
-        return orderRepository.findByIdWithItems(id)
-                .map(orderMapper::toDto)
-                .orElseThrow(() -> new OrderNotFoundException(
-                        "Order not found: " + id));
+    public OrderResponseDto getByOrderId(long orderID, Authentication authentication) {
+        Order order = orderRepository.findByIdWithItems(orderID)
+                .orElseThrow(() -> new OrderNotFoundException("Order not found: " + orderID));
+
+        boolean isAdmin = authentication.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+
+        if (!isAdmin) {
+            User user = authenticationUserExtractorHelper
+                    .extractUserFromSecurityContextHolder(authentication)
+                    .orElseThrow(() -> new UnauthorizedException("User not authenticated"));
+
+            if (order.getUser() == null || !order.getUser().getId().equals(user.getId())) {
+                throw new OrderNotFoundException("Order not found: " + orderID);
+            }
+        }
+        return orderMapper.toDto(order);
     }
 }

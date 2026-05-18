@@ -540,6 +540,58 @@ class AdminControllerTest {
                                     .header(HttpHeaders.AUTHORIZATION, auth(adminToken)))
                     .andExpect(status().isNotFound());
         }
+        @Test
+        void whenPickupOrderExists_thenReturnDetailsWithNullCustomerCity() throws Exception {
+            Order order = createPickupOrder(OrderStatus.NEW, "799.99", 1);
+
+            mockMvc
+                    .perform(
+                            get(ADMIN_ORDERS_URL + "/{id}", order.getId())
+                                    .header(HttpHeaders.AUTHORIZATION, auth(adminToken)))
+                    .andExpect(status().isOk())
+                    .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                    .andExpect(jsonPath("$.id").value(order.getId()))
+                    .andExpect(jsonPath("$.customerEmail").exists())
+                    .andExpect(jsonPath("$.status").value("NEW"))
+                    .andExpect(jsonPath("$.deliveryMethod").value("PICKUP"))
+                    .andExpect(jsonPath("$.customerCity").doesNotExist());
+        }
+        private Order createPickupOrder(OrderStatus status, String total, int quantity) {
+            Phone phone = findPhoneBySku("ADMIN-TEST-001");
+            User customer =
+                    userRepository.findAll().stream()
+                            .filter(user -> !ADMIN_EMAIL.equals(user.getEmail()))
+                            .findFirst()
+                            .orElseThrow();
+
+            Order order =
+                    Order.builder()
+                            .user(customer)
+                            .customerEmail(customer.getEmail())
+                            .customerFirstName(customer.getFirstName())
+                            .customerLastName(customer.getLastName())
+                            .customerPhoneNumber(customer.getPhoneNumber())
+                            .status(status)
+                            .paymentMethod(PaymentMethod.CARD)
+                            .paymentDetails(
+                                    new PaymentDetails(PaymentStatus.PENDING,
+                                            UUID.randomUUID().toString()))
+                            .deliveryMethod(DeliveryMethod.PICKUP)
+                            .shippingAddress(null)
+                            .total(new BigDecimal(total))
+                            .build();
+            order.addItem(
+                    OrderItem.builder()
+                            .phone(phone)
+                            .productName(phone.getName())
+                            .sku(phone.getSku())
+                            .unitPrice(phone.getPrice())
+                            .quantity(quantity)
+                            .totalPrice(phone.getPrice().multiply(BigDecimal.valueOf(quantity)))
+                            .build());
+
+            return orderRepository.save(order);
+        }
     }
 
     @Nested

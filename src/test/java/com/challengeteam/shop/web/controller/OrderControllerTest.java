@@ -536,6 +536,22 @@ class OrderControllerTest {
                             ))))
                     .andExpect(status().isBadRequest());
         }
+        @Test
+        @DisplayName("Missing deliveryMethod with shippingAddress → 400")
+        void missingDeliveryMethodWithShippingAddress_returns400() throws Exception {
+            mockMvc.perform(post(ORDER_URL)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(Map.of(
+                                    "customerEmail", "customer@example.com",
+                                    "customerFirstName", "John",
+                                    "customerLastName", "Doe",
+                                    "customerPhoneNumber", "+380991234567",
+                                    "paymentMethod", "CASH_ON_DELIVERY",
+                                    "shippingAddress", courierAddress(),
+                                    "items", List.of(Map.of("phoneId", iphone.getId(), "quantity", 1))
+                            ))))
+                    .andExpect(status().isBadRequest());
+        }
     }
 
     // -------------------------------------------------------------------------
@@ -620,30 +636,25 @@ class OrderControllerTest {
 
     @Nested
     @DisplayName("GET /api/v1/orders/{id} — get order by ID")
-            // Cases:
-            //   - existing order ID → 200, returns order details
-            //   - non-existing order ID → 404
-            //   - no auth required — guest can access by ID
-            // -------------------------------------------------------------------------
     class GetOrderByIdTests {
 
+
         @Test
-        @DisplayName("Existing order ID → 200, returns order details")
-        void existingOrderId_returns200_withOrderDetails() throws Exception {
+        @DisplayName("Owner fetches their order → 200, returns order details")
+        void ownerFetchesOrder_returns200_withOrderDetails() throws Exception {
             when(paymentMockService.pay(any(), any())).thenReturn(paid());
 
-            // create order and get its ID from response
             String responseBody = mockMvc.perform(post(ORDER_URL)
                             .contentType(MediaType.APPLICATION_JSON)
+                            .header("Authorization", "Bearer " + userToken)
                             .content(cardCourierBody(iphone.getId(), 1)))
                     .andExpect(status().isCreated())
-                    .andReturn()
-                    .getResponse()
-                    .getContentAsString();
+                    .andReturn().getResponse().getContentAsString();
 
             Long orderId = objectMapper.readTree(responseBody).get("id").asLong();
 
-            mockMvc.perform(get(ORDER_URL + "/{id}", orderId))
+            mockMvc.perform(get(ORDER_URL + "/{id}", orderId)
+                            .header("Authorization", "Bearer " + userToken))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.id").value(orderId))
                     .andExpect(jsonPath("$.status").value("NEW"))
@@ -654,29 +665,37 @@ class OrderControllerTest {
         @Test
         @DisplayName("Non-existing order ID → 404")
         void nonExistingOrderId_returns404() throws Exception {
-            mockMvc.perform(get(ORDER_URL + "/{id}", 99999L))
+            mockMvc.perform(get(ORDER_URL + "/{id}", 99999L)
+                            .header("Authorization", "Bearer " + userToken))
                     .andExpect(status().isNotFound());
         }
 
         @Test
-        @DisplayName("No auth required — guest can access order by ID")
-        void noAuthRequired_guestCanAccessOrderById() throws Exception {
+        @DisplayName("No auth → 403")
+        void noAuth_returns403() throws Exception {
+            mockMvc.perform(get(ORDER_URL + "/{id}", 1L))
+                    .andExpect(status().isForbidden());
+        }
+
+        @Test
+        @DisplayName("Another user tries to fetch order → 404")
+        void anotherUser_cannotFetchOtherUsersOrder() throws Exception {
             when(paymentMockService.pay(any(), any())).thenReturn(paid());
 
             String responseBody = mockMvc.perform(post(ORDER_URL)
                             .contentType(MediaType.APPLICATION_JSON)
+                            .header("Authorization", "Bearer " + userToken)
                             .content(cardCourierBody(iphone.getId(), 1)))
                     .andExpect(status().isCreated())
-                    .andReturn()
-                    .getResponse()
-                    .getContentAsString();
+                    .andReturn().getResponse().getContentAsString();
 
             Long orderId = objectMapper.readTree(responseBody).get("id").asLong();
 
-            // no Authorization header
-            mockMvc.perform(get(ORDER_URL + "/{id}", orderId))
-                    .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.id").value(orderId));
+            String otherToken = testAuthHelper.authorizeAsNewUser("other@gmail.com", "password");
+
+            mockMvc.perform(get(ORDER_URL + "/{id}", orderId)
+                            .header("Authorization", "Bearer " + otherToken))
+                    .andExpect(status().isNotFound());
         }
     }
 

@@ -64,6 +64,9 @@ public class OrderDeliveryDetailsValidator
     public boolean isValid(OrderRequestDto value, ConstraintValidatorContext context) {
         DeliveryMethod method = value.deliveryMethod();
         ShippingAddressRequestDto address = value.shippingAddress();
+        if (method == null) {
+            return true;
+        }
         if (method == DeliveryMethod.PICKUP) {
             return address == null;
         }
