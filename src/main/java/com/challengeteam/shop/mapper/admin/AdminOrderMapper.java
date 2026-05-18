@@ -9,58 +9,62 @@ import com.challengeteam.shop.service.admin.AdminOrderWorkflowService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
-/** Maps order domain objects to DTOs dedicated to the admin Order Management API. */
+/**
+ * Maps order domain objects to DTOs dedicated to the admin Order Management API.
+ */
 @Component
 @RequiredArgsConstructor
 public class AdminOrderMapper {
 
-  private final AdminOrderWorkflowService adminOrderWorkflowService;
+    private final AdminOrderWorkflowService adminOrderWorkflowService;
 
-  public AdminOrderListItemResponseDto toListItem(Order order) {
-    return new AdminOrderListItemResponseDto(
-        order.getId(),
-        order.getUser() == null ? null : order.getUser().getId(),
-        order.getCustomerEmail(),
-        order.getStatus(),
-        order.getPaymentMethod(),
-        order.getPaymentDetails().getPaymentStatus(),
-        order.getDeliveryMethod(),
-        order.getTotal(),
-        order.getItems().stream().mapToInt(OrderItem::getQuantity).sum(),
-        order.getCreatedAt(),
-        order.getUpdatedAt());
-  }
+    public AdminOrderListItemResponseDto toListItem(Order order) {
+        return new AdminOrderListItemResponseDto(
+                order.getId(),
+                order.getUser() == null ? null : order.getUser().getId(),
+                order.getCustomerEmail(),
+                order.getStatus(),
+                order.getPaymentMethod(),
+                order.getPaymentDetails().getPaymentStatus(),
+                order.getDeliveryMethod(),
+                order.getTotal(),
+                order.getItems().stream().mapToInt(OrderItem::getQuantity).sum(),
+                order.getCreatedAt(),
+                order.getUpdatedAt());
+    }
 
-  public AdminOrderDetailsResponseDto toDetails(Order order) {
-    return new AdminOrderDetailsResponseDto(
-        order.getId(),
-        order.getUser() == null ? null : order.getUser().getId(),
-        order.getCustomerEmail(),
-        order.getCustomerFirstName(),
-        order.getCustomerLastName(),
-        order.getCustomerPhoneNumber(),
-        order.getShippingAddress().getCity(),
-        order.getStatus(),
-        order.getPaymentMethod(),
-        order.getPaymentDetails().getPaymentStatus(),
-        order.getDeliveryMethod(),
-        order.getTotal(),
-        adminOrderWorkflowService.getAvailableActions(order.getStatus()),
-        order.getItems().stream().map(this::toItem).toList(),
-        order.getCreatedAt(),
-        order.getUpdatedAt());
-  }
+    public AdminOrderDetailsResponseDto toDetails(Order order) {
+        return new AdminOrderDetailsResponseDto(
+                order.getId(),
+                order.getUser() == null ? null : order.getUser().getId(),
+                order.getCustomerEmail(),
+                order.getCustomerFirstName(),
+                order.getCustomerLastName(),
+                order.getCustomerPhoneNumber(),
+                order.getShippingAddress() == null
+                        ? null
+                        : order.getShippingAddress().getCity(),
+                order.getStatus(),
+                order.getPaymentMethod(),
+                order.getPaymentDetails().getPaymentStatus(),
+                order.getDeliveryMethod(),
+                order.getTotal(),
+                adminOrderWorkflowService.getAvailableActions(order.getStatus()),
+                order.getItems().stream().map(this::toItem).toList(),
+                order.getCreatedAt(),
+                order.getUpdatedAt());
+    }
 
-  private AdminOrderItemResponseDto toItem(OrderItem item) {
-    Long phoneId = item.getPhone() == null ? null : item.getPhone().getId();
+    private AdminOrderItemResponseDto toItem(OrderItem item) {
+        Long phoneId = item.getPhone() == null ? null : item.getPhone().getId();
 
-    return new AdminOrderItemResponseDto(
-        item.getId(),
-        phoneId,
-        item.getProductName(),
-        item.getSku(),
-        item.getUnitPrice(),
-        item.getQuantity(),
-        item.getTotalPrice());
-  }
+        return new AdminOrderItemResponseDto(
+                item.getId(),
+                phoneId,
+                item.getProductName(),
+                item.getSku(),
+                item.getUnitPrice(),
+                item.getQuantity(),
+                item.getTotalPrice());
+    }
 }
