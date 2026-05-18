@@ -10,6 +10,7 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -56,7 +57,8 @@ public class OrderController {
 
     @Operation(
             summary = "Get my orders",
-            description = "Returns a paginated list of orders for the currently logged-in user"
+            description = "Returns a paginated list of orders for the currently logged-in user",
+            security = @SecurityRequirement(name = "bearer-jwt")
     )
     @ApiResponses(value = {
             @ApiResponse(
@@ -80,7 +82,8 @@ public class OrderController {
 
     @Operation(
             summary = "Get order by order ID",
-            description = "Returns detailed information about a specific order using its ID"
+            description = "Returns detailed information about a specific order using its ID",
+            security = @SecurityRequirement(name = "bearer-jwt")
     )
     @ApiResponses(value = {
             @ApiResponse(
@@ -91,7 +94,7 @@ public class OrderController {
             @ApiResponse(
                     responseCode = "404",
                     description = "Order not found with the given ID"
-            )
+            ),
     })
     @GetMapping("/{id}")
     public ResponseEntity<OrderResponseDto> getByOrderNumber(
