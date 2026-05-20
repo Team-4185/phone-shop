@@ -1,9 +1,9 @@
 package com.challengeteam.shop.service.impl;
 
-import com.challengeteam.shop.dto.jwt.JwtResponseDto;
-import com.challengeteam.shop.dto.user.CreateUserDto;
 import com.challengeteam.shop.dto.auth.UserLoginRequestDto;
 import com.challengeteam.shop.dto.auth.UserRegisterRequestDto;
+import com.challengeteam.shop.dto.jwt.JwtResponseDto;
+import com.challengeteam.shop.dto.user.CreateUserDto;
 import com.challengeteam.shop.entity.user.User;
 import com.challengeteam.shop.exceptionHandling.exception.*;
 import com.challengeteam.shop.service.JwtAuthorizationService;
@@ -36,7 +36,7 @@ public class JwtAuthorizationServiceImpl implements JwtAuthorizationService {
         }
 
         var createUserDto = new CreateUserDto(
-                registerRequest.email(),
+                registerRequest.email().toLowerCase(),
                 registerRequest.password()
         );
         Long id = userService.createDefaultUser(createUserDto);

@@ -24,7 +24,7 @@ import java.util.List;
  * if no sort order is specified, results are sorted by name in ascending order.
  * </p>
  *
- * @param brands   a list of brand names to filter by; if null or empty, no brand filtering is applied
+ * @param brands   a list of brandName names to filter by; if null or empty, no brandName filtering is applied
  * @param minPrice the minimum price threshold for filtering phones; must not be negative and must not exceed maxPrice
  * @param maxPrice the maximum price threshold for filtering phones; must not be negative and must not be less than minPrice
  * @param inStock  a flag indicating whether to filter for phones that are in stock (quantity >= 1);

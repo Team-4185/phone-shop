@@ -25,7 +25,7 @@ import java.util.function.Supplier;
  * </p>
  * <pre>{@code
  * Specification<Phone> spec = PhoneFilterSpecificationBuilder.build()
- *     .add(brand, b -> (root, query, builder) -> builder.equal(root.get(Phone_.BRAND), b))
+ *     .add(brandName, b -> (root, query, builder) -> builder.equal(root.get(Phone_.BRAND), b))
  *     .add(brands, bs -> (root, query, builder) -> root.get(Phone_.BRAND).in(bs))
  *     .add(minPrice, min -> (root, query, builder) -> builder.greaterThanOrEqualTo(root.get(Phone_.PRICE), min))
  *     .buildAnd();
@@ -82,7 +82,7 @@ public class PhoneFilterSpecificationBuilder {
      * Adds a specification to the builder for a collection of values.
      * <p>
      * If the provided collection is {@code null} or empty, the specification is not added
-     * and the builder is returned unchanged. This is useful for filters like "brand IN (brand1, brand2)"
+     * and the builder is returned unchanged. This is useful for filters like "brandName IN (brand1, brand2)"
      * where you want to ignore empty filter lists.
      * </p>
      *

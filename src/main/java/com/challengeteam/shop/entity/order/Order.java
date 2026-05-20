@@ -1,27 +1,35 @@
 package com.challengeteam.shop.entity.order;
 
 import com.challengeteam.shop.entity.BaseEntity;
+import com.challengeteam.shop.entity.order.payment.PaymentDetails;
+import com.challengeteam.shop.entity.order.payment.PaymentMethod;
+import com.challengeteam.shop.entity.order.shipping.ShippingAddress;
 import com.challengeteam.shop.entity.user.User;
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
+import lombok.*;
+import lombok.experimental.SuperBuilder;
+
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-import lombok.experimental.SuperBuilder;
 
-/** Root order aggregate persisted for admin Order Management workflows. */
+/**
+ * Root order aggregate persisted for admin Order Management workflows.
+ */
+@NamedEntityGraph(
+        name = "Order.withItems",
+        attributeNodes = {
+                @NamedAttributeNode(value = "items", subgraph = "items.phone")
+        },
+        subgraphs = {
+                @NamedSubgraph(
+                        name = "items.phone",
+                        attributeNodes = {
+                                @NamedAttributeNode("phone")
+                        }
+                )
+        }
+)
 @Getter
 @Setter
 @NoArgsConstructor
@@ -31,50 +39,51 @@ import lombok.experimental.SuperBuilder;
 @Table(name = "orders")
 public class Order extends BaseEntity {
 
-  @ManyToOne
-  @JoinColumn(name = "fk_user_id")
-  private User user;
+    @ManyToOne
+    @JoinColumn(name = "fk_user_id")
+    private User user;
 
-  @Column(nullable = false)
-  private String customerEmail;
+    @Column(nullable = false)
+    private String customerEmail;
 
-  @Column(nullable = true)
-  private String customerFirstName;
+    @Column(nullable = true)
+    private String customerFirstName;
 
-  @Column(nullable = true)
-  private String customerLastName;
+    @Column(nullable = true)
+    private String customerLastName;
 
-  @Column(nullable = true)
-  private String customerPhoneNumber;
+    @Column(nullable = true)
+    private String customerPhoneNumber;
 
-  @Column(nullable = true)
-  private String customerCity;
 
-  @Enumerated(EnumType.STRING)
-  @Column(nullable = false)
-  private OrderStatus status;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private OrderStatus status;
 
-  @Enumerated(EnumType.STRING)
-  @Column(nullable = false)
-  private PaymentMethod paymentMethod;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private PaymentMethod paymentMethod;
 
-  @Enumerated(EnumType.STRING)
-  @Column(nullable = false)
-  private PaymentStatus paymentStatus;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private DeliveryMethod deliveryMethod;
 
-  @Enumerated(EnumType.STRING)
-  @Column(nullable = false)
-  private DeliveryMethod deliveryMethod;
+    @Embedded
+    private ShippingAddress shippingAddress;
 
-  @Column(nullable = false, precision = 10, scale = 2)
-  private BigDecimal total;
+    @Embedded
+    @Column(nullable = false)
+    private PaymentDetails paymentDetails;
 
-  @Builder.Default
-  @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
-  private List<OrderItem> items = new ArrayList<>();
+    @Column(nullable = false, precision = 10, scale = 2)
+    private BigDecimal total;
 
-  public void addItem(OrderItem item) {
-    items.add(item);
-    item.setOrder(this);
-  }
+    @Builder.Default
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<OrderItem> items = new ArrayList<>();
+
+    public void addItem(OrderItem item) {
+        items.add(item);
+        item.setOrder(this);
+    }
 }

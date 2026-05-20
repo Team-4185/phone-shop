@@ -5,7 +5,7 @@ import com.challengeteam.shop.dto.cart.CartItemRemoveRequestDto;
 import com.challengeteam.shop.dto.cart.CartResponseDto;
 import com.challengeteam.shop.entity.cart.Cart;
 import com.challengeteam.shop.exceptionHandling.exception.ResourceNotFoundException;
-import com.challengeteam.shop.mapper.CartMapper;
+import com.challengeteam.shop.mapper.cart.CartMapper;
 import com.challengeteam.shop.security.SimpleUserDetailsService.SimpleUserDetails;
 import com.challengeteam.shop.service.UserCartService;
 import io.swagger.v3.oas.annotations.Operation;

@@ -1632,7 +1632,7 @@ class PhoneControllerTest {
                 "Snapdragon 8 Gen 3", 8, "6.7\"", "12 MP", "50-12 MP", "5000 mAh"),
 
 
-        // Invalid brand
+        // Invalid brandName
         INVALID_BRAND_NULL(
                 "Phone", "description", new BigDecimal("100.00"), null, 2020,
                 "Snapdragon 8 Gen 3", 8, "6.7\"", "12 MP", "50-12 MP", "5000 mAh"),

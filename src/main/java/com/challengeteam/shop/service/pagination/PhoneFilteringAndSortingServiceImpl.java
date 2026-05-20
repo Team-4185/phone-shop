@@ -5,7 +5,7 @@ import com.challengeteam.shop.dto.pagination.paginationResponse.PageResponseDto;
 import com.challengeteam.shop.dto.phone.PhoneResponseDto;
 import com.challengeteam.shop.entity.phone.Phone;
 import com.challengeteam.shop.entity.phone.Phone_;
-import com.challengeteam.shop.mapper.PhoneMapper;
+import com.challengeteam.shop.mapper.phone.PhoneMapper;
 import com.challengeteam.shop.persistence.repository.PhoneRepository;
 import com.challengeteam.shop.utility.pagination.filter.sort.SortResolver;
 import com.challengeteam.shop.utility.pagination.filter.specefication.PhoneFilterSpecificationBuilder;
@@ -26,7 +26,7 @@ import java.util.List;
  * capabilities for phone entities.
  * <p>
  * This service uses Spring Data JPA Specifications to dynamically build complex queries based on
- * multiple filter criteria such as brand, price range, and stock availability. The filtered results
+ * multiple filter criteria such as brandName, price range, and stock availability. The filtered results
  * are returned as paginated responses with customizable sorting options.
  * </p>
  *
