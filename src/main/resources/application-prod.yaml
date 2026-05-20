@@ -1,0 +1,61 @@
+server:
+  port: ${PORT}
+  shutdown: graceful
+
+spring:
+  application:
+    name: gadgetroom
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ${GMAIL_USERNAME}
+    password: ${GMAIL_APP_PASSWORD}
+    properties:
+      mail.smtp.auth: true
+      mail.smtp.starttls.enable: true
+      connection-timeout: 5000
+      write-timeout: 5000
+      timeout: 3000
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      connection-timeout: 60000   # 1 min
+      idle-timeout: 600000        # 10 min
+      max-lifetime: 1800000       # 30 min
+      maximum-pool-size: 10
+      minimum-idle: 5
+  jpa:
+    hibernate:
+      ddl-auto: none
+    show-sql: false
+
+security:
+  cors:
+    allowed-origins: ${CORS_ALLOWED_ORIGINS}                    # domains or patterns
+    allowed-methods: ${CORS_ALLOWED_METHODS}
+    allowed-headers: ${CORS_ALLOWED_HEADERS}
+    max-cache-age: ${CORS_MAX_CACHE_AGE}                        # seconds
+    allow-credentials: ${CORS_ALLOW_CREDENTIALS}
+
+  frontend-url: ${FRONTEND_URL}
+
+  jwt:
+    private-key: ${JWT_PRIVATE_KEY}
+    public-key: ${JWT_PUBLIC_KEY}
+    reset-secret: ${JWT_RESET_SECRET}
+    access-token-expiration: ${JWT_ACCESS_TOKEN_EXPIRATION}
+    refresh-token-expiration: ${JWT_REFRESH_TOKEN_EXPIRATION}
+    remember-me-refresh-token-expiration: ${JWT_REMEMBER_ME_REFRESH_TOKEN_EXPIRATION}
+    reset-token-expiration: ${JWT_RESET_TOKEN_EXPIRATION}
+
+minio:
+  url: ${MINIO_URL}
+  username: ${MINIO_USERNAME}
+  password: ${MINIO_PASSWORD}
+
+logging:
+  level:
+    root: ${LOG_LEVEL:INFO}

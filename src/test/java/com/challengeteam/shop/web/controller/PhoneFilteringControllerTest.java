@@ -76,9 +76,9 @@ class PhoneFilteringControllerTest {
     /**
      * cases:
      * - no filters → all 5 phones returned
-     * - filter by single brand → only that brand returned
+     * - filter by single brandName → only that brandName returned
      * - filter by multiple brands → union of both brands returned
-     * - filter by unknown brand → empty result
+     * - filter by unknown brandName → empty result
      */
     @Nested
     @DisplayName("Brand filter")
@@ -95,7 +95,7 @@ class PhoneFilteringControllerTest {
         }
 
         @Test
-        @DisplayName("Single brand filter → only that brand")
+        @DisplayName("Single brandName filter → only that brandName")
         void shouldReturnOnlyMatchingBrand_whenSingleBrandGiven() throws Exception {
             mockMvc.perform(get("/api/v1/filter/by")
                             .header("Authorization", "Bearer " + token)
@@ -121,7 +121,7 @@ class PhoneFilteringControllerTest {
         }
 
         @Test
-        @DisplayName("Unknown brand → empty result")
+        @DisplayName("Unknown brandName → empty result")
         void shouldReturnEmpty_whenUnknownBrandGiven() throws Exception {
             mockMvc.perform(get("/api/v1/filter/by")
                             .header("Authorization", "Bearer " + token)
@@ -432,8 +432,8 @@ class PhoneFilteringControllerTest {
 
     /**
      * cases:
-     * - combined brand + price filter
-     * - combined brand + inStock filter
+     * - combined brandName + price filter
+     * - combined brandName + inStock filter
      * - combined price + inStock + sort
      */
     @Nested

@@ -27,7 +27,7 @@ public class PhoneSpecification {
     }
 
     public static Specification<Phone> build(PhoneFilterDto requestDto) {
-        Specification<Phone> spec = (root, query, cb) -> cb.conjunction();;
+        Specification<Phone> spec = (root, query, cb) -> cb.conjunction();
 
         if (requestDto.brand() != null && !requestDto.brand().isBlank()) {
             spec = spec.and(hasBrand(requestDto.brand()));

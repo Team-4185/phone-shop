@@ -27,6 +27,7 @@
         <testcontainers.minio.version>2.0.1</testcontainers.minio.version>
         <testcontainers.postgres.version>2.0.1</testcontainers.postgres.version>
         <jacoco.version>0.8.11</jacoco.version>
+        <spring-boot-starter-thymeleaf.version>3.5.14</spring-boot-starter-thymeleaf.version>
     </properties>
 
     <parent>
@@ -34,6 +35,25 @@
         <artifactId>spring-boot-starter-parent</artifactId>
         <version>3.5.0</version>
     </parent>
+
+    <profiles>
+        <profile>
+            <id>dev</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <dependencies>
+                <dependency>
+                    <groupId>org.springframework.boot</groupId>
+                    <artifactId>spring-boot-docker-compose</artifactId>
+                    <scope>runtime</scope>
+                </dependency>
+            </dependencies>
+        </profile>
+        <profile>
+            <id>prod</id>
+        </profile>
+    </profiles>
 
     <dependencies>
         <dependency>
@@ -140,6 +160,13 @@
             <groupId>org.mapstruct</groupId>
             <artifactId>mapstruct-processor</artifactId>
             <version>${mapstruct.version}</version>
+        </dependency>
+        <!-- Source: https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-thymeleaf -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-thymeleaf</artifactId>
+            <version>${spring-boot-starter-thymeleaf.version}</version>
+            <scope>compile</scope>
         </dependency>
     </dependencies>
 

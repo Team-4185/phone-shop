@@ -1,0 +1,19 @@
+services:
+  db:
+    image: postgres:14
+    environment:
+      POSTGRES_DB: gadgetroom_dev
+      POSTGRES_USER: post
+      POSTGRES_PASSWORD: post
+    ports:
+      - "5432:5432"
+
+  minio:
+    image: minio/minio
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    command: server /data --console-address ":9001"

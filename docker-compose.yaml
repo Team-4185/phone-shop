@@ -1,5 +1,4 @@
 services:
-
   shop:
     container_name: gadget-room
     build: .

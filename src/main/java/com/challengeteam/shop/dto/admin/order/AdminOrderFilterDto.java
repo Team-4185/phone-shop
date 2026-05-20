@@ -1,7 +1,7 @@
 package com.challengeteam.shop.dto.admin.order;
 
 import com.challengeteam.shop.entity.order.OrderStatus;
-import com.challengeteam.shop.entity.order.PaymentStatus;
+import com.challengeteam.shop.entity.order.payment.PaymentStatus;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;

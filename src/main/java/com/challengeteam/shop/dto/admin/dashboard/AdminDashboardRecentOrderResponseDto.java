@@ -1,7 +1,7 @@
 package com.challengeteam.shop.dto.admin.dashboard;
 
 import com.challengeteam.shop.entity.order.OrderStatus;
-import com.challengeteam.shop.entity.order.PaymentStatus;
+import com.challengeteam.shop.entity.order.payment.PaymentStatus;
 import java.math.BigDecimal;
 import java.time.Instant;
 

@@ -15,7 +15,7 @@ public class AdminDashboardMapper {
         order.getId(),
         order.getCustomerEmail(),
         order.getStatus(),
-        order.getPaymentStatus(),
+        order.getPaymentDetails().getPaymentStatus(),
         order.getTotal(),
         order.getCreatedAt());
   }

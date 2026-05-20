@@ -55,7 +55,7 @@ public class AdminCustomerMapper {
     return new AdminCustomerOrderSummaryResponseDto(
         order.getId(),
         order.getStatus(),
-        order.getPaymentStatus(),
+        order.getPaymentDetails().getPaymentStatus(),
         order.getTotal(),
         order.getCreatedAt());
   }

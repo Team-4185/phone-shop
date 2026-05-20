@@ -5,7 +5,7 @@ import com.challengeteam.shop.dto.pagination.paginationResponse.PageResponseDto;
 import com.challengeteam.shop.dto.phone.PhoneResponseDto;
 import com.challengeteam.shop.entity.phone.Phone;
 import com.challengeteam.shop.entity.phone.Phone_;
-import com.challengeteam.shop.mapper.PhoneMapper;
+import com.challengeteam.shop.mapper.phone.PhoneMapper;
 import com.challengeteam.shop.persistence.repository.PhoneRepository;
 import com.challengeteam.shop.utility.pagination.filter.specefication.PhoneFilterSpecificationBuilder;
 import org.junit.jupiter.api.BeforeAll;
@@ -108,8 +108,8 @@ class PhoneFilteringAndSortingServiceTest {
 
     /**
      * cases:
-     * brand was not found -> empty list;
-     * request contains only one brand -> return a list of phones with this brand;
+     * brandName was not found -> empty list;
+     * request contains only one brandName -> return a list of phones with this brandName;
      * request contains multiple brands -> return a list of phones with all brands;
      */
     @Nested
