@@ -1,10 +1,9 @@
-package com.challengeteam.shop.service.impl;
+package com.challengeteam.shop.service.security.auth.jwt;
 
-import com.challengeteam.shop.dto.jwt.JwtResponseDto;
+import com.challengeteam.shop.dto.security.jwt.JwtResponseDto;
 import com.challengeteam.shop.entity.user.User;
-import com.challengeteam.shop.exceptionHandling.exception.InvalidTokenException;
+import com.challengeteam.shop.exceptionHandling.exception.security.InvalidTokenException;
 import com.challengeteam.shop.properties.JwtProperties;
-import com.challengeteam.shop.service.JwtService;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
@@ -173,6 +172,11 @@ public class JwtServiceImpl implements JwtService {
         } catch (JwtException | IllegalArgumentException e) {
             throw new InvalidTokenException("Token is invalid");
         }
+    }
+
+    @Override
+    public Instant getExpiration(String token) {
+        return getClaims(token).getExpiration().toInstant();
     }
 
     private Claims getClaims(String token) {
