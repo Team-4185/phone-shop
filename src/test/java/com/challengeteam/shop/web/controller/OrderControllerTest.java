@@ -616,10 +616,10 @@ class OrderControllerTest {
         }
 
         @Test
-        @DisplayName("Unauthenticated request → 403")
+        @DisplayName("Unauthenticated request → 401")
         void unauthenticatedRequest_returns401() throws Exception {
             mockMvc.perform(get(ORDER_URL + "/my"))
-                    .andExpect(status().isForbidden());
+                    .andExpect(status().isUnauthorized());
         }
 
         @Test
@@ -688,10 +688,10 @@ class OrderControllerTest {
         }
 
         @Test
-        @DisplayName("No auth → 403")
-        void noAuth_returns403() throws Exception {
+        @DisplayName("No auth → 401")
+        void noAuth_returns401() throws Exception {
             mockMvc.perform(get(ORDER_URL + "/{id}", 1L))
-                    .andExpect(status().isForbidden());
+                    .andExpect(status().isUnauthorized());
         }
 
         @Test
