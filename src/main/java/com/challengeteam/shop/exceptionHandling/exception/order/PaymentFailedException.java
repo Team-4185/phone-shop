@@ -1,4 +1,4 @@
-package com.challengeteam.shop.exceptionHandling.exception;
+package com.challengeteam.shop.exceptionHandling.exception.order;
 
 public class PaymentFailedException extends RuntimeException {
     public PaymentFailedException(String message) {

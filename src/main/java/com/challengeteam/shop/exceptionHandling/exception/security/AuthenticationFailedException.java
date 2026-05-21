@@ -1,4 +1,4 @@
-package com.challengeteam.shop.exceptionHandling.exception;
+package com.challengeteam.shop.exceptionHandling.exception.security;
 
 public class AuthenticationFailedException extends RuntimeException {
     public AuthenticationFailedException() {

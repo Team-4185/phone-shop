@@ -1,14 +1,16 @@
-package com.challengeteam.shop.service.impl;
+package com.challengeteam.shop.service.security.auth.authorization;
 
 import com.challengeteam.shop.dto.auth.UserLoginRequestDto;
 import com.challengeteam.shop.dto.auth.UserRegisterRequestDto;
-import com.challengeteam.shop.dto.jwt.JwtResponseDto;
+import com.challengeteam.shop.dto.security.jwt.JwtResponseDto;
 import com.challengeteam.shop.dto.user.CreateUserDto;
 import com.challengeteam.shop.entity.user.User;
-import com.challengeteam.shop.exceptionHandling.exception.*;
-import com.challengeteam.shop.service.JwtAuthorizationService;
-import com.challengeteam.shop.service.JwtService;
+import com.challengeteam.shop.exceptionHandling.exception.CriticalSystemException;
+import com.challengeteam.shop.exceptionHandling.exception.InvalidAPIRequestException;
+import com.challengeteam.shop.exceptionHandling.exception.ResourceNotFoundException;
+import com.challengeteam.shop.exceptionHandling.exception.security.*;
 import com.challengeteam.shop.service.UserService;
+import com.challengeteam.shop.service.security.auth.jwt.JwtService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.*;
