@@ -2,8 +2,8 @@ package com.challengeteam.shop.utility.order;
 
 import com.challengeteam.shop.dto.order.request.item.OrderItemRequestDto;
 import com.challengeteam.shop.entity.phone.Phone;
-import com.challengeteam.shop.utility.ProductStatusResolver;
-import com.challengeteam.shop.exceptionHandling.exception.OrderCreationException;
+import com.challengeteam.shop.entity.phone.ProductStatus;
+import com.challengeteam.shop.exceptionHandling.exception.order.OrderCreationException;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 
@@ -71,9 +71,8 @@ public class OrderUtils {
      * Decreases the phone's stock by the ordered quantity and updates the product status
      * based on the remaining stock:
      * <ul>
-     *   <li>If remaining stock is 0, sets status to OUT_OF_STOCK</li>
-     *   <li>If remaining stock is 1-9, sets status to LOW_STOCK</li>
-     *   <li>If remaining stock is 10 or more, sets status to IN_STOCK</li>
+     *   <li>If remaining stock is 0, sets status to {@link ProductStatus#OUT_OF_STOCK}</li>
+     *   <li>If remaining stock is 5 or less, sets status to {@link ProductStatus#LOW_STOCK}</li>
      * </ul>
      * </p>
      *
@@ -83,7 +82,13 @@ public class OrderUtils {
     public static void updatePhoneStock(Phone phone, int orderedQuantity) {
         int remainingStock = phone.getStock() - orderedQuantity;
         phone.setStock(remainingStock);
-        phone.setStatus(ProductStatusResolver.resolve(remainingStock));
         log.info("Updated phone stock for phone: {} with remaining stock: {}", phone.getId(), remainingStock);
+        if (remainingStock == 0) {
+            log.info("Phone {} is out of stock", phone.getId());
+            phone.setStatus(ProductStatus.OUT_OF_STOCK);
+        } else if (remainingStock <= 5) {
+            log.info("Phone {} is low on stock", phone.getId());
+            phone.setStatus(ProductStatus.LOW_STOCK);
+        }
     }
 }
