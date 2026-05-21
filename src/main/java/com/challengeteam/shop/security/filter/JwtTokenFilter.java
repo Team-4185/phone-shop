@@ -1,7 +1,9 @@
 package com.challengeteam.shop.security.filter;
 
-import com.challengeteam.shop.exceptionHandling.exception.InvalidTokenException;
-import com.challengeteam.shop.service.JwtService;
+import com.challengeteam.shop.exceptionHandling.exception.security.InvalidTokenException;
+import com.challengeteam.shop.service.security.auth.jwt.JwtService;
+import com.challengeteam.shop.service.security.auth.logout.blackListTokenCache.TokenRevocationService;
+import com.challengeteam.shop.utility.web.headers.AccessTokenHeaderExtractor;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -20,23 +22,25 @@ import java.io.IOException;
 @Service
 @RequiredArgsConstructor
 public class JwtTokenFilter extends OncePerRequestFilter {
-    public static final String BEARER_TOKEN_HEADER_NAME = "Authorization";
-    public static final String BEARER_TOKEN_HEADER_PREFIX = "Bearer ";
 
     private final JwtService jwtService;
+    private final TokenRevocationService tokenRevocationService;
 
     private final UserDetailsService userDetailsService;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
-        String bearerToken = request.getHeader(BEARER_TOKEN_HEADER_NAME);
-        if (bearerToken != null && bearerToken.startsWith(BEARER_TOKEN_HEADER_PREFIX)) {
-            bearerToken = bearerToken.substring(BEARER_TOKEN_HEADER_PREFIX.length());
-        }
+        String bearerToken = AccessTokenHeaderExtractor.extractAccessToken(request);
 
         if (bearerToken != null && jwtService.isValid(bearerToken)) {
             if (!jwtService.isAccessToken(bearerToken)) {
                 throw new InvalidTokenException("Invalid token type. Access token required.");
+            }
+            if (tokenRevocationService.isRevoked(bearerToken)) {
+                logger.warn("Token is revoked");
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                response.getWriter().write("User was logged out");
+                return;
             }
             authenticateByToken(bearerToken);
         }
@@ -55,5 +59,4 @@ public class JwtTokenFilter extends OncePerRequestFilter {
         );
         SecurityContextHolder.getContext().setAuthentication(authentication);
     }
-
 }
