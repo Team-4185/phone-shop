@@ -2,6 +2,7 @@ package com.challengeteam.shop.testContainer;
 
 import com.challengeteam.shop.testContainer.container.MinioContainer;
 import com.challengeteam.shop.testContainer.container.PostgresContainer;
+import com.challengeteam.shop.testContainer.container.RedisContainer;
 import org.springframework.test.context.DynamicPropertyRegistry;
 
 import java.util.TimeZone;
@@ -75,6 +76,7 @@ public class TestContextConfigurator {
         configureSystem();
         PostgresContainer.setPostgresProperties(propertyRegistry);
         MinioContainer.setMinioProperties(propertyRegistry);
+        RedisContainer.setRedisProperties(propertyRegistry);
     }
 
 }
