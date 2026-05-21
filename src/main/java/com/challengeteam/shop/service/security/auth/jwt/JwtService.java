@@ -1,7 +1,9 @@
-package com.challengeteam.shop.service;
+package com.challengeteam.shop.service.security.auth.jwt;
 
-import com.challengeteam.shop.dto.jwt.JwtResponseDto;
+import com.challengeteam.shop.dto.security.jwt.JwtResponseDto;
 import com.challengeteam.shop.entity.user.User;
+
+import java.time.Instant;
 
 public interface JwtService {
 
@@ -23,4 +25,5 @@ public interface JwtService {
 
     String getEmailFromResetToken(String token);
 
+    Instant getExpiration(String token);
 }
