@@ -4,8 +4,8 @@ import com.challengeteam.shop.dto.cart.CartItemAddRequestDto;
 import com.challengeteam.shop.entity.cart.Cart;
 import com.challengeteam.shop.entity.cart.CartItem;
 import com.challengeteam.shop.entity.phone.Phone;
-import com.challengeteam.shop.exceptionHandling.exception.PhoneAlreadyInCartException;
 import com.challengeteam.shop.exceptionHandling.exception.ResourceNotFoundException;
+import com.challengeteam.shop.exceptionHandling.exception.phone.PhoneAlreadyInCartException;
 import com.challengeteam.shop.persistence.repository.CartItemRepository;
 import com.challengeteam.shop.persistence.repository.CartRepository;
 import com.challengeteam.shop.service.PhoneService;
@@ -23,9 +23,10 @@ import java.util.ArrayList;
 import java.util.Optional;
 
 import static com.challengeteam.shop.service.impl.CartServiceImplTest.TestResources.*;
-import static org.assertj.core.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.never;
 
 @ExtendWith(MockitoExtension.class)
 class CartServiceImplTest {
