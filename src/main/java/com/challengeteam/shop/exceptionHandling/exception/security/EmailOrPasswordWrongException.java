@@ -1,4 +1,4 @@
-package com.challengeteam.shop.exceptionHandling.exception;
+package com.challengeteam.shop.exceptionHandling.exception.security;
 
 public class EmailOrPasswordWrongException extends RuntimeException {
     public EmailOrPasswordWrongException() {
