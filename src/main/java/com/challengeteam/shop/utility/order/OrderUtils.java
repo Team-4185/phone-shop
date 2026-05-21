@@ -2,9 +2,7 @@ package com.challengeteam.shop.utility.order;
 
 import com.challengeteam.shop.dto.order.request.item.OrderItemRequestDto;
 import com.challengeteam.shop.entity.phone.Phone;
-import com.challengeteam.shop.entity.phone.PhoneColor;
 import com.challengeteam.shop.entity.phone.ProductStatus;
-import com.challengeteam.shop.entity.phone.StorageCapacity;
 import com.challengeteam.shop.exceptionHandling.exception.order.OrderCreationException;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
