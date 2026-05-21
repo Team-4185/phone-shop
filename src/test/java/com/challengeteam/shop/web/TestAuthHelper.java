@@ -2,9 +2,9 @@ package com.challengeteam.shop.web;
 
 import com.challengeteam.shop.dto.auth.UserLoginRequestDto;
 import com.challengeteam.shop.dto.auth.UserRegisterRequestDto;
-import com.challengeteam.shop.dto.jwt.JwtResponseDto;
+import com.challengeteam.shop.dto.security.jwt.JwtResponseDto;
 import com.challengeteam.shop.exceptionHandling.exception.EmailAlreadyExistsException;
-import com.challengeteam.shop.service.JwtAuthorizationService;
+import com.challengeteam.shop.service.security.auth.authorization.JwtAuthorizationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
