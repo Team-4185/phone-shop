@@ -76,16 +76,16 @@ class UserControllerTest {
         }
 
         @Test
-        void whenRequestMissingToken_thenStatus403() throws Exception {
+        void whenRequestMissingToken_thenStatus401() throws Exception {
             mockMvc.perform(get(URL))
-                    .andExpect(status().isForbidden());
+                    .andExpect(status().isUnauthorized());
         }
 
         @Test
-        void whenRequestHasInvalidToken_thenStatus403() throws Exception {
+        void whenRequestHasInvalidToken_thenStatus401() throws Exception {
             mockMvc.perform(get(URL)
                             .header(HttpHeaders.AUTHORIZATION, auth("invalid_token")))
-                    .andExpect(status().isForbidden());
+                    .andExpect(status().isUnauthorized());
         }
     }
 
@@ -112,16 +112,16 @@ class UserControllerTest {
         }
 
         @Test
-        void whenRequestMissingToken_thenStatus403() throws Exception {
+        void whenRequestMissingToken_thenStatus401() throws Exception {
             mockMvc.perform(get(URL, user1))
-                    .andExpect(status().isForbidden());
+                    .andExpect(status().isUnauthorized());
         }
 
         @Test
-        void whenRequestHasInvalidToken_thenStatus403() throws Exception {
+        void whenRequestHasInvalidToken_thenStatus401() throws Exception {
             mockMvc.perform(get(URL, user1)
                             .header(HttpHeaders.AUTHORIZATION, auth("invalid_token")))
-                    .andExpect(status().isForbidden());
+                    .andExpect(status().isUnauthorized());
         }
 
         @Test
@@ -175,24 +175,24 @@ class UserControllerTest {
         }
 
         @Test
-        void whenRequestMissingToken_thenStatus403() throws Exception {
+        void whenRequestMissingToken_thenStatus401() throws Exception {
             CreateUserDto request = buildCreateUserDto(TestUserCredentials.VALID_USER);
 
             mockMvc.perform(post(URL)
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
-                    .andExpect(status().isForbidden());
+                    .andExpect(status().isUnauthorized());
         }
 
         @Test
-        void whenRequestHasInvalidToken_thenStatus403() throws Exception {
+        void whenRequestHasInvalidToken_thenStatus401() throws Exception {
             CreateUserDto request = buildCreateUserDto(TestUserCredentials.VALID_USER);
 
             mockMvc.perform(post(URL)
                             .header(HttpHeaders.AUTHORIZATION, auth("invalid_token"))
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
-                    .andExpect(status().isForbidden());
+                    .andExpect(status().isUnauthorized());
         }
 
         @Test
@@ -403,24 +403,24 @@ class UserControllerTest {
         }
 
         @Test
-        void whenRequestMissingToken_thenStatus403() throws Exception {
+        void whenRequestMissingToken_thenStatus401() throws Exception {
             UpdateProfileDto request = buildUpdateProfileDto(TestUserProfile.VALID_PROFILE);
 
             mockMvc.perform(patch(URL, user1)
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
-                    .andExpect(status().isForbidden());
+                    .andExpect(status().isUnauthorized());
         }
 
         @Test
-        void whenRequestHasInvalidToken_thenStatus403() throws Exception {
+        void whenRequestHasInvalidToken_thenStatus401() throws Exception {
             UpdateProfileDto request = buildUpdateProfileDto(TestUserProfile.VALID_PROFILE);
 
             mockMvc.perform(patch(URL, user1)
                             .header(HttpHeaders.AUTHORIZATION, auth("invalid_token"))
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
-                    .andExpect(status().isForbidden());
+                    .andExpect(status().isUnauthorized());
         }
 
         @Test
@@ -615,16 +615,16 @@ class UserControllerTest {
         }
 
         @Test
-        void whenRequestMissingToken_thenStatus403() throws Exception {
+        void whenRequestMissingToken_thenStatus401() throws Exception {
             mockMvc.perform(delete(URL, user1))
-                    .andExpect(status().isForbidden());
+                    .andExpect(status().isUnauthorized());
         }
 
         @Test
-        void whenRequestHasInvalidToken_thenStatus403() throws Exception {
+        void whenRequestHasInvalidToken_thenStatus401() throws Exception {
             mockMvc.perform(delete(URL, user1)
                             .header(HttpHeaders.AUTHORIZATION, auth("invalid_token")))
-                    .andExpect(status().isForbidden());
+                    .andExpect(status().isUnauthorized());
         }
 
         @Test
