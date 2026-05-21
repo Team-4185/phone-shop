@@ -1,14 +1,14 @@
-package com.challengeteam.shop.web.controller;
+package com.challengeteam.shop.web.auth;
 
 import com.challengeteam.shop.dto.auth.ForgotPasswordRequestDto;
 import com.challengeteam.shop.dto.auth.ResetPasswordRequestDto;
-import com.challengeteam.shop.dto.jwt.JwtPublicResponseDto;
-import com.challengeteam.shop.dto.jwt.JwtResponseDto;
 import com.challengeteam.shop.dto.auth.UserLoginRequestDto;
 import com.challengeteam.shop.dto.auth.UserRegisterRequestDto;
+import com.challengeteam.shop.dto.security.jwt.JwtPublicResponseDto;
+import com.challengeteam.shop.dto.security.jwt.JwtResponseDto;
 import com.challengeteam.shop.properties.JwtProperties;
-import com.challengeteam.shop.service.JwtAuthorizationService;
 import com.challengeteam.shop.service.PasswordResetService;
+import com.challengeteam.shop.service.security.auth.authorization.JwtAuthorizationService;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;

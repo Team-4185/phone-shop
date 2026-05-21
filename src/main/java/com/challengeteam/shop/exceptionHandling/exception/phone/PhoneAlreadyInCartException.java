@@ -1,4 +1,4 @@
-package com.challengeteam.shop.exceptionHandling.exception;
+package com.challengeteam.shop.exceptionHandling.exception.phone;
 
 public class PhoneAlreadyInCartException extends RuntimeException {
     public PhoneAlreadyInCartException() {

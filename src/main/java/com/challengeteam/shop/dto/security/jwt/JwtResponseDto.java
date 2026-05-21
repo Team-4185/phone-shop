@@ -1,4 +1,4 @@
-package com.challengeteam.shop.dto.jwt;
+package com.challengeteam.shop.dto.security.jwt;
 
 public record JwtResponseDto(
         Long userId,

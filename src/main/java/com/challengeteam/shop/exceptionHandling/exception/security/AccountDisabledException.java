@@ -1,4 +1,4 @@
-package com.challengeteam.shop.exceptionHandling.exception;
+package com.challengeteam.shop.exceptionHandling.exception.security;
 
 public class AccountDisabledException extends RuntimeException {
     public AccountDisabledException() {
