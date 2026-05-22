@@ -2,8 +2,11 @@ package com.challengeteam.shop.entity.phone;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import lombok.*;
 
+import java.util.List;
 import java.util.Objects;
 
 @Getter
@@ -31,6 +34,14 @@ public class PhoneCharacteristics {
 
     @Column(name = "battery_capacity", nullable = false, length = 20)
     private String batteryCapacity;
+
+    @Column(name = "storage_capacities", nullable = false)
+    @Enumerated(EnumType.STRING)
+    private List<StorageCapacity> storageCapacities;
+
+    @Column(name = "phone_colors", nullable = false)
+    @Enumerated(EnumType.STRING)
+    private List<PhoneColor> phoneColors;
 
     @Override
     public boolean equals(Object o) {
