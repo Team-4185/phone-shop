@@ -150,16 +150,16 @@ class PhoneControllerTest {
         }
 
         @Test
-        void whenRequestMissingToken_thenStatus403() throws Exception {
+        void whenRequestMissingToken_thenStatus401() throws Exception {
             mockMvc.perform(get(URL))
-                    .andExpect(status().isForbidden());
+                    .andExpect(status().isUnauthorized());
         }
 
         @Test
-        void whenRequestHasInvalidToken_thenStatus403() throws Exception {
+        void whenRequestHasInvalidToken_thenStatus401() throws Exception {
             mockMvc.perform(get(URL)
                             .header(HttpHeaders.AUTHORIZATION, auth("some_invalid_text")))
-                    .andExpect(status().isForbidden());
+                    .andExpect(status().isUnauthorized());
         }
 
         @Test
@@ -561,16 +561,16 @@ class PhoneControllerTest {
         }
 
         @Test
-        void whenRequestMissingToken_thenStatus403() throws Exception {
+        void whenRequestMissingToken_thenStatus401() throws Exception {
             mockMvc.perform(get(URL, phone1))
-                    .andExpect(status().isForbidden());
+                    .andExpect(status().isUnauthorized());
         }
 
         @Test
-        void whenRequestHasInvalidToken_thenStatus403() throws Exception {
+        void whenRequestHasInvalidToken_thenStatus401() throws Exception {
             mockMvc.perform(get(URL, phone1)
                             .header(HttpHeaders.AUTHORIZATION, auth("some_invalid_text")))
-                    .andExpect(status().isForbidden());
+                    .andExpect(status().isUnauthorized());
         }
 
         @Test
@@ -651,7 +651,7 @@ class PhoneControllerTest {
         }
 
         @Test
-        void whenRequestMissingToken_thenStatus403() throws Exception {
+        void whenRequestMissingToken_thenStatus401() throws Exception {
             PhoneCreateRequestDto json = buildPhoneCreateRequestDto(TestPhone.VALID_PHONE);
             byte[] content = objectMapper.writeValueAsBytes(json);
 
@@ -660,11 +660,11 @@ class PhoneControllerTest {
                     .file((MockMultipartFile) buildMultipartFile("images"));
 
             mockMvc.perform(request)
-                    .andExpect(status().isForbidden());
+                    .andExpect(status().isUnauthorized());
         }
 
         @Test
-        void whenRequestHasInvalidToken_thenStatus403() throws Exception {
+        void whenRequestHasInvalidToken_thenStatus401() throws Exception {
             PhoneCreateRequestDto json = buildPhoneCreateRequestDto(TestPhone.VALID_PHONE);
             byte[] content = objectMapper.writeValueAsBytes(json);
 
@@ -674,7 +674,7 @@ class PhoneControllerTest {
                     .header(HttpHeaders.AUTHORIZATION, auth("some_invalid_text"));
 
             mockMvc.perform(request)
-                    .andExpect(status().isForbidden());
+                    .andExpect(status().isUnauthorized());
         }
 
         // Validation tests
@@ -997,24 +997,24 @@ class PhoneControllerTest {
         }
 
         @Test
-        void whenRequestMissingToken_thenStatus403() throws Exception {
+        void whenRequestMissingToken_thenStatus401() throws Exception {
             PhoneUpdateRequestDto request = buildPhoneUpdateRequestDto(TestPhone.VALID_PHONE);
 
             mockMvc.perform(put(URL, phone1)
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
-                    .andExpect(status().isForbidden());
+                    .andExpect(status().isUnauthorized());
         }
 
         @Test
-        void whenRequestHasInvalidToken_thenStatus403() throws Exception {
+        void whenRequestHasInvalidToken_thenStatus401() throws Exception {
             PhoneUpdateRequestDto request = buildPhoneUpdateRequestDto(TestPhone.VALID_PHONE);
 
             mockMvc.perform(put(URL, phone1)
                             .header(HttpHeaders.AUTHORIZATION, auth("some_invalid_text"))
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
-                    .andExpect(status().isForbidden());
+                    .andExpect(status().isUnauthorized());
         }
 
         @Test
@@ -1220,16 +1220,16 @@ class PhoneControllerTest {
         }
 
         @Test
-        void whenRequestMissingToken_thenStatus403() throws Exception {
+        void whenRequestMissingToken_thenStatus401() throws Exception {
             mockMvc.perform(delete(URL, phone1))
-                    .andExpect(status().isForbidden());
+                    .andExpect(status().isUnauthorized());
         }
 
         @Test
-        void whenRequestHasInvalidToken_thenStatus403() throws Exception {
+        void whenRequestHasInvalidToken_thenStatus401() throws Exception {
             mockMvc.perform(delete(URL, phone1)
                             .header(HttpHeaders.AUTHORIZATION, auth("some_invalid_text")))
-                    .andExpect(status().isForbidden());
+                    .andExpect(status().isUnauthorized());
         }
 
         @Test
@@ -1288,16 +1288,16 @@ class PhoneControllerTest {
         }
 
         @Test
-        void whenRequestMissingToken_thenStatus403() throws Exception {
+        void whenRequestMissingToken_thenStatus401() throws Exception {
             mockMvc.perform(get(URL, phone1))
-                    .andExpect(status().isForbidden());
+                    .andExpect(status().isUnauthorized());
         }
 
         @Test
-        void whenRequestHasInvalidToken_thenStatus403() throws Exception {
+        void whenRequestHasInvalidToken_thenStatus401() throws Exception {
             mockMvc.perform(get(URL, phone1)
                             .header(HttpHeaders.AUTHORIZATION, auth("some_invalid_text")))
-                    .andExpect(status().isForbidden());
+                    .andExpect(status().isUnauthorized());
         }
 
         @Test
@@ -1358,24 +1358,24 @@ class PhoneControllerTest {
         }
 
         @Test
-        void whenRequestMissingToken_thenStatus403() throws Exception {
+        void whenRequestMissingToken_thenStatus401() throws Exception {
             var request = multipart(URL, phone1)
                     .file((MockMultipartFile) buildUnsupportedMultipartFile("image"))
                     .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
 
             mockMvc.perform(request)
-                    .andExpect(status().isForbidden());
+                    .andExpect(status().isUnauthorized());
         }
 
         @Test
-        void whenRequestHasInvalidToken_thenStatus403() throws Exception {
+        void whenRequestHasInvalidToken_thenStatus401() throws Exception {
             var request = multipart(URL, phone1)
                     .file((MockMultipartFile) buildUnsupportedMultipartFile("image"))
                     .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
                     .header(HttpHeaders.AUTHORIZATION, auth("not_valid_token"));
 
             mockMvc.perform(request)
-                    .andExpect(status().isForbidden());
+                    .andExpect(status().isUnauthorized());
         }
 
         @Test
@@ -1445,16 +1445,16 @@ class PhoneControllerTest {
         }
 
         @Test
-        void whenRequestMissingToken_thenStatus403() throws Exception {
+        void whenRequestMissingToken_thenStatus401() throws Exception {
             mockMvc.perform(delete(URL, phone3, phone3Images.get(0).getId()))
-                    .andExpect(status().isForbidden());
+                    .andExpect(status().isUnauthorized());
         }
 
         @Test
-        void whenRequestHasInvalidToken_thenStatus403() throws Exception {
+        void whenRequestHasInvalidToken_thenStatus401() throws Exception {
             mockMvc.perform(delete(URL, phone3, phone3Images.get(0).getId())
                             .header(HttpHeaders.AUTHORIZATION, auth("some_invalid_text")))
-                    .andExpect(status().isForbidden());
+                    .andExpect(status().isUnauthorized());
         }
 
         @Test

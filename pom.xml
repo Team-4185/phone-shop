@@ -28,6 +28,7 @@
         <testcontainers.postgres.version>2.0.1</testcontainers.postgres.version>
         <jacoco.version>0.8.11</jacoco.version>
         <spring-boot-starter-thymeleaf.version>3.5.14</spring-boot-starter-thymeleaf.version>
+        <spring-boot-starter-data-redis.version>3.5.14</spring-boot-starter-data-redis.version>
     </properties>
 
     <parent>
@@ -84,6 +85,13 @@
             <groupId>io.minio</groupId>
             <artifactId>minio</artifactId>
             <version>${minio.version}</version>
+        </dependency>
+        <!-- Source: https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-data-redis -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-redis</artifactId>
+            <version>${spring-boot-starter-data-redis.version}</version>
+            <scope>compile</scope>
         </dependency>
 
         <!-- SECURITY -->

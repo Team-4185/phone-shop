@@ -1,9 +1,10 @@
 package com.challengeteam.shop.service.impl;
 
-import com.challengeteam.shop.dto.jwt.JwtResponseDto;
+import com.challengeteam.shop.dto.security.jwt.JwtResponseDto;
 import com.challengeteam.shop.entity.user.User;
-import com.challengeteam.shop.exceptionHandling.exception.InvalidTokenException;
+import com.challengeteam.shop.exceptionHandling.exception.security.InvalidTokenException;
 import com.challengeteam.shop.properties.JwtProperties;
+import com.challengeteam.shop.service.security.auth.jwt.JwtServiceImpl;
 import com.challengeteam.shop.testData.user.UserTestData;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
@@ -15,10 +16,13 @@ import javax.crypto.SecretKey;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.time.Duration;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.Base64;
 
 import static com.challengeteam.shop.service.impl.JwtServiceImplTest.TestResources.*;
-import static org.assertj.core.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.*;
 
 class JwtServiceImplTest {
@@ -272,6 +276,30 @@ class JwtServiceImplTest {
 
             // when + then
             assertThatThrownBy(() -> jwtService.getEmailFromResetToken(authToken))
+                    .isInstanceOf(InvalidTokenException.class);
+        }
+    }
+
+    @Nested
+    class CheckCorrectExpirationTest {
+        @Test
+        void getExpiration_shouldReturnCorrectInstant_whenAccessTokenProvided() {
+            Duration expectedTtl = Duration.ofMinutes(3);
+            when(jwtProperties.getAccessTokenExpiration()).thenReturn(expectedTtl);
+
+            Instant before = Instant.now().truncatedTo(ChronoUnit.SECONDS);
+            String token = jwtService.createAccessToken(buildUser());
+            Instant after = Instant.now().truncatedTo(ChronoUnit.SECONDS);
+
+            Instant expiration = jwtService.getExpiration(token);
+
+            assertThat(expiration).isAfterOrEqualTo(before.plus(expectedTtl));
+            assertThat(expiration).isBeforeOrEqualTo(after.plus(expectedTtl).plusSeconds(1));
+        }
+
+        @Test
+        void getExpiration_shouldThrowInvalidTokenException_whenTokenIsInvalid() {
+            assertThatThrownBy(() -> jwtService.getExpiration("not.a.token"))
                     .isInstanceOf(InvalidTokenException.class);
         }
     }

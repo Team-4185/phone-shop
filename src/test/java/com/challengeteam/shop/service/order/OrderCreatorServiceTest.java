@@ -1,6 +1,6 @@
 package com.challengeteam.shop.service.order;
 
-import com.challengeteam.shop.constants.Notification_type;
+import com.challengeteam.shop.constants.notification.type.Notification_type;
 import com.challengeteam.shop.dto.email.Notification;
 import com.challengeteam.shop.dto.order.OrderResponseDto;
 import com.challengeteam.shop.dto.order.request.item.OrderItemRequestDto;
@@ -18,9 +18,9 @@ import com.challengeteam.shop.entity.order.shipping.ShippingAddress;
 import com.challengeteam.shop.entity.phone.Phone;
 import com.challengeteam.shop.entity.phone.ProductStatus;
 import com.challengeteam.shop.entity.user.User;
-import com.challengeteam.shop.exceptionHandling.exception.OrderCreationException;
-import com.challengeteam.shop.exceptionHandling.exception.PaymentFailedException;
-import com.challengeteam.shop.exceptionHandling.exception.PhoneNotFoundException;
+import com.challengeteam.shop.exceptionHandling.exception.order.OrderCreationException;
+import com.challengeteam.shop.exceptionHandling.exception.order.PaymentFailedException;
+import com.challengeteam.shop.exceptionHandling.exception.phone.PhoneNotFoundException;
 import com.challengeteam.shop.mapper.order.OrderMapper;
 import com.challengeteam.shop.mapper.order.ShippingAddressOrderMapper;
 import com.challengeteam.shop.persistence.repository.OrderRepository;

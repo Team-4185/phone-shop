@@ -157,16 +157,16 @@ class UserCartControllerTest {
         }
 
         @Test
-        void whenRequestMissingToken_thenStatus403() throws Exception {
+        void whenRequestMissingToken_thenStatus401() throws Exception {
             mockMvc.perform(get(URL))
-                    .andExpect(status().isForbidden());
+                    .andExpect(status().isUnauthorized());
         }
 
         @Test
-        void whenRequestHasInvalidToken_thenStatus403() throws Exception {
+        void whenRequestHasInvalidToken_thenStatus401() throws Exception {
             mockMvc.perform(get(URL)
                             .header(HttpHeaders.AUTHORIZATION, auth("some_invalid_text")))
-                    .andExpect(status().isForbidden());
+                    .andExpect(status().isUnauthorized());
         }
     }
 
@@ -270,24 +270,24 @@ class UserCartControllerTest {
         }
 
         @Test
-        void whenRequestMissingToken_thenStatus403() throws Exception {
+        void whenRequestMissingToken_thenStatus401() throws Exception {
             CartItemAddRequestDto request = buildCartItemAddRequestDto(phoneId1, VALID_CART_ITEM.amount);
 
             mockMvc.perform(post(URL)
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
-                    .andExpect(status().isForbidden());
+                    .andExpect(status().isUnauthorized());
         }
 
         @Test
-        void whenRequestHasInvalidToken_thenStatus403() throws Exception {
+        void whenRequestHasInvalidToken_thenStatus401() throws Exception {
             CartItemAddRequestDto request = buildCartItemAddRequestDto(phoneId1, VALID_CART_ITEM.amount);
 
             mockMvc.perform(post(URL)
                             .header(HttpHeaders.AUTHORIZATION, auth("some_invalid_text"))
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
-                    .andExpect(status().isForbidden());
+                    .andExpect(status().isUnauthorized());
         }
 
         // Validation tests
@@ -437,24 +437,24 @@ class UserCartControllerTest {
         }
 
         @Test
-        void whenRequestMissingToken_thenStatus403() throws Exception {
+        void whenRequestMissingToken_thenStatus401() throws Exception {
             CartItemRemoveRequestDto request = buildCartItemRemoveRequestDto(phoneId1, VALID_CART_ITEM.amount);
 
             mockMvc.perform(post(URL)
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
-                    .andExpect(status().isForbidden());
+                    .andExpect(status().isUnauthorized());
         }
 
         @Test
-        void whenRequestHasInvalidToken_thenStatus403() throws Exception {
+        void whenRequestHasInvalidToken_thenStatus401() throws Exception {
             CartItemRemoveRequestDto request = buildCartItemRemoveRequestDto(phoneId1, VALID_CART_ITEM.amount);
 
             mockMvc.perform(post(URL)
                             .header(HttpHeaders.AUTHORIZATION, auth("some_invalid_text"))
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
-                    .andExpect(status().isForbidden());
+                    .andExpect(status().isUnauthorized());
         }
 
         // Validation tests
@@ -586,16 +586,16 @@ class UserCartControllerTest {
         }
 
         @Test
-        void whenRequestMissingToken_thenStatus403() throws Exception {
+        void whenRequestMissingToken_thenStatus401() throws Exception {
             mockMvc.perform(post(URL))
-                    .andExpect(status().isForbidden());
+                    .andExpect(status().isUnauthorized());
         }
 
         @Test
-        void whenRequestHasInvalidToken_thenStatus403() throws Exception {
+        void whenRequestHasInvalidToken_thenStatus401() throws Exception {
             mockMvc.perform(post(URL)
                             .header(HttpHeaders.AUTHORIZATION, auth("some_invalid_text")))
-                    .andExpect(status().isForbidden());
+                    .andExpect(status().isUnauthorized());
         }
     }
 

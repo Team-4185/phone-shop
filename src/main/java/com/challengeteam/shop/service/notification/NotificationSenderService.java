@@ -1,6 +1,6 @@
 package com.challengeteam.shop.service.notification;
 
-import com.challengeteam.shop.constants.Notification_type;
+import com.challengeteam.shop.constants.notification.type.Notification_type;
 import com.challengeteam.shop.dto.email.Notification;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
