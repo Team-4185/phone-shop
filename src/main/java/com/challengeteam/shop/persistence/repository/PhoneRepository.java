@@ -35,4 +35,9 @@ public interface PhoneRepository extends JpaRepository<Phone, Long>, JpaSpecific
     @Query("SELECT p FROM Phone p LEFT JOIN FETCH p.images WHERE p IN :phones")
     List<Phone> findAllWithImages(@Param("phones") List<Phone> phones);
 
+    @Query("SELECT p FROM Phone p WHERE p.stock <= :threshold ORDER BY p.stock ASC, p.name ASC")
+    List<Phone> findLowStockProducts(@Param("threshold") int threshold, org.springframework.data.domain.Pageable pageable);
+
+    long countByStockLessThanEqual(Integer threshold);
+
 }

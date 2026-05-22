@@ -271,13 +271,19 @@ class AdminControllerTest {
                     .andExpect(status().isOk())
                     .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                     .andExpect(jsonPath("$.sections").isArray())
-                    .andExpect(jsonPath("$.sections", hasSize(2)))
+                    .andExpect(jsonPath("$.sections", hasSize(4)))
                     .andExpect(jsonPath("$.sections[0].name").value("products"))
                     .andExpect(jsonPath("$.sections[0].path").value("/api/v1/admin/products"))
                     .andExpect(jsonPath("$.sections[0].implemented").value(true))
                     .andExpect(jsonPath("$.sections[1].name").value("orders"))
                     .andExpect(jsonPath("$.sections[1].path").value("/api/v1/admin/orders"))
-                    .andExpect(jsonPath("$.sections[1].implemented").value(true));
+                    .andExpect(jsonPath("$.sections[1].implemented").value(true))
+                    .andExpect(jsonPath("$.sections[2].name").value("customers"))
+                    .andExpect(jsonPath("$.sections[2].path").value("/api/v1/admin/customers"))
+                    .andExpect(jsonPath("$.sections[2].implemented").value(true))
+                    .andExpect(jsonPath("$.sections[3].name").value("dashboard"))
+                    .andExpect(jsonPath("$.sections[3].path").value("/api/v1/admin/dashboard"))
+                    .andExpect(jsonPath("$.sections[3].implemented").value(true));
         }
     }
 
