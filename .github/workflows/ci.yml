@@ -20,7 +20,7 @@ jobs:
           cache: 'maven'
 
       - name: Build, test & check coverage
-        run: mvn clean verify -Dspring.profiles.active=dev
+        run: mvn clean verify -Pdev
 
       - name: Post coverage report to PR
         if: always()
