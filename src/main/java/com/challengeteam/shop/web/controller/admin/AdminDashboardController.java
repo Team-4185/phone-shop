@@ -4,16 +4,20 @@ import com.challengeteam.shop.dto.admin.dashboard.AdminDashboardLowStockAlertRes
 import com.challengeteam.shop.dto.admin.dashboard.AdminDashboardRecentOrderResponseDto;
 import com.challengeteam.shop.dto.admin.dashboard.AdminDashboardSalesByBrandResponseDto;
 import com.challengeteam.shop.dto.admin.dashboard.AdminDashboardSalesPointResponseDto;
+import com.challengeteam.shop.dto.admin.dashboard.AdminDashboardSalesPeriod;
 import com.challengeteam.shop.dto.admin.dashboard.AdminDashboardSummaryResponseDto;
 import com.challengeteam.shop.dto.admin.dashboard.AdminDashboardTopProductResponseDto;
+import com.challengeteam.shop.exceptionHandling.exception.InvalidAPIRequestException;
 import com.challengeteam.shop.service.admin.AdminDashboardService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import java.util.List;
+import java.util.Locale;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -36,9 +40,11 @@ public class AdminDashboardController {
 
   @Operation(summary = "Get dashboard sales analytics chart")
   @GetMapping("/sales-analytics")
-  public ResponseEntity<List<AdminDashboardSalesPointResponseDto>> getSalesAnalytics() {
-    log.debug("Admin dashboard sales analytics request");
-    return ResponseEntity.ok(adminDashboardService.getSalesAnalytics());
+  public ResponseEntity<List<AdminDashboardSalesPointResponseDto>> getSalesAnalytics(
+      @RequestParam(defaultValue = "month") String period) {
+    AdminDashboardSalesPeriod salesPeriod = parseSalesPeriod(period);
+    log.debug("Admin dashboard sales analytics request period={}", salesPeriod);
+    return ResponseEntity.ok(adminDashboardService.getSalesAnalytics(salesPeriod));
   }
 
   @Operation(summary = "Get dashboard sales by brand")
@@ -67,5 +73,14 @@ public class AdminDashboardController {
   public ResponseEntity<List<AdminDashboardLowStockAlertResponseDto>> getLowStockAlerts() {
     log.debug("Admin dashboard low stock alerts request");
     return ResponseEntity.ok(adminDashboardService.getLowStockAlerts());
+  }
+
+  private AdminDashboardSalesPeriod parseSalesPeriod(String period) {
+    try {
+      return AdminDashboardSalesPeriod.valueOf(period.toUpperCase(Locale.ROOT));
+    } catch (IllegalArgumentException e) {
+      throw new InvalidAPIRequestException(
+          "Sales analytics period must be one of: week, month, year", e);
+    }
   }
 }

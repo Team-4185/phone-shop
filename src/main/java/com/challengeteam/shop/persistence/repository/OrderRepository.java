@@ -1,6 +1,7 @@
 package com.challengeteam.shop.persistence.repository;
 
 import com.challengeteam.shop.entity.order.Order;
+import com.challengeteam.shop.entity.order.OrderStatus;
 import com.challengeteam.shop.entity.user.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -11,6 +12,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
@@ -52,6 +54,13 @@ public interface OrderRepository extends JpaRepository<Order, Long>, JpaSpecific
     @Query("SELECT COALESCE(SUM(o.total), 0) FROM CustomerOrder o")
     java.math.BigDecimal sumTotalRevenue();
 
+    @Query("SELECT COALESCE(SUM(o.total), 0) FROM CustomerOrder o WHERE o.createdAt >= :start AND o.createdAt < :end")
+    java.math.BigDecimal sumRevenueBetween(@Param("start") Instant start, @Param("end") Instant end);
+
+    long countByCreatedAtGreaterThanEqualAndCreatedAtLessThan(Instant start, Instant end);
+
+    long countByStatus(OrderStatus status);
+
     @Query(
             value =
                     """
@@ -64,6 +73,34 @@ public interface OrderRepository extends JpaRepository<Order, Long>, JpaSpecific
                     """,
             nativeQuery = true)
     List<Object[]> aggregateSalesByDate();
+
+    @Query(
+            value =
+                    """
+                    SELECT CAST(o.created_at AS DATE) AS sale_date,
+                           COALESCE(SUM(o.total), 0) AS revenue,
+                           COUNT(o.id) AS sales_count
+                    FROM orders o
+                    WHERE o.created_at >= :start AND o.created_at < :end
+                    GROUP BY CAST(o.created_at AS DATE)
+                    ORDER BY sale_date
+                    """,
+            nativeQuery = true)
+    List<Object[]> aggregateSalesByDateBetween(@Param("start") Instant start, @Param("end") Instant end);
+
+    @Query(
+            value =
+                    """
+                    SELECT CAST(DATE_TRUNC('month', o.created_at) AS DATE) AS sale_month,
+                           COALESCE(SUM(o.total), 0) AS revenue,
+                           COUNT(o.id) AS sales_count
+                    FROM orders o
+                    WHERE o.created_at >= :start AND o.created_at < :end
+                    GROUP BY DATE_TRUNC('month', o.created_at)
+                    ORDER BY sale_month
+                    """,
+            nativeQuery = true)
+    List<Object[]> aggregateSalesByMonthBetween(@Param("start") Instant start, @Param("end") Instant end);
 
     @Query(
             value =
@@ -86,8 +123,11 @@ public interface OrderRepository extends JpaRepository<Order, Long>, JpaSpecific
                            MIN(oi.product_name) AS name,
                            oi.sku AS sku,
                            COALESCE(SUM(oi.quantity), 0) AS units_sold,
-                           COALESCE(SUM(oi.total_price), 0) AS revenue
+                           COALESCE(SUM(oi.total_price), 0) AS revenue,
+                           MIN(p.stock) AS stock,
+                           MIN(p.status) AS status
                     FROM orders_items oi
+                    LEFT JOIN phones p ON p.id = oi.fk_phone_id
                     GROUP BY oi.fk_phone_id, oi.sku
                     ORDER BY units_sold DESC, revenue DESC
                     LIMIT :limit
