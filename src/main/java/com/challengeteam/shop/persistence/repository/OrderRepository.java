@@ -43,6 +43,9 @@ public interface OrderRepository extends JpaRepository<Order, Long>, JpaSpecific
     @Query("SELECT o FROM CustomerOrder o WHERE o.user IN :users")
     List<Order> findAllByUsers(@Param("users") List<User> users);
 
+    @Query("SELECT o.status, COUNT(o) FROM CustomerOrder o GROUP BY o.status")
+    List<Object[]> countOrdersByStatus();
+
     @Query("SELECT o FROM CustomerOrder o WHERE o.user.id = :userId ORDER BY o.createdAt DESC")
     List<Order> findRecentByUserId(@Param("userId") Long userId, Pageable pageable);
 
