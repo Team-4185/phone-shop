@@ -150,20 +150,71 @@ class AdminCustomerDashboardControllerTest {
         mockMvc.perform(get(ADMIN_DASHBOARD_URL + "/summary").header(HttpHeaders.AUTHORIZATION, auth(adminToken)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.totalRevenue").value(799.99))
+                .andExpect(jsonPath("$.totalRevenueChangePercent").value(100))
                 .andExpect(jsonPath("$.totalOrders").value(1))
-                .andExpect(jsonPath("$.totalCustomers").value(1))
-                .andExpect(jsonPath("$.lowStockProducts").value(1));
+                .andExpect(jsonPath("$.totalOrdersChangePercent").value(100))
+                .andExpect(jsonPath("$.processingOrders").value(0))
+                .andExpect(jsonPath("$.itemsInStock").value(23))
+                .andExpect(jsonPath("$.lowStockProducts").value(1))
+                .andExpect(jsonPath("$.newClients").value(1))
+                .andExpect(jsonPath("$.newClientsChangePercent").value(100));
 
         mockMvc.perform(get(ADMIN_DASHBOARD_URL + "/recent-orders").header(HttpHeaders.AUTHORIZATION, auth(adminToken)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(1)))
                 .andExpect(jsonPath("$[0].customerEmail").value(customer.getEmail()))
+                .andExpect(jsonPath("$[0].customerName").value(customer.getEmail()))
+                .andExpect(jsonPath("$[0].productName").value("Dashboard Phone"))
                 .andExpect(jsonPath("$[0].paymentStatus").value("PAID"));
 
         mockMvc.perform(get(ADMIN_DASHBOARD_URL + "/low-stock-alerts").header(HttpHeaders.AUTHORIZATION, auth(adminToken)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(1)))
-                .andExpect(jsonPath("$[0].sku").value("LOW-001"));
+                .andExpect(jsonPath("$[0].sku").value("LOW-001"))
+                .andExpect(jsonPath("$[0].stock").value(3))
+                .andExpect(jsonPath("$[0].threshold").value(10));
+    }
+
+    @Test
+    void whenDashboardSalesWidgetsRequested_thenReturnDesignAlignedData() throws Exception {
+        createOrder(OrderStatus.DELIVERED, PaymentStatus.PAID, "799.99", 2);
+
+        mockMvc.perform(get(ADMIN_DASHBOARD_URL + "/sales-analytics")
+                        .param("period", "month")
+                        .header(HttpHeaders.AUTHORIZATION, auth(adminToken)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(1)))
+                .andExpect(jsonPath("$[0].revenue").value(799.99))
+                .andExpect(jsonPath("$[0].profit").value(799.99))
+                .andExpect(jsonPath("$[0].salesCount").value(1))
+                .andExpect(jsonPath("$[0].ordersCount").value(1));
+
+        mockMvc.perform(get(ADMIN_DASHBOARD_URL + "/sales-by-brand")
+                        .header(HttpHeaders.AUTHORIZATION, auth(adminToken)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(1)))
+                .andExpect(jsonPath("$[0].brand").value("DashBrand"))
+                .andExpect(jsonPath("$[0].revenue").value(1599.98))
+                .andExpect(jsonPath("$[0].unitsSold").value(2))
+                .andExpect(jsonPath("$[0].percentage").value(100));
+
+        mockMvc.perform(get(ADMIN_DASHBOARD_URL + "/top-selling-products")
+                        .header(HttpHeaders.AUTHORIZATION, auth(adminToken)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(1)))
+                .andExpect(jsonPath("$[0].name").value("Dashboard Phone"))
+                .andExpect(jsonPath("$[0].unitsSold").value(2))
+                .andExpect(jsonPath("$[0].revenue").value(1599.98))
+                .andExpect(jsonPath("$[0].stock").value(20))
+                .andExpect(jsonPath("$[0].status").value("IN_STOCK"));
+    }
+
+    @Test
+    void whenSalesAnalyticsPeriodIsUnsupported_thenStatus400() throws Exception {
+        mockMvc.perform(get(ADMIN_DASHBOARD_URL + "/sales-analytics")
+                        .param("period", "quarter")
+                        .header(HttpHeaders.AUTHORIZATION, auth(adminToken)))
+                .andExpect(status().isBadRequest());
     }
 
     private String createAdminAccessToken() {
