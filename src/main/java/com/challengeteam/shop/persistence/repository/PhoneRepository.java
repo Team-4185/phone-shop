@@ -40,4 +40,7 @@ public interface PhoneRepository extends JpaRepository<Phone, Long>, JpaSpecific
 
     long countByStockLessThanEqual(Integer threshold);
 
+    @Query("SELECT COALESCE(SUM(p.stock), 0) FROM Phone p")
+    Long sumStock();
+
 }
