@@ -20,7 +20,7 @@ jobs:
           cache: 'maven'
 
       - name: Build, test & check coverage
-        run: mvn clean verify
+        run: mvn clean verify -Pdev
 
       - name: Post coverage report to PR
         if: always()
