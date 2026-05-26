@@ -2,6 +2,7 @@ package com.challengeteam.shop.service.admin.impl;
 
 import com.challengeteam.shop.dto.admin.order.AdminOrderDetailsResponseDto;
 import com.challengeteam.shop.dto.admin.order.AdminOrderFilterDto;
+import com.challengeteam.shop.dto.admin.order.AdminOrderKpiResponseDto;
 import com.challengeteam.shop.dto.admin.order.AdminOrderListItemResponseDto;
 import com.challengeteam.shop.entity.order.Order;
 import com.challengeteam.shop.entity.order.OrderStatus;
@@ -12,6 +13,7 @@ import com.challengeteam.shop.persistence.repository.OrderRepository;
 import com.challengeteam.shop.persistence.specification.AdminOrderSpecification;
 import com.challengeteam.shop.service.admin.AdminOrderService;
 import com.challengeteam.shop.service.admin.AdminOrderWorkflowService;
+import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -77,6 +79,20 @@ public class AdminOrderServiceImpl implements AdminOrderService {
         size,
         ordersPage.getTotalElements());
     return new PageImpl<>(orderedOrders, pageable, ordersPage.getTotalElements());
+  }
+
+  @Override
+  public AdminOrderKpiResponseDto getOrderKpi() {
+    Map<OrderStatus, Long> countsByStatus = new EnumMap<>(OrderStatus.class);
+    orderRepository
+        .countOrdersByStatus()
+        .forEach(row -> countsByStatus.put((OrderStatus) row[0], (Long) row[1]));
+
+    return new AdminOrderKpiResponseDto(
+        countsByStatus.getOrDefault(OrderStatus.CONFIRMED, 0L),
+        countsByStatus.getOrDefault(OrderStatus.PROCESSING, 0L),
+        countsByStatus.getOrDefault(OrderStatus.DELIVERED, 0L),
+        countsByStatus.getOrDefault(OrderStatus.CANCELLED, 0L));
   }
 
   @Override

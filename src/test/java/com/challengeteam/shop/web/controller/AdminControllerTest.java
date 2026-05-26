@@ -513,6 +513,51 @@ class AdminControllerTest {
     }
 
     @Nested
+    @DisplayName("GET /api/v1/admin/orders/kpi")
+    class GetAdminOrderKpiTest {
+
+        @Test
+        void whenAuthenticatedUserHasNoAdminRole_thenStatus403() throws Exception {
+            mockMvc
+                    .perform(get(ADMIN_ORDERS_URL + "/kpi").header(HttpHeaders.AUTHORIZATION, auth(userToken)))
+                    .andExpect(status().isForbidden());
+        }
+
+        @Test
+        void whenAuthenticatedUserIsAdmin_thenReturnOrderStatusCounts() throws Exception {
+            createOrder(OrderStatus.CONFIRMED, "799.99", 1);
+            createOrder(OrderStatus.PROCESSING, "1499.99", 1);
+            createOrder(OrderStatus.PROCESSING, "2499.99", 2);
+            createOrder(OrderStatus.DELIVERED, "999.99", 1);
+            createOrder(OrderStatus.CANCELLED, "399.99", 1);
+            createOrder(OrderStatus.NEW, "199.99", 1);
+            createOrder(OrderStatus.SHIPPED, "599.99", 1);
+
+            mockMvc
+                    .perform(get(ADMIN_ORDERS_URL + "/kpi").header(HttpHeaders.AUTHORIZATION, auth(adminToken)))
+                    .andExpect(status().isOk())
+                    .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                    .andExpect(jsonPath("$.confirmed").value(1))
+                    .andExpect(jsonPath("$.processing").value(2))
+                    .andExpect(jsonPath("$.delivered").value(1))
+                    .andExpect(jsonPath("$.cancelled").value(1));
+        }
+
+        @Test
+        void whenStatusHasNoOrders_thenReturnZero() throws Exception {
+            createOrder(OrderStatus.PROCESSING, "1499.99", 1);
+
+            mockMvc
+                    .perform(get(ADMIN_ORDERS_URL + "/kpi").header(HttpHeaders.AUTHORIZATION, auth(adminToken)))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.confirmed").value(0))
+                    .andExpect(jsonPath("$.processing").value(1))
+                    .andExpect(jsonPath("$.delivered").value(0))
+                    .andExpect(jsonPath("$.cancelled").value(0));
+        }
+    }
+
+    @Nested
     @DisplayName("GET /api/v1/admin/orders/{id}")
     class GetAdminOrderDetailsTest {
 
