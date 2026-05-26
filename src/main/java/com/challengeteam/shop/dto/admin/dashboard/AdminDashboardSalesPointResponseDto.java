@@ -5,4 +5,4 @@ import java.time.LocalDate;
 
 /** One point in the dashboard sales analytics chart. */
 public record AdminDashboardSalesPointResponseDto(
-    LocalDate date, BigDecimal revenue, Long ordersCount) {}
+    LocalDate date, BigDecimal revenue, BigDecimal profit, Long salesCount, Long ordersCount) {}
