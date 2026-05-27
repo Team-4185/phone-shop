@@ -12,7 +12,6 @@ import lombok.extern.slf4j.Slf4j;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * Utility class providing helper methods for order processing operations.
@@ -92,26 +91,6 @@ public class OrderUtils {
         } else if (remainingStock <= 5) {
             log.info("Phone {} is low on stock", phone.getId());
             phone.setStatus(ProductStatus.LOW_STOCK);
-        }
-    }
-
-    public static void checkIfColorAndStorageAvailable(
-            Map<Long, Phone> phoneMap, List<OrderItemRequestDto> items) {
-        for (OrderItemRequestDto item : items) {
-            Phone phone = phoneMap.get(item.phoneId());
-            Set<PhoneColor> availableColors = phone.getPhoneCharacteristics().getPhoneColors();
-            Set<StorageCapacity> availableStorages = phone.getPhoneCharacteristics().getStorageCapacities();
-
-            if (!availableColors.contains(item.color())) {
-                log.error("Color {} is not available for phone: {}", item.color(), phone.getName());
-                throw new OrderCreationException(
-                        "Color " + item.color() + " is not available for phone: " + phone.getName());
-            }
-            if (!availableStorages.contains(item.storage())) {
-                log.error("Storage {} is not available for phone: {}", item.storage(), phone.getName());
-                throw new OrderCreationException(
-                        "Storage " + item.storage() + " is not available for phone: " + phone.getName());
-            }
         }
     }
 }

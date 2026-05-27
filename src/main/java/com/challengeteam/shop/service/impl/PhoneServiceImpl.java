@@ -15,6 +15,7 @@ import com.challengeteam.shop.persistence.specification.PhoneSpecification;
 import com.challengeteam.shop.service.ImageService;
 import com.challengeteam.shop.service.PhoneService;
 import com.challengeteam.shop.service.impl.merger.PhoneMerger;
+import com.challengeteam.shop.utility.ProductStatusResolver;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.*;
@@ -104,7 +105,7 @@ public class PhoneServiceImpl implements PhoneService {
                 .releaseYear(phoneCreateRequestDto.releaseYear())
                 .sku(normalizedSku)
                 .stock(phoneCreateRequestDto.stock())
-                .status(phoneCreateRequestDto.status())
+                .status(ProductStatusResolver.resolve(phoneCreateRequestDto.stock()))
                 .phoneCharacteristics(phoneCharacteristics)
                 .build();
 

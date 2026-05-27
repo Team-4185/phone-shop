@@ -11,6 +11,7 @@ import com.challengeteam.shop.exceptionHandling.exception.TestDataGeneratorOutOf
 import com.challengeteam.shop.service.PhoneService;
 import com.challengeteam.shop.service.TestDataService;
 import com.challengeteam.shop.service.UserService;
+import com.challengeteam.shop.utility.ProductStatusResolver;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -209,13 +210,6 @@ public class TestDataServiceImpl implements TestDataService {
 
         private final int[] stockValues = {0, 3, 8, 12, 25, 50, 100};
 
-        private final ProductStatus[] statuses = {
-                ProductStatus.IN_STOCK,
-                ProductStatus.LOW_STOCK,
-                ProductStatus.OUT_OF_STOCK
-        };
-
-
         public List<PhoneCreateRequestDto> generatePhones(int amount) {
             List<PhoneCreateRequestDto> result = new ArrayList<>(amount);
 
@@ -227,7 +221,7 @@ public class TestDataServiceImpl implements TestDataService {
                 int releaseYear = getRandomReleaseYear();
                 String sku = getRandomSku(brand, i);
                 int stock = getRandomStock();
-                ProductStatus status = getRandomStatus();
+                ProductStatus status = ProductStatusResolver.resolve(stock);
                 String cpu = getRandomCpu();
                 int coresNumber = getRandomCoresNumber();
                 String screenSize = getRandomScreenSize();
@@ -263,10 +257,6 @@ public class TestDataServiceImpl implements TestDataService {
 
         private int getRandomStock() {
             return stockValues[random.nextInt(stockValues.length)];
-        }
-
-        private ProductStatus getRandomStatus() {
-            return statuses[random.nextInt(statuses.length)];
         }
 
         private String getRandomBatteryCapacity() {
