@@ -12,6 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Utility class providing helper methods for order processing operations.
@@ -73,9 +74,8 @@ public class OrderUtils {
      * Decreases the phone's stock by the ordered quantity and updates the product status
      * based on the remaining stock:
      * <ul>
-     *   <li>If remaining stock is 0, sets status to OUT_OF_STOCK</li>
-     *   <li>If remaining stock is 1-9, sets status to LOW_STOCK</li>
-     *   <li>If remaining stock is 10 or more, sets status to IN_STOCK</li>
+     *   <li>If remaining stock is 0, sets status to {@link ProductStatus#OUT_OF_STOCK}</li>
+     *   <li>If remaining stock is 5 or less, sets status to {@link ProductStatus#LOW_STOCK}</li>
      * </ul>
      * </p>
      *
@@ -85,7 +85,33 @@ public class OrderUtils {
     public static void updatePhoneStock(Phone phone, int orderedQuantity) {
         int remainingStock = phone.getStock() - orderedQuantity;
         phone.setStock(remainingStock);
-        phone.setStatus(ProductStatusResolver.resolve(remainingStock));
         log.info("Updated phone stock for phone: {} with remaining stock: {}", phone.getId(), remainingStock);
+        if (remainingStock == 0) {
+            log.info("Phone {} is out of stock", phone.getId());
+            phone.setStatus(ProductStatus.OUT_OF_STOCK);
+        } else if (remainingStock <= 5) {
+            log.info("Phone {} is low on stock", phone.getId());
+            phone.setStatus(ProductStatus.LOW_STOCK);
+        }
+    }
+
+    public static void checkIfColorAndStorageAvailable(
+            Map<Long, Phone> phoneMap, List<OrderItemRequestDto> items) {
+        for (OrderItemRequestDto item : items) {
+            Phone phone = phoneMap.get(item.phoneId());
+            Set<PhoneColor> availableColors = phone.getPhoneCharacteristics().getPhoneColors();
+            Set<StorageCapacity> availableStorages = phone.getPhoneCharacteristics().getStorageCapacities();
+
+            if (!availableColors.contains(item.color())) {
+                log.error("Color {} is not available for phone: {}", item.color(), phone.getName());
+                throw new OrderCreationException(
+                        "Color " + item.color() + " is not available for phone: " + phone.getName());
+            }
+            if (!availableStorages.contains(item.storage())) {
+                log.error("Storage {} is not available for phone: {}", item.storage(), phone.getName());
+                throw new OrderCreationException(
+                        "Storage " + item.storage() + " is not available for phone: " + phone.getName());
+            }
+        }
     }
 }
