@@ -107,6 +107,35 @@ class PhoneMergerImplTest {
         }
 
         @Test
+        void whenStockIsUpdated_thenDeriveStatusFromStock() {
+            // given
+            Phone phone = getIphone();
+            var dto = new PhoneUpdateRequestDto(
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    XIAOMI_STOCK,
+                    ProductStatus.IN_STOCK,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null
+            );
+
+            // when
+            phoneMerger.mergePhone(phone, dto);
+
+            // then
+            assertEquals(XIAOMI_STOCK, phone.getStock());
+            assertEquals(ProductStatus.OUT_OF_STOCK, phone.getStatus());
+        }
+
+        @Test
         void whenParameterPhoneIsNull_thenThrowException() {
             // given
             var dto = new PhoneUpdateRequestDto(
