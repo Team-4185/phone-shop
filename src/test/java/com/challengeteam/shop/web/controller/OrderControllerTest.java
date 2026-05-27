@@ -197,7 +197,7 @@ class OrderControllerTest {
             //   - multiple items → total = sum of (price * quantity)
             //   - stock decreases by ordered quantity
             //   - stock = 0 → phone status OUT_OF_STOCK
-            //   - stock <= 5 → phone status LOW_STOCK
+            //   - stock between 1 and 9 → phone status LOW_STOCK
             //   - POST_OFFICE delivery → 201, logistics company in response
             // -------------------------------------------------------------------------
     class SuccessfulOrderCreationTests {
@@ -299,7 +299,7 @@ class OrderControllerTest {
         }
 
         @Test
-        @DisplayName("Remaining stock <= 5 → phone status LOW_STOCK")
+        @DisplayName("Remaining stock between 1 and 9 → phone status LOW_STOCK")
         void remainingStockLow_setsLowStockStatus() throws Exception {
             when(paymentMockService.pay(any(), any())).thenReturn(paid());
 
@@ -310,6 +310,23 @@ class OrderControllerTest {
 
             assertThat(phoneRepository.findById(iphone.getId())
                     .orElseThrow().getStatus()).isEqualTo(ProductStatus.LOW_STOCK);
+        }
+
+        @Test
+        @DisplayName("Remaining stock >= 10 → phone status IN_STOCK")
+        void remainingStockTenOrMore_setsInStockStatus() throws Exception {
+            when(paymentMockService.pay(any(), any())).thenReturn(paid());
+
+            Phone highStockPhone = phoneRepository.save(
+                    phone("Google Pixel 9", "Google", new BigDecimal("699.00"), 12, ProductStatus.LOW_STOCK));
+
+            mockMvc.perform(post(ORDER_URL)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(cardCourierBody(highStockPhone.getId(), 2))) // 12 - 2 = 10
+                    .andExpect(status().isCreated());
+
+            assertThat(phoneRepository.findById(highStockPhone.getId())
+                    .orElseThrow().getStatus()).isEqualTo(ProductStatus.IN_STOCK);
         }
 
         @Test
