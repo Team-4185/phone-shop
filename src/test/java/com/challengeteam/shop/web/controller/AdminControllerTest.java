@@ -47,6 +47,7 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.UUID;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.hasSize;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -185,6 +186,72 @@ class AdminControllerTest {
                     .andExpect(jsonPath("$.stock").value(7))
                     .andExpect(jsonPath("$.status").value("LOW_STOCK"))
                     .andExpect(jsonPath("$.cpu").value("Updated Chip"));
+        }
+
+        @Test
+        void whenAdminCreatesProductWithMismatchedStatus_thenStatusIsDerivedFromStock() throws Exception {
+            AdminProductCreateRequestDto request =
+                    new AdminProductCreateRequestDto(
+                            "Low Stock Admin Product",
+                            "Created through admin product management",
+                            new BigDecimal("699.99"),
+                            "CreatedBrand",
+                            2024,
+                            "LOW-STOCK-ADMIN-001",
+                            5,
+                            ProductStatus.IN_STOCK,
+                            "Created Chip",
+                            8,
+                            "6.4\"",
+                            "12 MP",
+                            "64 MP",
+                            "4300 mAh");
+
+            mockMvc
+                    .perform(
+                            multipart(ADMIN_PRODUCTS_URL)
+                                    .file(jsonPart("product", request))
+                                    .header(HttpHeaders.AUTHORIZATION, auth(adminToken)))
+                    .andExpect(status().isCreated());
+
+            Phone created = findPhoneBySku("LOW-STOCK-ADMIN-001");
+
+            assertThat(created.getStock()).isEqualTo(5);
+            assertThat(created.getStatus()).isEqualTo(ProductStatus.LOW_STOCK);
+        }
+
+        @Test
+        void whenAdminUpdatesProductWithMismatchedStatus_thenStatusIsDerivedFromStock() throws Exception {
+            Phone phone = phoneRepository.findAll().getFirst();
+            AdminProductUpdateRequestDto request =
+                    new AdminProductUpdateRequestDto(
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            0,
+                            ProductStatus.IN_STOCK,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null);
+
+            mockMvc
+                    .perform(
+                            put(ADMIN_PRODUCTS_URL + "/{id}", phone.getId())
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsBytes(request))
+                                    .header(HttpHeaders.AUTHORIZATION, auth(adminToken)))
+                    .andExpect(status().isNoContent());
+
+            Phone updated = phoneRepository.findById(phone.getId()).orElseThrow();
+
+            assertThat(updated.getStock()).isZero();
+            assertThat(updated.getStatus()).isEqualTo(ProductStatus.OUT_OF_STOCK);
         }
 
         @Test
@@ -725,7 +792,7 @@ class AdminControllerTest {
                 "OtherBrand",
                 2023,
                 "OTHER-DEVICE-001",
-                12,
+                9,
                 ProductStatus.LOW_STOCK,
                 "Other CPU",
                 6,
@@ -889,7 +956,7 @@ class AdminControllerTest {
                 .andExpect(jsonPath("$.content[0].sku").value("ADMIN-TEST-001"))
                 .andExpect(jsonPath("$.content[0].stock").value(45))
                 .andExpect(jsonPath("$.content[1].sku").value("OTHER-DEVICE-001"))
-                .andExpect(jsonPath("$.content[1].stock").value(12));
+                .andExpect(jsonPath("$.content[1].stock").value(9));
     }
 
     @Test

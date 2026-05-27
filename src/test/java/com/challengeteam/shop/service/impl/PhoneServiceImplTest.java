@@ -626,7 +626,7 @@ class PhoneServiceImplTest {
             assertThat(phoneBeforeSave.getReleaseYear()).isEqualTo(dto.releaseYear());
             assertThat(phoneBeforeSave.getSku()).isEqualTo(dto.sku());
             assertThat(phoneBeforeSave.getStock()).isEqualTo(dto.stock());
-            assertThat(phoneBeforeSave.getStatus()).isEqualTo(dto.status());
+            assertThat(phoneBeforeSave.getStatus()).isEqualTo(ProductStatus.IN_STOCK);
 
             // capture Image
             ArgumentCaptor<Image> imageCaptor = ArgumentCaptor.forClass(Image.class);
@@ -666,7 +666,41 @@ class PhoneServiceImplTest {
             assertThat(forSave.getReleaseYear()).isEqualTo(dto.releaseYear());
             assertThat(forSave.getSku()).isEqualTo(PHONE_SKU);
             assertThat(forSave.getStock()).isEqualTo(dto.stock());
-            assertThat(forSave.getStatus()).isEqualTo(dto.status());
+            assertThat(forSave.getStatus()).isEqualTo(ProductStatus.IN_STOCK);
+        }
+
+        @Test
+        void whenCreateRequestStatusDoesNotMatchStock_thenDeriveStatusFromStock() {
+            // given
+            PhoneCreateRequestDto dto = new PhoneCreateRequestDto(
+                    PHONE_NAME,
+                    PHONE_DESCRIPTION,
+                    PHONE_PRICE,
+                    PHONE_BRAND,
+                    PHONE_RELEASE_YEAR,
+                    PHONE_SKU,
+                    5,
+                    ProductStatus.IN_STOCK,
+                    PHONE_CPU,
+                    PHONE_CORES_NUMBER,
+                    PHONE_SCREEN_SIZE,
+                    PHONE_FRONT_CAMERA,
+                    PHONE_MAIN_CAMERA,
+                    PHONE_BATTERY_CAPACITY
+            );
+
+            Mockito.when(phoneRepository.save(any(Phone.class)))
+                    .thenReturn(buildPhone(PHONE_ID));
+
+            // when
+            phoneService.create(dto, List.of());
+
+            // then
+            ArgumentCaptor<Phone> captor = ArgumentCaptor.forClass(Phone.class);
+            Mockito.verify(phoneRepository).save(captor.capture());
+
+            assertThat(captor.getValue().getStock()).isEqualTo(5);
+            assertThat(captor.getValue().getStatus()).isEqualTo(ProductStatus.LOW_STOCK);
         }
 
         @Test
