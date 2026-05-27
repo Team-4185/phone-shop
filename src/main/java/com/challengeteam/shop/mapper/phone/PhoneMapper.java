@@ -1,7 +1,11 @@
 package com.challengeteam.shop.mapper.phone;
 
-import com.challengeteam.shop.dto.phone.PhoneResponseDto;
+import com.challengeteam.shop.dto.phone.response.PhoneColorResponseDto;
+import com.challengeteam.shop.dto.phone.response.PhoneResponseDto;
+import com.challengeteam.shop.dto.phone.response.StorageCapacityResponseDto;
 import com.challengeteam.shop.entity.phone.Phone;
+import com.challengeteam.shop.entity.phone.PhoneColor;
+import com.challengeteam.shop.entity.phone.StorageCapacity;
 import com.challengeteam.shop.mapper.image.ImageMapper;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -43,6 +47,8 @@ public interface PhoneMapper {
     @Mapping(source = "phoneCharacteristics.mainCamera", target = "mainCamera")
     @Mapping(source = "phoneCharacteristics.batteryCapacity", target = "batteryCapacity")
     @Mapping(source = "images", target = "images")
+    @Mapping(source = "phoneCharacteristics.phoneColors", target = "colors")
+    @Mapping(source = "phoneCharacteristics.storageCapacities", target = "storageCapacity")
     PhoneResponseDto toResponse(Phone phone);
 
     /**
@@ -55,4 +61,12 @@ public interface PhoneMapper {
      * @return a list of {@link PhoneResponseDto} objects corresponding to the input phones
      */
     List<PhoneResponseDto> toResponseList(List<Phone> phones);
+
+    default PhoneColorResponseDto toColorDto(PhoneColor color) {
+        return new PhoneColorResponseDto(color.name(), color.getDisplayName(), color.getHexCode());
+    }
+
+    default StorageCapacityResponseDto toStorageCapacityDto(StorageCapacity capacity) {
+        return new StorageCapacityResponseDto(capacity.name(), capacity.getValue(), capacity.getUnit());
+    }
 }
