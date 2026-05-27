@@ -1,7 +1,7 @@
 package com.challengeteam.shop.web.controller;
 
-import com.challengeteam.shop.dto.phone.PhoneCreateRequestDto;
-import com.challengeteam.shop.dto.phone.PhoneUpdateRequestDto;
+import com.challengeteam.shop.dto.phone.request.PhoneCreateRequestDto;
+import com.challengeteam.shop.dto.phone.request.PhoneUpdateRequestDto;
 import com.challengeteam.shop.entity.image.Image;
 import com.challengeteam.shop.entity.phone.ProductStatus;
 import com.challengeteam.shop.persistence.repository.PhoneRepository;

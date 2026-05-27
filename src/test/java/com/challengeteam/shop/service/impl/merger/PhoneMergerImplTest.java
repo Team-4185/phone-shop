@@ -1,6 +1,6 @@
 package com.challengeteam.shop.service.impl.merger;
 
-import com.challengeteam.shop.dto.phone.PhoneUpdateRequestDto;
+import com.challengeteam.shop.dto.phone.request.PhoneUpdateRequestDto;
 import com.challengeteam.shop.entity.phone.Phone;
 import com.challengeteam.shop.entity.phone.PhoneCharacteristics;
 import com.challengeteam.shop.entity.phone.ProductStatus;

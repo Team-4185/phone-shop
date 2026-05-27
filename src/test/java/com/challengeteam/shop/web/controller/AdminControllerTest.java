@@ -2,7 +2,7 @@ package com.challengeteam.shop.web.controller;
 
 import com.challengeteam.shop.dto.admin.product.AdminProductCreateRequestDto;
 import com.challengeteam.shop.dto.admin.product.AdminProductUpdateRequestDto;
-import com.challengeteam.shop.dto.phone.PhoneCreateRequestDto;
+import com.challengeteam.shop.dto.phone.request.PhoneCreateRequestDto;
 import com.challengeteam.shop.entity.image.Image;
 import com.challengeteam.shop.entity.order.DeliveryMethod;
 import com.challengeteam.shop.entity.order.Order;
@@ -14,7 +14,9 @@ import com.challengeteam.shop.entity.order.payment.PaymentStatus;
 import com.challengeteam.shop.entity.order.shipping.LogisticsCompany;
 import com.challengeteam.shop.entity.order.shipping.ShippingAddress;
 import com.challengeteam.shop.entity.phone.Phone;
+import com.challengeteam.shop.entity.phone.PhoneColor;
 import com.challengeteam.shop.entity.phone.ProductStatus;
+import com.challengeteam.shop.entity.phone.StorageCapacity;
 import com.challengeteam.shop.entity.user.Role;
 import com.challengeteam.shop.entity.user.User;
 import com.challengeteam.shop.persistence.repository.*;
@@ -592,6 +594,8 @@ class AdminControllerTest {
                             .productName(phone.getName())
                             .sku(phone.getSku())
                             .unitPrice(phone.getPrice())
+                            .selectedStorage(StorageCapacity.CAPACITY_128GB)
+                            .selectedColor(PhoneColor.GOLD)
                             .quantity(quantity)
                             .totalPrice(phone.getPrice().multiply(BigDecimal.valueOf(quantity)))
                             .build());
@@ -785,6 +789,8 @@ class AdminControllerTest {
                         .productName(phone.getName())
                         .sku(phone.getSku())
                         .unitPrice(phone.getPrice())
+                        .selectedColor(PhoneColor.GOLD)
+                        .selectedStorage(StorageCapacity.CAPACITY_128GB)
                         .quantity(quantity)
                         .totalPrice(phone.getPrice().multiply(BigDecimal.valueOf(quantity)))
                         .build());

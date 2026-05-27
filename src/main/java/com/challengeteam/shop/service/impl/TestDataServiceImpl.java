@@ -1,10 +1,10 @@
 package com.challengeteam.shop.service.impl;
 
-import com.challengeteam.shop.dto.phone.PhoneCreateRequestDto;
+import com.challengeteam.shop.dto.phone.request.PhoneCreateRequestDto;
 import com.challengeteam.shop.dto.user.CreateUserDto;
 import com.challengeteam.shop.dto.user.UpdateProfileDto;
-import com.challengeteam.shop.entity.user.User;
 import com.challengeteam.shop.entity.phone.ProductStatus;
+import com.challengeteam.shop.entity.user.User;
 import com.challengeteam.shop.exceptionHandling.exception.CriticalSystemException;
 import com.challengeteam.shop.exceptionHandling.exception.InvalidAPIRequestException;
 import com.challengeteam.shop.exceptionHandling.exception.TestDataGeneratorOutOfLimitException;
