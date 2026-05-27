@@ -2,7 +2,7 @@ package com.challengeteam.shop.service.pagination;
 
 import com.challengeteam.shop.dto.pagination.paginationRequest.PhoneMultipleFilterRequest;
 import com.challengeteam.shop.dto.pagination.paginationResponse.PageResponseDto;
-import com.challengeteam.shop.dto.phone.PhoneResponseDto;
+import com.challengeteam.shop.dto.phone.response.PhoneResponseDto;
 import org.springframework.data.domain.Pageable;
 
 /**

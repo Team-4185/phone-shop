@@ -2,7 +2,7 @@ package com.challengeteam.shop.web.controller;
 
 import com.challengeteam.shop.dto.pagination.paginationRequest.PhoneMultipleFilterRequest;
 import com.challengeteam.shop.dto.pagination.paginationResponse.PageResponseDto;
-import com.challengeteam.shop.dto.phone.PhoneResponseDto;
+import com.challengeteam.shop.dto.phone.response.PhoneResponseDto;
 import com.challengeteam.shop.service.pagination.PhoneFilteringAndSortingService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
