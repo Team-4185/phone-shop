@@ -1,5 +1,7 @@
 package com.challengeteam.shop.dto.order.request.item;
 
+import com.challengeteam.shop.entity.phone.PhoneColor;
+import com.challengeteam.shop.entity.phone.StorageCapacity;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 
@@ -14,5 +16,10 @@ public record OrderItemRequestDto(
         Long phoneId,
         @NotNull(message = "Quantity must be not null")
         @Positive(message = "Quantity must be greater than 0")
-        Integer quantity) implements Serializable {
+        Integer quantity,
+        @NotNull(message = "Color must be present")
+        PhoneColor color,
+        @NotNull(message = "Storage must be present")
+        StorageCapacity storage
+) implements Serializable {
 }
