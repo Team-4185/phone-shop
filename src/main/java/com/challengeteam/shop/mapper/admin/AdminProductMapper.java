@@ -9,6 +9,7 @@ import com.challengeteam.shop.entity.image.Image;
 import com.challengeteam.shop.entity.phone.Phone;
 import com.challengeteam.shop.entity.phone.PhoneCharacteristics;
 import com.challengeteam.shop.mapper.image.ImageMapper;
+import com.challengeteam.shop.utility.ProductStatusResolver;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -72,7 +73,7 @@ public class AdminProductMapper {
         .releaseYear(request.releaseYear())
         .sku(normalizedSku)
         .stock(request.stock())
-        .status(request.status())
+        .status(ProductStatusResolver.resolve(request.stock()))
         .phoneCharacteristics(
             PhoneCharacteristics.builder()
                 .cpu(request.cpu().trim())
@@ -96,8 +97,10 @@ public class AdminProductMapper {
     if (request.brand() != null) phone.setBrand(request.brand().trim());
     if (request.releaseYear() != null) phone.setReleaseYear(request.releaseYear());
     if (normalizedSku != null) phone.setSku(normalizedSku);
-    if (request.stock() != null) phone.setStock(request.stock());
-    if (request.status() != null) phone.setStatus(request.status());
+    if (request.stock() != null) {
+      phone.setStock(request.stock());
+      phone.setStatus(ProductStatusResolver.resolve(request.stock()));
+    }
 
     PhoneCharacteristics characteristics = phone.getPhoneCharacteristics();
     if (characteristics == null) {

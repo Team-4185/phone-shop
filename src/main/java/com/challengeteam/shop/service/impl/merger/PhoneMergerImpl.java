@@ -2,6 +2,7 @@ package com.challengeteam.shop.service.impl.merger;
 
 import com.challengeteam.shop.dto.phone.PhoneUpdateRequestDto;
 import com.challengeteam.shop.entity.phone.Phone;
+import com.challengeteam.shop.utility.ProductStatusResolver;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
@@ -48,10 +49,7 @@ public class PhoneMergerImpl implements PhoneMerger {
         Integer newStock = newPhone.stock();
         if (newStock != null) {
             phone.setStock(newStock);
-        }
-
-        if (newPhone.status() != null) {
-            phone.setStatus(newPhone.status());
+            phone.setStatus(ProductStatusResolver.resolve(newStock));
         }
 
         String cpu = newPhone.cpu();
