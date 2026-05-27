@@ -1,4 +1,4 @@
-package com.challengeteam.shop.dto.phone;
+package com.challengeteam.shop.dto.phone.request;
 
 import com.challengeteam.shop.entity.phone.ProductStatus;
 import jakarta.validation.constraints.*;
