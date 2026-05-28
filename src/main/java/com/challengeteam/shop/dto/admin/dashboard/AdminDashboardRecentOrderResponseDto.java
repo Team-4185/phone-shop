@@ -9,6 +9,8 @@ import java.time.Instant;
 public record AdminDashboardRecentOrderResponseDto(
     Long id,
     String customerEmail,
+    String customerName,
+    String productName,
     OrderStatus status,
     PaymentStatus paymentStatus,
     BigDecimal total,
