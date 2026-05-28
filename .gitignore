@@ -13,6 +13,7 @@ OpenAPI definition/
 *.iws
 *.iml
 *.ipr
+.junie
 
 ### Eclipse ###
 .apt_generated
