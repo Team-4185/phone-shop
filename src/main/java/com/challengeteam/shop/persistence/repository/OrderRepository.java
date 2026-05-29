@@ -58,6 +58,9 @@ public interface OrderRepository extends JpaRepository<Order, Long>, JpaSpecific
     @Query("SELECT COALESCE(SUM(o.total), 0) FROM CustomerOrder o WHERE o.createdAt >= :start AND o.createdAt < :end")
     java.math.BigDecimal sumRevenueBetween(@Param("start") Instant start, @Param("end") Instant end);
 
+    @Query(value = "SELECT COALESCE(AVG(total), 0) FROM orders", nativeQuery = true)
+    java.math.BigDecimal averageOrderTotal();
+
     long countByCreatedAtGreaterThanEqualAndCreatedAtLessThan(Instant start, Instant end);
 
     long countByStatus(OrderStatus status);
