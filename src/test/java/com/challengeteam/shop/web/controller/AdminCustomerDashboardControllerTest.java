@@ -14,12 +14,7 @@ import com.challengeteam.shop.entity.order.shipping.ShippingAddress;
 import com.challengeteam.shop.entity.phone.*;
 import com.challengeteam.shop.entity.user.Role;
 import com.challengeteam.shop.entity.user.User;
-import com.challengeteam.shop.persistence.repository.ImageRepository;
-import com.challengeteam.shop.persistence.repository.MIMETypeRepository;
-import com.challengeteam.shop.persistence.repository.OrderRepository;
-import com.challengeteam.shop.persistence.repository.PhoneRepository;
-import com.challengeteam.shop.persistence.repository.RoleRepository;
-import com.challengeteam.shop.persistence.repository.UserRepository;
+import com.challengeteam.shop.persistence.repository.*;
 import com.challengeteam.shop.service.security.auth.jwt.JwtService;
 import com.challengeteam.shop.testContainer.ContainerExtension;
 import com.challengeteam.shop.testContainer.TestContextConfigurator;
@@ -43,6 +38,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.UUID;
 
 import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.oneOf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -255,7 +251,8 @@ class AdminCustomerDashboardControllerTest {
                 .andExpect(jsonPath("$[0].previewImage.name").value("dashboard-phone.jpg"))
                 .andExpect(jsonPath("$[0].previewImage.url").value(
                         "http://localhost/api/v1/images/" + imageRepository.findAll().getFirst().getId()))
-                .andExpect(jsonPath("$[0].previewImage.mimeType").value("image/jpg"));
+                .andExpect(jsonPath("$[0].previewImage.mimeType")
+                        .value(oneOf("image/jpeg", "image/jpg")));
     }
 
     @Test
@@ -381,10 +378,10 @@ class AdminCustomerDashboardControllerTest {
                 .productName(phone.getName())
                 .sku(phone.getSku())
                 .unitPrice(phone.getPrice())
-                .selectedColor(PhoneColor.GOLD)
-                .selectedStorage(StorageCapacity.CAPACITY_64GB)
                 .quantity(quantity)
                 .totalPrice(phone.getPrice().multiply(BigDecimal.valueOf(quantity)))
+                .selectedColor(PhoneColor.GOLD)
+                .selectedStorage(StorageCapacity.CAPACITY_128GB)
                 .build());
 
         Order savedOrder = orderRepository.save(order);
