@@ -1,5 +1,7 @@
 package com.challengeteam.shop.web.controller;
 
+import com.challengeteam.shop.entity.image.Image;
+import com.challengeteam.shop.entity.image.MIMEType;
 import com.challengeteam.shop.entity.order.DeliveryMethod;
 import com.challengeteam.shop.entity.order.Order;
 import com.challengeteam.shop.entity.order.OrderItem;
@@ -12,6 +14,8 @@ import com.challengeteam.shop.entity.order.shipping.ShippingAddress;
 import com.challengeteam.shop.entity.phone.*;
 import com.challengeteam.shop.entity.user.Role;
 import com.challengeteam.shop.entity.user.User;
+import com.challengeteam.shop.persistence.repository.ImageRepository;
+import com.challengeteam.shop.persistence.repository.MIMETypeRepository;
 import com.challengeteam.shop.persistence.repository.OrderRepository;
 import com.challengeteam.shop.persistence.repository.PhoneRepository;
 import com.challengeteam.shop.persistence.repository.RoleRepository;
@@ -72,6 +76,12 @@ class AdminCustomerDashboardControllerTest {
     private OrderRepository orderRepository;
 
     @Autowired
+    private ImageRepository imageRepository;
+
+    @Autowired
+    private MIMETypeRepository mimeTypeRepository;
+
+    @Autowired
     private PasswordEncoder passwordEncoder;
 
     private String adminToken;
@@ -87,6 +97,7 @@ class AdminCustomerDashboardControllerTest {
     @BeforeEach
     void setup() {
         orderRepository.deleteAll();
+        imageRepository.deleteAll();
         phoneRepository.deleteAll();
         userRepository.deleteAll();
 
@@ -94,6 +105,7 @@ class AdminCustomerDashboardControllerTest {
         userToken = testAuthHelper.authorizeAsNewUser("customer.ntt46@valid.com", "Password123!");
         customer = userRepository.findByEmail("customer.ntt46@valid.com").orElseThrow();
         phone = phoneRepository.save(phone("Dashboard Phone", "DashBrand", "DASH-001", 20, ProductStatus.IN_STOCK));
+        imageRepository.save(image("dashboard-phone.jpg", phone));
     }
 
     @Test
@@ -203,10 +215,28 @@ class AdminCustomerDashboardControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(1)))
                 .andExpect(jsonPath("$[0].name").value("Dashboard Phone"))
+                .andExpect(jsonPath("$[0].brand").value("DashBrand"))
                 .andExpect(jsonPath("$[0].unitsSold").value(2))
                 .andExpect(jsonPath("$[0].revenue").value(1599.98))
                 .andExpect(jsonPath("$[0].stock").value(20))
-                .andExpect(jsonPath("$[0].status").value("IN_STOCK"));
+                .andExpect(jsonPath("$[0].status").value("IN_STOCK"))
+                .andExpect(jsonPath("$[0].previewImage.name").value("dashboard-phone.jpg"))
+                .andExpect(jsonPath("$[0].previewImage.url").value(
+                        "http://localhost/api/v1/images/" + imageRepository.findAll().getFirst().getId()))
+                .andExpect(jsonPath("$[0].previewImage.mimeType").value("image/jpeg"));
+    }
+
+    @Test
+    void whenTopSellingProductHasNoImage_thenPreviewImageIsNotReturned() throws Exception {
+        imageRepository.deleteAll();
+        createOrder(OrderStatus.DELIVERED, PaymentStatus.PAID, "799.99", 1);
+
+        mockMvc.perform(get(ADMIN_DASHBOARD_URL + "/top-selling-products")
+                        .header(HttpHeaders.AUTHORIZATION, auth(adminToken)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(1)))
+                .andExpect(jsonPath("$[0].brand").value("DashBrand"))
+                .andExpect(jsonPath("$[0].previewImage").doesNotExist());
     }
 
     @Test
@@ -249,6 +279,23 @@ class AdminCustomerDashboardControllerTest {
                         .mainCamera("50 MP")
                         .batteryCapacity("4500 mAh")
                         .build())
+                .build();
+    }
+
+    private Image image(String name, Phone phone) {
+        MIMEType mimeType = mimeTypeRepository.findByExtension("jpg")
+                .orElseGet(() -> mimeTypeRepository.save(
+                        MIMEType.builder()
+                                .extension("jpg")
+                                .type("image/jpeg")
+                                .build()));
+
+        return Image.builder()
+                .name(name)
+                .storageKey("dashboard/" + name)
+                .size(1024L)
+                .mimeType(mimeType)
+                .phone(phone)
                 .build();
     }
 
