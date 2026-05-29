@@ -36,6 +36,8 @@ import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.math.BigDecimal;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.UUID;
 
 import static org.hamcrest.Matchers.hasSize;
@@ -104,6 +106,36 @@ class AdminCustomerDashboardControllerTest {
     void whenUserRequestsCustomers_thenStatus403() throws Exception {
         mockMvc.perform(get(ADMIN_CUSTOMERS_URL).header(HttpHeaders.AUTHORIZATION, auth(userToken)))
                 .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void whenUserRequestsCustomerKpi_thenStatus403() throws Exception {
+        mockMvc.perform(get(ADMIN_CUSTOMERS_URL + "/kpi").header(HttpHeaders.AUTHORIZATION, auth(userToken)))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void whenAdminRequestsCustomerKpi_thenReturnCustomerCardData() throws Exception {
+        createOrder(OrderStatus.DELIVERED, PaymentStatus.PAID, "800.00", 1);
+
+        User inactiveCustomer = createCustomer("inactive.ntt46@valid.com");
+        inactiveCustomer.setCreatedAt(Instant.now().minus(120, ChronoUnit.DAYS));
+        inactiveCustomer = userRepository.save(inactiveCustomer);
+        createOrder(
+                inactiveCustomer,
+                OrderStatus.DELIVERED,
+                PaymentStatus.PAID,
+                "400.00",
+                1,
+                Instant.now().minus(120, ChronoUnit.DAYS));
+
+        mockMvc.perform(get(ADMIN_CUSTOMERS_URL + "/kpi").header(HttpHeaders.AUTHORIZATION, auth(adminToken)))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.totalClients").value(2))
+                .andExpect(jsonPath("$.newCustomersThisMonth").value(1))
+                .andExpect(jsonPath("$.inactiveCustomers").value(1))
+                .andExpect(jsonPath("$.averageReceipt").value(600.00));
     }
 
     @Test
@@ -235,6 +267,18 @@ class AdminCustomerDashboardControllerTest {
         return jwtService.createAccessToken(userRepository.save(adminUser));
     }
 
+    private User createCustomer(String email) {
+        Role userRole = roleRepository
+                .findByName("USER")
+                .orElseThrow(() -> new IllegalStateException("User role is missing in test database"));
+
+        return userRepository.save(User.builder()
+                .email(email)
+                .password(passwordEncoder.encode("Password123!"))
+                .role(userRole)
+                .build());
+    }
+
     private Phone phone(String name, String brand, String sku, int stock, ProductStatus status) {
         return Phone.builder()
                 .name(name)
@@ -257,12 +301,22 @@ class AdminCustomerDashboardControllerTest {
     }
 
     private Order createOrder(OrderStatus status, PaymentStatus paymentStatus, String total, int quantity) {
+        return createOrder(customer, status, paymentStatus, total, quantity, null);
+    }
+
+    private Order createOrder(
+            User orderCustomer,
+            OrderStatus status,
+            PaymentStatus paymentStatus,
+            String total,
+            int quantity,
+            Instant createdAt) {
         Order order = Order.builder()
-                .user(customer)
-                .customerEmail(customer.getEmail())
-                .customerFirstName(customer.getFirstName())
-                .customerLastName(customer.getLastName())
-                .customerPhoneNumber(customer.getPhoneNumber())
+                .user(orderCustomer)
+                .customerEmail(orderCustomer.getEmail())
+                .customerFirstName(orderCustomer.getFirstName())
+                .customerLastName(orderCustomer.getLastName())
+                .customerPhoneNumber(orderCustomer.getPhoneNumber())
                 .status(status)
                 .paymentMethod(PaymentMethod.CARD)
                 .paymentDetails(new PaymentDetails(paymentStatus, UUID.randomUUID().toString()))
@@ -288,7 +342,12 @@ class AdminCustomerDashboardControllerTest {
                 .totalPrice(phone.getPrice().multiply(BigDecimal.valueOf(quantity)))
                 .build());
 
-        return orderRepository.save(order);
+        Order savedOrder = orderRepository.save(order);
+        if (createdAt != null) {
+            savedOrder.setCreatedAt(createdAt);
+            savedOrder = orderRepository.save(savedOrder);
+        }
+        return savedOrder;
     }
 
     private static String auth(String token) {
