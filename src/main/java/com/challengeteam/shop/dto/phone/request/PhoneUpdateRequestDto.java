@@ -1,9 +1,12 @@
 package com.challengeteam.shop.dto.phone.request;
 
+import com.challengeteam.shop.entity.phone.PhoneColor;
 import com.challengeteam.shop.entity.phone.ProductStatus;
+import com.challengeteam.shop.entity.phone.StorageCapacity;
 import jakarta.validation.constraints.*;
 
 import java.math.BigDecimal;
+import java.util.Set;
 
 public record PhoneUpdateRequestDto(
 
@@ -57,6 +60,14 @@ public record PhoneUpdateRequestDto(
 
         @Pattern(regexp = "^\\d+ mAh$", message = "Format: 4323 mAh")
         @Size(max = 10, message = "Battery capacity must be at most {max} characters long")
-        String batteryCapacity
+        String batteryCapacity,
+
+        @NotNull(message = "Phone colors must be present")
+        @NotEmpty(message = "Phone colors must not be empty")
+        Set<PhoneColor> colors,
+
+        @NotNull(message = "Storage capacities must be present")
+        @NotEmpty(message = "Storage capacities must not be empty")
+        Set<StorageCapacity> storageCapacities
 ) {
 }
