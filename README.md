@@ -1,56 +1,105 @@
-# Gadget room
+# Gadget Room Backend
 
-## Remote URLs
-- application base-url: ```https://gadget-room.up.railway.app```
-- minio base-url(secured ui): ```https://minio-ui.up.railway.app```
+> Production-ready REST API for an online phone store: catalog, cart, orders, admin dashboard, JWT authentication,
+> image storage, email notifications and CI quality gates.
 
-## How to get api docs
+## Core Features
 
-Application uses an auto-generated api docs.\
-To get docs UI: `[base-url]/docs`\
-To get docs api:`[base-url]/docs/api-docs`
+- [x] **Authentication:** registration, login, access tokens, refresh tokens and password reset flow.
+- [x] **Catalog:** phone listing, product details, filtering, sorting, pagination and brand discovery.
+- [x] **Cart:** authenticated user cart with add, remove, clear and total recalculation operations.
+- [x] **Orders:** order creation, customer order history, delivery details and payment details validation.
+- [x] **Admin Panel API:** product, order, customer and dashboard endpoints protected by admin role.
+- [x] **Image Storage:** product image upload, metadata retrieval and binary image serving through MinIO.
+- [x] **Email Notifications:** order confirmation emails with server-side templates.
+- [x] **API Documentation:** OpenAPI documentation with JWT bearer authentication support.
 
-## How to Launch the Application
+## Engineering Highlights
 
-### Prerequisites
+- [x] **Layered Architecture:** controllers, services, repositories, mappers, validators and DTO contracts are separated.
+- [x] **Database Versioning:** Flyway migrations keep schema changes explicit and reproducible.
+- [x] **Security:** stateless JWT authentication, BCrypt password hashing, role-based authorization and configurable CORS.
+- [x] **Object Storage:** MinIO integration isolates image files from relational data.
+- [x] **Validation:** custom validators cover order delivery, payment details, cart rules and filter constraints.
+- [x] **Testing:** unit and integration tests cover controllers, services, storage and validation logic.
+- [x] **Quality Gate:** JaCoCo enforces a 70% minimum line coverage threshold in CI.
+- [x] **Containerization:** Docker and Docker Compose provide reproducible local and production environments.
 
-#### Environment Variables
+## Tech Stack
 
-Set the following environment variables before starting the application:
+`Java 21` | `Spring Boot 3.5` | `Spring Security` | `Spring Data JPA` | `PostgreSQL` | `Flyway` | `MinIO` | `JWT` |
+`MapStruct` | `Lombok` | `Docker` | `JUnit 5` | `Mockito` | `Testcontainers` | `JaCoCo` | `OpenAPI`
 
-| Variable                      | Description                             | Example               |
-|-------------------------------|-----------------------------------------|-----------------------|
-| PORT	                         | Application port	                       | 8080                  |
-| DB_HOST	                      | PostgreSQL host address	                | localhost:5544        |
-| DB_NAME	                      | Database name	                          | gadgetroom            |
-| DB_USERNAME	                  | Database username	                      | postgres              |
-| DB_PASSWORD	                  | Database password	                      | pass1234              |
-| JWT_ACCESS_TOKEN_EXPIRATION	  | Access token expiration time (minutes)	 | 10                    |
-| JWT_REFRESH_TOKEN_EXPIRATION	 | Refresh token expiration time (hours)	  | 2                     |
-| JWT_PRIVATE_KEY	              | RSA private key for JWT signing	        | secure                |
-| JWT_PUBLIC_KEY	               | RSA public key for JWT verification	    | secure                |
-| MINIO_URL	                    | MinIO service URL	                      | http://localhost:9000 |
-| MINIO_USERNAME	               | MinIO username	                         | minioadmin            |
-| MINIO_PASSWORD	               | MinIO password	                         | minioadmin            |
+## Architecture
 
-### Launch
+```text
+Client
+  -> REST Controllers
+  -> Services
+  -> Validators / Mappers
+  -> Repositories / Storage Adapters
+  -> PostgreSQL / MinIO / SMTP
+```
 
-#### Local Development
+## Main API Areas
+
+| Area | Base path |
+| --- | --- |
+| Authentication | `/api/auth` |
+| Users | `/api/v1/users` |
+| Phones | `/api/v1/phones` |
+| Filtering | `/api/v1/filter` |
+| Images | `/api/v1/images` |
+| Cart | `/api/v1/me/cart` |
+| Orders | `/api/v1/orders` |
+| Admin | `/api/v1/admin/**` |
+
+## API Documentation
+
+- Production Swagger UI: `https://gadget-room.up.railway.app/docs`
+- Production OpenAPI JSON: `https://gadget-room.up.railway.app/docs/api-docs`
+- Local Swagger UI: `http://localhost:8080/docs`
+
+## Run
 
 ```bash
-export PORT=8080
-export DB_HOST=localhost:5544
-export DB_NAME=gadgetroom
-export DB_USERNAME=postgres
-export DB_PASSWORD=pass1234
-export JWT_ACCESS_TOKEN_EXPIRATION=10
-export JWT_REFRESH_TOKEN_EXPIRATION=2
-export JWT_PRIVATE_KEY=<your-private-key>
-export JWT_PUBLIC_KEY=<your-public-key>
-export MINIO_URL=http://localhost:9000
-export MINIO_USERNAME=minioadmin
-export MINIO_PASSWORD=minioadmin
+docker compose --env-file test.env up --build
+```
 
-./mvnw spring-boot:run
+```bash
+docker compose down
+```
 
+## Local Development
+
+```bash
+docker compose -f docker-compose-dev.yml up -d
+mvn spring-boot:run -Dspring-boot.run.profiles=dev
+```
+
+## Tests
+
+```bash
+mvn clean verify -Dspring.profiles.active=dev
+```
+
+Coverage report:
+
+```text
+target/site/jacoco/index.html
+```
+
+## CI
+
+GitHub Actions runs on pull requests to `develop` and `main`:
+
+- build
+- tests
+- JaCoCo coverage check
+- coverage report artifact
+
+## Repository
+
+```text
+https://github.com/Team-4185/phone-shop
 ```
