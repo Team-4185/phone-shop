@@ -56,6 +56,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ExtendWith(ContainerExtension.class)
 class AdminControllerTest {
     private static final String ADMIN_ROOT_URL = "/api/v1/admin";
+    private static final String ADMIN_SIDEBAR_COUNTERS_URL = "/api/v1/admin/sidebar-counters";
     private static final String ADMIN_PRODUCTS_URL = "/api/v1/admin/products";
     private static final String ADMIN_ORDERS_URL = "/api/v1/admin/orders";
     private static final String ADMIN_EMAIL = "admin.test@valid.com";
@@ -351,6 +352,41 @@ class AdminControllerTest {
                     .andExpect(jsonPath("$.sections[3].name").value("dashboard"))
                     .andExpect(jsonPath("$.sections[3].path").value("/api/v1/admin/dashboard"))
                     .andExpect(jsonPath("$.sections[3].implemented").value(true));
+        }
+    }
+
+    @Nested
+    @DisplayName("GET /api/v1/admin/sidebar-counters")
+    class GetAdminSidebarCountersTest {
+
+        @Test
+        void whenRequestMissingToken_thenStatus403() throws Exception {
+            mockMvc.perform(get(ADMIN_SIDEBAR_COUNTERS_URL)).andExpect(status().isForbidden());
+        }
+
+        @Test
+        void whenAuthenticatedUserHasNoAdminRole_thenStatus403() throws Exception {
+            mockMvc
+                    .perform(get(ADMIN_SIDEBAR_COUNTERS_URL).header(HttpHeaders.AUTHORIZATION, auth(userToken)))
+                    .andExpect(status().isForbidden());
+        }
+
+        @Test
+        void whenAuthenticatedUserIsAdmin_thenReturnSidebarCounters() throws Exception {
+            createOrder(OrderStatus.NEW, "100.00", 1);
+            createOrder(OrderStatus.CONFIRMED, "100.00", 1);
+            createOrder(OrderStatus.PROCESSING, "100.00", 1);
+            createOrder(OrderStatus.SHIPPED, "100.00", 1);
+            createOrder(OrderStatus.DELIVERED, "100.00", 1);
+            createOrder(OrderStatus.CANCELLED, "100.00", 1);
+
+            mockMvc
+                    .perform(get(ADMIN_SIDEBAR_COUNTERS_URL).header(HttpHeaders.AUTHORIZATION, auth(adminToken)))
+                    .andExpect(status().isOk())
+                    .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                    .andExpect(jsonPath("$.productsCount").value(1))
+                    .andExpect(jsonPath("$.ordersCount").value(4))
+                    .andExpect(jsonPath("$.customersCount").value(1));
         }
     }
 
