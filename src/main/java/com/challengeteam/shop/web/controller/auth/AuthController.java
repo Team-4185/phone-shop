@@ -1,4 +1,4 @@
-package com.challengeteam.shop.web.auth;
+package com.challengeteam.shop.web.controller.auth;
 
 import com.challengeteam.shop.dto.auth.ForgotPasswordRequestDto;
 import com.challengeteam.shop.dto.auth.ResetPasswordRequestDto;

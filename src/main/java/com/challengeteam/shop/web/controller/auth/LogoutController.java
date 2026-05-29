@@ -1,4 +1,4 @@
-package com.challengeteam.shop.web.auth;
+package com.challengeteam.shop.web.controller.auth;
 
 import com.challengeteam.shop.service.security.auth.logout.LogoutService;
 import com.challengeteam.shop.utility.web.headers.AccessTokenHeaderExtractor;
