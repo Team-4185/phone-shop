@@ -360,8 +360,8 @@ class AdminControllerTest {
     class GetAdminSidebarCountersTest {
 
         @Test
-        void whenRequestMissingToken_thenStatus403() throws Exception {
-            mockMvc.perform(get(ADMIN_SIDEBAR_COUNTERS_URL)).andExpect(status().isForbidden());
+        void whenRequestMissingToken_thenStatus401() throws Exception {
+            mockMvc.perform(get(ADMIN_SIDEBAR_COUNTERS_URL)).andExpect(status().isUnauthorized());
         }
 
         @Test
