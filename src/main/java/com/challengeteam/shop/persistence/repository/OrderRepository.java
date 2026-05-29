@@ -13,6 +13,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.Instant;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -60,6 +61,8 @@ public interface OrderRepository extends JpaRepository<Order, Long>, JpaSpecific
     long countByCreatedAtGreaterThanEqualAndCreatedAtLessThan(Instant start, Instant end);
 
     long countByStatus(OrderStatus status);
+
+    long countByStatusIn(Collection<OrderStatus> statuses);
 
     @Query(
             value =
