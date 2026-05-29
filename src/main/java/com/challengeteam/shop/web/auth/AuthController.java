@@ -118,7 +118,7 @@ public class AuthController {
         Cookie cookie = new Cookie("refreshToken", refreshToken);
         cookie.setHttpOnly(true);
         cookie.setSecure(false);
-        cookie.setPath("/api/auth");
+        cookie.setPath("/api");
         cookie.setMaxAge(maxAge);
         httpServletResponse.addCookie(cookie);
     }
