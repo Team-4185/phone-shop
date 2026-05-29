@@ -95,6 +95,8 @@ public class PhoneServiceImpl implements PhoneService {
                 .frontCamera(phoneCreateRequestDto.frontCamera())
                 .mainCamera(phoneCreateRequestDto.mainCamera())
                 .batteryCapacity(phoneCreateRequestDto.batteryCapacity())
+                .phoneColors(phoneCreateRequestDto.colors())
+                .storageCapacities(phoneCreateRequestDto.storageCapacities())
                 .build();
 
         var phone = Phone.builder()

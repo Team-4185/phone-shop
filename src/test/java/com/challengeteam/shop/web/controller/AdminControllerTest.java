@@ -44,8 +44,7 @@ import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.UUID;
+import java.util.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.containsString;
@@ -362,8 +361,8 @@ class AdminControllerTest {
     class GetAdminSidebarCountersTest {
 
         @Test
-        void whenRequestMissingToken_thenStatus403() throws Exception {
-            mockMvc.perform(get(ADMIN_SIDEBAR_COUNTERS_URL)).andExpect(status().isForbidden());
+        void whenRequestMissingToken_thenStatus401() throws Exception {
+            mockMvc.perform(get(ADMIN_SIDEBAR_COUNTERS_URL)).andExpect(status().isUnauthorized());
         }
 
         @Test
@@ -696,6 +695,7 @@ class AdminControllerTest {
                                     .header(HttpHeaders.AUTHORIZATION, auth(adminToken)))
                     .andExpect(status().isNotFound());
         }
+
         @Test
         void whenPickupOrderExists_thenReturnDetailsWithNullCustomerCity() throws Exception {
             Order order = createPickupOrder(OrderStatus.NEW, "799.99", 1);
@@ -712,6 +712,7 @@ class AdminControllerTest {
                     .andExpect(jsonPath("$.deliveryMethod").value("PICKUP"))
                     .andExpect(jsonPath("$.customerCity").doesNotExist());
         }
+
         private Order createPickupOrder(OrderStatus status, String total, int quantity) {
             Phone phone = findPhoneBySku("ADMIN-TEST-001");
             User customer =
@@ -781,6 +782,95 @@ class AdminControllerTest {
         }
     }
 
+    @Nested
+    @DisplayName("Admin create phone → checkout flow")
+// Cases:
+//   - admin creates phone with colors and storages → checkout with valid color+storage succeeds
+//   - admin creates phone → checkout with color not in phone's colors → 422
+//   - admin creates phone → checkout with storage not in phone's storages → 422
+    class AdminCreatePhoneCheckoutTest {
+
+        private static final String ORDER_URL = "/api/v1/orders";
+
+        @Test
+        void whenAdminCreatesPhone_thenCheckoutWithValidColorAndStorage_succeeds() throws Exception {
+            // admin creates phone with BLUE + CAPACITY_256GB
+            Phone phone = findPhoneBySku("ADMIN-TEST-001"); // already has BLUE, RED + CAPACITY_256GB, CAPACITY_512GB
+
+            String orderBody = objectMapper.writeValueAsString(Map.of(
+                    "customerEmail",       "customer@example.com",
+                    "customerFirstName",   "John",
+                    "customerLastName",    "Doe",
+                    "customerPhoneNumber", "+380991234567",
+                    "paymentMethod",       "CASH_ON_DELIVERY",
+                    "deliveryMethod",      "PICKUP",
+                    "items", List.of(Map.of(
+                            "phoneId",  phone.getId(),
+                            "quantity", 1,
+                            "color",    "BLUE",
+                            "storage",  "CAPACITY_256GB"
+                    ))
+            ));
+
+            mockMvc.perform(post(ORDER_URL)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(orderBody))
+                    .andExpect(status().isCreated())
+                    .andExpect(jsonPath("$.items[0].selectedColor").value("BLUE"))
+                    .andExpect(jsonPath("$.items[0].selectedStorage").value("CAPACITY_256GB"));
+        }
+
+        @Test
+        void whenAdminCreatesPhone_thenCheckoutWithColorNotInPhone_returns422() throws Exception {
+            Phone phone = findPhoneBySku("ADMIN-TEST-001"); // has BLUE, RED — not BLACK
+
+            String orderBody = objectMapper.writeValueAsString(Map.of(
+                    "customerEmail",       "customer@example.com",
+                    "customerFirstName",   "John",
+                    "customerLastName",    "Doe",
+                    "customerPhoneNumber", "+380991234567",
+                    "paymentMethod",       "CASH_ON_DELIVERY",
+                    "deliveryMethod",      "PICKUP",
+                    "items", List.of(Map.of(
+                            "phoneId",  phone.getId(),
+                            "quantity", 1,
+                            "color",    "BLACK", // not available
+                            "storage",  "CAPACITY_256GB"
+                    ))
+            ));
+
+            mockMvc.perform(post(ORDER_URL)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(orderBody))
+                    .andExpect(status().isUnprocessableEntity());
+        }
+
+        @Test
+        void whenAdminCreatesPhone_thenCheckoutWithStorageNotInPhone_returns422() throws Exception {
+            Phone phone = findPhoneBySku("ADMIN-TEST-001"); // has CAPACITY_256GB, CAPACITY_512GB — not CAPACITY_128GB
+
+            String orderBody = objectMapper.writeValueAsString(Map.of(
+                    "customerEmail",       "customer@example.com",
+                    "customerFirstName",   "John",
+                    "customerLastName",    "Doe",
+                    "customerPhoneNumber", "+380991234567",
+                    "paymentMethod",       "CASH_ON_DELIVERY",
+                    "deliveryMethod",      "PICKUP",
+                    "items", List.of(Map.of(
+                            "phoneId",  phone.getId(),
+                            "quantity", 1,
+                            "color",    "BLUE",
+                            "storage",  "CAPACITY_128GB" // not available
+                    ))
+            ));
+
+            mockMvc.perform(post(ORDER_URL)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(orderBody))
+                    .andExpect(status().isUnprocessableEntity());
+        }
+    }
+
     private String createAdminAccessToken() {
         Role adminRole =
                 roleRepository
@@ -817,7 +907,9 @@ class AdminControllerTest {
                 "6.5\"",
                 "12 MP",
                 "50 MP",
-                "4500 mAh");
+                "4500 mAh",
+                Set.of(PhoneColor.BLUE, PhoneColor.RED),
+                Set.of(StorageCapacity.CAPACITY_256GB, StorageCapacity.CAPACITY_512GB));
     }
 
     private static PhoneCreateRequestDto buildOtherPhoneCreateRequestDto() {
@@ -835,7 +927,9 @@ class AdminControllerTest {
                 "6.1\"",
                 "10 MP",
                 "30 MP",
-                "4000 mAh");
+                "4000 mAh",
+                Set.of(PhoneColor.BLUE, PhoneColor.RED),
+                Set.of(StorageCapacity.CAPACITY_256GB, StorageCapacity.CAPACITY_512GB));
     }
 
     private static PhoneCreateRequestDto buildMoreExpensivePhoneCreateRequestDto() {
@@ -853,7 +947,9 @@ class AdminControllerTest {
                 "6.8\"",
                 "16 MP",
                 "108 MP",
-                "5000 mAh");
+                "5000 mAh",
+                Set.of(PhoneColor.BLUE, PhoneColor.RED),
+                Set.of(StorageCapacity.CAPACITY_256GB, StorageCapacity.CAPACITY_512GB));
     }
 
     private AdminProductCreateRequestDto buildAdminProductCreateRequestDto(String name, String sku) {

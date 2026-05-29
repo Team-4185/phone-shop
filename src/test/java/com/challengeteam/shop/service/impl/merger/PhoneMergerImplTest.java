@@ -1,13 +1,12 @@
 package com.challengeteam.shop.service.impl.merger;
 
 import com.challengeteam.shop.dto.phone.request.PhoneUpdateRequestDto;
-import com.challengeteam.shop.entity.phone.Phone;
-import com.challengeteam.shop.entity.phone.PhoneCharacteristics;
-import com.challengeteam.shop.entity.phone.ProductStatus;
+import com.challengeteam.shop.entity.phone.*;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
+import java.util.Set;
 
 import static com.challengeteam.shop.service.impl.merger.PhoneMergerImplTest.TestResources.*;
 import static org.junit.jupiter.api.Assertions.*;
@@ -38,7 +37,9 @@ class PhoneMergerImplTest {
                     null,
                     null,
                     null,
-                    null
+                    null,
+                    COLORS,
+                    STORAGE_CAPACITY
             );
 
             // mockito
@@ -83,7 +84,9 @@ class PhoneMergerImplTest {
                     "  " + SAMSUNG_SCREEN_SIZE + "  ",
                     "  " + SAMSUNG_FRONT_CAMERA + "  ",
                     "  " + SAMSUNG_MAIN_CAMERA + "  ",
-                    "  " + SAMSUNG_BATTERY_CAPACITY + "  "
+                    "  " + SAMSUNG_BATTERY_CAPACITY + "  ",
+                    COLORS,
+                    STORAGE_CAPACITY
             );
 
             // when
@@ -124,7 +127,9 @@ class PhoneMergerImplTest {
                     null,
                     null,
                     null,
-                    null
+                    null,
+                    COLORS,
+                    STORAGE_CAPACITY
             );
 
             // when
@@ -142,6 +147,8 @@ class PhoneMergerImplTest {
                     "new iphone",
                     "new description",
                     BigDecimal.valueOf(1999.99),
+                    null,
+                    null,
                     null,
                     null,
                     null,
@@ -209,6 +216,8 @@ class PhoneMergerImplTest {
         public static final String SAMSUNG_FRONT_CAMERA = "12 MP";
         public static final String SAMSUNG_MAIN_CAMERA = "50 MP";
         public static final String SAMSUNG_BATTERY_CAPACITY = "4000 mAh";
+        public static final Set<PhoneColor> COLORS = Set.of(PhoneColor.BLUE, PhoneColor.GOLD);
+        public static final Set<StorageCapacity> STORAGE_CAPACITY = Set.of(StorageCapacity.CAPACITY_64GB, StorageCapacity.CAPACITY_128GB);
 
         public static final Long XIAOMI_ID = 3L;
         public static final String XIAOMI_NAME = "Xiaomi 14 Pro";
@@ -260,6 +269,8 @@ class PhoneMergerImplTest {
                                     .frontCamera(IPHONE_FRONT_CAMERA)
                                     .mainCamera(IPHONE_MAIN_CAMERA)
                                     .batteryCapacity(IPHONE_BATTERY_CAPACITY)
+                                    .phoneColors(COLORS)
+                                    .storageCapacities(STORAGE_CAPACITY)
                                     .build()
                     )
                     .build();
@@ -285,6 +296,8 @@ class PhoneMergerImplTest {
                                     .frontCamera(SAMSUNG_FRONT_CAMERA)
                                     .mainCamera(SAMSUNG_MAIN_CAMERA)
                                     .batteryCapacity(SAMSUNG_BATTERY_CAPACITY)
+                                    .phoneColors(COLORS)
+                                    .storageCapacities(STORAGE_CAPACITY)
                                     .build()
                     )
                     .build();
@@ -310,6 +323,8 @@ class PhoneMergerImplTest {
                                     .frontCamera(XIAOMI_FRONT_CAMERA)
                                     .mainCamera(XIAOMI_MAIN_CAMERA)
                                     .batteryCapacity(XIAOMI_BATTERY_CAPACITY)
+                                    .phoneColors(COLORS)
+                                    .storageCapacities(STORAGE_CAPACITY)
                                     .build()
                     )
                     .build();
@@ -335,6 +350,8 @@ class PhoneMergerImplTest {
                                     .frontCamera(GOOGLE_FRONT_CAMERA)
                                     .mainCamera(GOOGLE_MAIN_CAMERA)
                                     .batteryCapacity(GOOGLE_BATTERY_CAPACITY)
+                                    .phoneColors(COLORS)
+                                    .storageCapacities(STORAGE_CAPACITY)
                                     .build()
                     )
                     .build();

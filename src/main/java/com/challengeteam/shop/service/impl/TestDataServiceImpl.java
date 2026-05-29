@@ -3,7 +3,9 @@ package com.challengeteam.shop.service.impl;
 import com.challengeteam.shop.dto.phone.request.PhoneCreateRequestDto;
 import com.challengeteam.shop.dto.user.CreateUserDto;
 import com.challengeteam.shop.dto.user.UpdateProfileDto;
+import com.challengeteam.shop.entity.phone.PhoneColor;
 import com.challengeteam.shop.entity.phone.ProductStatus;
+import com.challengeteam.shop.entity.phone.StorageCapacity;
 import com.challengeteam.shop.entity.user.User;
 import com.challengeteam.shop.exceptionHandling.exception.CriticalSystemException;
 import com.challengeteam.shop.exceptionHandling.exception.InvalidAPIRequestException;
@@ -26,6 +28,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import java.util.Set;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -105,7 +108,7 @@ public class TestDataServiceImpl implements TestDataService {
 
         // report
         String createdPhonesData = concatToStrings(createdPhones);
-        log.info("Generated {} fake phones: {}",createdPhones.size(), createdPhonesData);
+        log.info("Generated {} fake phones: {}", createdPhones.size(), createdPhonesData);
 
         return createdPhones.size();
     }
@@ -243,13 +246,16 @@ public class TestDataServiceImpl implements TestDataService {
                         screenSize,
                         frontCamera,
                         mainCamera,
-                        batteryCapacity
+                        batteryCapacity,
+                        Set.of(PhoneColor.BLUE, PhoneColor.GOLD, PhoneColor.BLACK),
+                        Set.of(StorageCapacity.CAPACITY_64GB, StorageCapacity.CAPACITY_1TB, StorageCapacity.CAPACITY_128GB)
                 );
                 result.add(phone);
             }
 
             return result;
         }
+
 
         private String getRandomSku(PhoneBrand brand, int index) {
             return (brand.name() + "-" + (index + 1)).toUpperCase();

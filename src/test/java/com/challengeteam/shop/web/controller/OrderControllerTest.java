@@ -340,7 +340,7 @@ class OrderControllerTest {
             when(paymentMockService.pay(any(), any())).thenReturn(paid());
 
             Phone highStockPhone = phoneRepository.save(
-                    phone("Google Pixel 9", "Google", new BigDecimal("699.00"), 12, ProductStatus.LOW_STOCK));
+                    phone("Google Pixel 9", "Google", new BigDecimal("699.00"), 12, ProductStatus.IN_STOCK));
 
             mockMvc.perform(post(ORDER_URL)
                             .contentType(MediaType.APPLICATION_JSON)

@@ -5,9 +5,7 @@ import com.challengeteam.shop.dto.phone.request.PhoneCreateRequestDto;
 import com.challengeteam.shop.dto.phone.request.PhoneUpdateRequestDto;
 import com.challengeteam.shop.entity.image.Image;
 import com.challengeteam.shop.entity.image.MIMEType;
-import com.challengeteam.shop.entity.phone.Phone;
-import com.challengeteam.shop.entity.phone.PhoneCharacteristics;
-import com.challengeteam.shop.entity.phone.ProductStatus;
+import com.challengeteam.shop.entity.phone.*;
 import com.challengeteam.shop.exceptionHandling.exception.CriticalSystemException;
 import com.challengeteam.shop.exceptionHandling.exception.InvalidAPIRequestException;
 import com.challengeteam.shop.exceptionHandling.exception.ResourceNotFoundException;
@@ -33,6 +31,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.LongStream;
 
 import static com.challengeteam.shop.service.impl.PhoneServiceImplTest.TestResources.*;
@@ -42,11 +41,16 @@ import static org.mockito.ArgumentMatchers.any;
 
 @ExtendWith(MockitoExtension.class)
 class PhoneServiceImplTest {
-    @Mock private PhoneRepository phoneRepository;
-    @Mock private PhoneMerger phoneMerger;
-    @Mock private ImageService imageService;
-    @Mock private ImageRepository imageRepository;
-    @InjectMocks private PhoneServiceImpl phoneService;
+    @Mock
+    private PhoneRepository phoneRepository;
+    @Mock
+    private PhoneMerger phoneMerger;
+    @Mock
+    private ImageService imageService;
+    @Mock
+    private ImageRepository imageRepository;
+    @InjectMocks
+    private PhoneServiceImpl phoneService;
 
     @Nested
     class GetAllPhonesTest {
@@ -686,7 +690,9 @@ class PhoneServiceImplTest {
                     PHONE_SCREEN_SIZE,
                     PHONE_FRONT_CAMERA,
                     PHONE_MAIN_CAMERA,
-                    PHONE_BATTERY_CAPACITY
+                    PHONE_BATTERY_CAPACITY,
+                    NEW_COLORS,
+                    NEW_STORAGE_CAPACITY
             );
 
             Mockito.when(phoneRepository.save(any(Phone.class)))
@@ -793,7 +799,7 @@ class PhoneServiceImplTest {
         @Test
         void whenIdIsNull_thenThrowNullPointerException() {
             // when + then
-            assertThatThrownBy(() -> phoneService.update(null,  buildPhoneUpdateRequestDto()))
+            assertThatThrownBy(() -> phoneService.update(null, buildPhoneUpdateRequestDto()))
                     .isInstanceOf(NullPointerException.class);
         }
 
@@ -878,7 +884,7 @@ class PhoneServiceImplTest {
         @Test
         void whenParameterNewImageIsNull_thenThrowException() {
             // when + then
-            assertThatThrownBy(() -> phoneService.addImageToPhone(PHONE_ID,null))
+            assertThatThrownBy(() -> phoneService.addImageToPhone(PHONE_ID, null))
                     .isInstanceOf(NullPointerException.class);
         }
 
@@ -943,7 +949,7 @@ class PhoneServiceImplTest {
         void whenExistsButDoesntContainImage_thenThrowException() {
             // mockito
             Mockito.when(phoneRepository.existsPhoneByIdWithImage(PHONE_ID, IMAGE_ID))
-                        .thenReturn(false);
+                    .thenReturn(false);
 
             // when + then
             assertThatThrownBy(() -> phoneService.deletePhonesImageById(PHONE_ID, IMAGE_ID))
@@ -1014,6 +1020,10 @@ class PhoneServiceImplTest {
         public static final String PHONE_FRONT_CAMERA = "12 MP";
         public static final String PHONE_MAIN_CAMERA = "50-12 MP";
         public static final String PHONE_BATTERY_CAPACITY = "4500 mAh";
+        public static final Set<PhoneColor> COLORS = Set.of(
+                PhoneColor.RED, PhoneColor.GREEN, PhoneColor.YELLOW);
+        public static final Set<StorageCapacity> STORAGE_CAPACITY = Set.of(
+                StorageCapacity.CAPACITY_512GB, StorageCapacity.CAPACITY_1TB, StorageCapacity.CAPACITY_2TB);
 
         public static final String NEW_PHONE_NAME = "new_phone_name";
         public static final String NEW_PHONE_DESCRIPTION = "New phone description.";
@@ -1029,6 +1039,11 @@ class PhoneServiceImplTest {
         public static final String NEW_PHONE_FRONT_CAMERA = "16 MP";
         public static final String NEW_PHONE_MAIN_CAMERA = "50-50-12 MP";
         public static final String NEW_PHONE_BATTERY_CAPACITY = "5000 mAh";
+
+        public static final Set<PhoneColor> NEW_COLORS = Set.of(
+                PhoneColor.BLACK, PhoneColor.WHITE, PhoneColor.BLUE);
+        public static final Set<StorageCapacity> NEW_STORAGE_CAPACITY = Set.of(
+                StorageCapacity.CAPACITY_64GB, StorageCapacity.CAPACITY_128GB, StorageCapacity.CAPACITY_256GB, StorageCapacity.CAPACITY_512GB);
 
 
         static List<Phone> buildPhonesFromTo(long from, long to) {
@@ -1079,7 +1094,9 @@ class PhoneServiceImplTest {
                     PHONE_SCREEN_SIZE,
                     PHONE_FRONT_CAMERA,
                     PHONE_MAIN_CAMERA,
-                    PHONE_BATTERY_CAPACITY
+                    PHONE_BATTERY_CAPACITY,
+                    NEW_COLORS,
+                    NEW_STORAGE_CAPACITY
             );
         }
 
@@ -1098,7 +1115,10 @@ class PhoneServiceImplTest {
                     "  " + PHONE_SCREEN_SIZE + "  ",
                     "  " + PHONE_FRONT_CAMERA + "  ",
                     "  " + PHONE_MAIN_CAMERA + "  ",
-                    "  " + PHONE_BATTERY_CAPACITY + "  "
+                    "  " + PHONE_BATTERY_CAPACITY + "  ",
+                    COLORS,
+                    STORAGE_CAPACITY
+
             );
         }
 
@@ -1117,7 +1137,9 @@ class PhoneServiceImplTest {
                     NEW_PHONE_SCREEN_SIZE,
                     NEW_PHONE_FRONT_CAMERA,
                     NEW_PHONE_MAIN_CAMERA,
-                    NEW_PHONE_BATTERY_CAPACITY
+                    NEW_PHONE_BATTERY_CAPACITY,
+                    NEW_COLORS,
+                    NEW_STORAGE_CAPACITY
             );
         }
 
