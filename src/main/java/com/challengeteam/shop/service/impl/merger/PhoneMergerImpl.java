@@ -81,5 +81,15 @@ public class PhoneMergerImpl implements PhoneMerger {
         if (batteryCapacity != null) {
             phone.getPhoneCharacteristics().setBatteryCapacity(batteryCapacity.trim());
         }
+
+        if (phone.getPhoneCharacteristics().getPhoneColors() != null && !phone.getPhoneCharacteristics().getPhoneColors().containsAll(newPhone.colors())) {
+            phone.getPhoneCharacteristics().getPhoneColors().clear();
+            phone.getPhoneCharacteristics().getPhoneColors().addAll(newPhone.colors());
+        }
+
+        if (phone.getPhoneCharacteristics().getPhoneColors() != null && !phone.getPhoneCharacteristics().getStorageCapacities().containsAll(newPhone.storageCapacities())) {
+            phone.getPhoneCharacteristics().getStorageCapacities().clear();
+            phone.getPhoneCharacteristics().getStorageCapacities().addAll(newPhone.storageCapacities());
+        }
     }
 }
