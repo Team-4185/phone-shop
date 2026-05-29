@@ -4,13 +4,18 @@ import com.challengeteam.shop.dto.phone.request.PhoneUpdateRequestDto;
 import com.challengeteam.shop.entity.phone.*;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.Set;
 
 import static com.challengeteam.shop.service.impl.merger.PhoneMergerImplTest.TestResources.*;
 import static org.junit.jupiter.api.Assertions.*;
 
+@ExtendWith(MockitoExtension.class)
 class PhoneMergerImplTest {
     private final PhoneMergerImpl phoneMerger = new PhoneMergerImpl();
 
@@ -183,6 +188,192 @@ class PhoneMergerImplTest {
         }
     }
 
+    /**
+     * cases:
+     * if colors are null -> keep old colors
+     * if colors are empty -> keep old colors
+     * if colors are not empty -> merge new colors
+     */
+    @Nested
+    class MergePhoneColorsTest {
+
+        @Test
+        void whenColorsAreNull_thenKeepOldColors() {
+            Phone phone = getIphone();
+            var dto = new PhoneUpdateRequestDto(
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null
+            );
+
+            phoneMerger.mergePhone(phone, dto);
+
+            assertEquals(IPHONE_NAME, phone.getName());
+            assertEquals(COLORS, phone.getPhoneCharacteristics().getPhoneColors());
+        }
+
+        @Test
+        void whenColorsAreEmpty_thenKeepOldColors() {
+            Phone phone = getIphone();
+            var dto = new PhoneUpdateRequestDto(
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    Collections.emptySet(),
+                    null
+            );
+
+            phoneMerger.mergePhone(phone, dto);
+
+            assertEquals(IPHONE_NAME, phone.getName());
+            assertEquals(COLORS, phone.getPhoneCharacteristics().getPhoneColors());
+        }
+
+        @Test
+        void whenColorsAreNotEmpty_thenMergeNewColors() {
+            Phone phone = getIphone();
+            Set<PhoneColor> newColors = Set.of(PhoneColor.WHITE);
+
+            var dto = new PhoneUpdateRequestDto(
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    newColors,
+                    null
+            );
+
+            phoneMerger.mergePhone(phone, dto);
+
+            assertEquals(IPHONE_NAME, phone.getName());
+            assertEquals(newColors, phone.getPhoneCharacteristics().getPhoneColors());
+        }
+
+    }
+
+    /**
+     * cases:
+     * if storage capacities are null -> keep old storage capacities
+     * if storage capacities are empty -> keep old storage capacities
+     * if storage capacities are not empty -> merge new storage capacities
+     */
+    @Nested
+    class MergePhoneStorageCapacityTest {
+        @Test
+        void whenStorageCapacitiesAreNull_thenKeepOldStorageCapacities() {
+            Phone phone = getIphone();
+            var dto = new PhoneUpdateRequestDto(
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null
+            );
+            phoneMerger.mergePhone(phone, dto);
+            assertEquals(IPHONE_NAME, phone.getName());
+            assertEquals(STORAGE_CAPACITY, phone.getPhoneCharacteristics().getStorageCapacities());
+        }
+
+        @Test
+        void whenStorageCapacitiesAreEmpty_thenKeepOldStorageCapacities() {
+            Phone phone = getIphone();
+            var dto = new PhoneUpdateRequestDto(
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    Collections.emptySet()
+            );
+            phoneMerger.mergePhone(phone, dto);
+            assertEquals(IPHONE_NAME, phone.getName());
+            assertEquals(STORAGE_CAPACITY, phone.getPhoneCharacteristics().getStorageCapacities());
+        }
+
+        @Test
+        void whenStorageCapacitiesAreNotEmpty_thenMergeNewStorageCapacities() {
+            Phone phone = getIphone();
+            Set<StorageCapacity> newStorageCapacities = Set.of(StorageCapacity.CAPACITY_512GB, StorageCapacity.CAPACITY_1TB);
+            var dto = new PhoneUpdateRequestDto(
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    newStorageCapacities
+            );
+            phoneMerger.mergePhone(phone, dto);
+            assertEquals(IPHONE_NAME, phone.getName());
+            assertEquals(newStorageCapacities, phone.getPhoneCharacteristics().getStorageCapacities());
+        }
+    }
+
+
     static class TestResources {
 
         public static final Long IPHONE_ID = 1L;
@@ -216,8 +407,11 @@ class PhoneMergerImplTest {
         public static final String SAMSUNG_FRONT_CAMERA = "12 MP";
         public static final String SAMSUNG_MAIN_CAMERA = "50 MP";
         public static final String SAMSUNG_BATTERY_CAPACITY = "4000 mAh";
-        public static final Set<PhoneColor> COLORS = Set.of(PhoneColor.BLUE, PhoneColor.GOLD);
-        public static final Set<StorageCapacity> STORAGE_CAPACITY = Set.of(StorageCapacity.CAPACITY_64GB, StorageCapacity.CAPACITY_128GB);
+        public static final Set<PhoneColor> COLORS = new HashSet<>(
+                Set.of(PhoneColor.BLUE, PhoneColor.GOLD));
+
+        public static final Set<StorageCapacity> STORAGE_CAPACITY = new HashSet<>(
+                Set.of(StorageCapacity.CAPACITY_64GB, StorageCapacity.CAPACITY_128GB));
 
         public static final Long XIAOMI_ID = 3L;
         public static final String XIAOMI_NAME = "Xiaomi 14 Pro";
