@@ -122,9 +122,3 @@ GitHub Actions runs on pull requests to `develop` and `main`:
 - tests
 - JaCoCo coverage check
 - coverage report artifact
-
-## Repository
-
-```text
-https://github.com/Team-4185/phone-shop
-```
