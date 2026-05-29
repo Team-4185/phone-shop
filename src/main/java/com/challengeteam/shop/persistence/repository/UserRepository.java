@@ -25,4 +25,23 @@ public interface UserRepository extends JpaRepository<User, Long>, JpaSpecificat
     long countByRoleNameAndCreatedAtBetween(
             @Param("roleName") String roleName, @Param("start") Instant start, @Param("end") Instant end);
 
+    @Query(
+            """
+            SELECT COUNT(u)
+            FROM User u
+            WHERE u.role.name = :roleName
+              AND EXISTS (
+                  SELECT 1
+                  FROM CustomerOrder o
+                  WHERE o.user = u
+              )
+              AND NOT EXISTS (
+                  SELECT 1
+                  FROM CustomerOrder o
+                  WHERE o.user = u AND o.createdAt >= :activeSince
+              )
+            """)
+    long countInactiveCustomers(
+            @Param("roleName") String roleName, @Param("activeSince") Instant activeSince);
+
 }

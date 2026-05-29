@@ -2,6 +2,7 @@ package com.challengeteam.shop.service.admin.impl;
 
 import com.challengeteam.shop.dto.admin.customer.AdminCustomerDetailsResponseDto;
 import com.challengeteam.shop.dto.admin.customer.AdminCustomerFilterDto;
+import com.challengeteam.shop.dto.admin.customer.AdminCustomerKpiResponseDto;
 import com.challengeteam.shop.dto.admin.customer.AdminCustomerListItemResponseDto;
 import com.challengeteam.shop.entity.order.Order;
 import com.challengeteam.shop.entity.user.User;
@@ -14,6 +15,9 @@ import com.challengeteam.shop.service.admin.AdminCustomerService;
 import com.challengeteam.shop.service.admin.AdminCustomerStatusService;
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneOffset;
+import java.time.temporal.ChronoUnit;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -43,6 +47,8 @@ import org.springframework.transaction.annotation.Transactional;
 public class AdminCustomerServiceImpl implements AdminCustomerService {
 
   private static final int CUSTOMER_DETAILS_RECENT_ORDERS_LIMIT = 5;
+  private static final long ACTIVE_WINDOW_DAYS = 90;
+  private static final String CUSTOMER_ROLE = "USER";
 
   private final UserRepository userRepository;
   private final OrderRepository orderRepository;
@@ -87,12 +93,28 @@ public class AdminCustomerServiceImpl implements AdminCustomerService {
   }
 
   @Override
+  public AdminCustomerKpiResponseDto getCustomerKpi() {
+    log.debug("Get admin customer KPI cards");
+    LocalDate currentMonth = LocalDate.now(ZoneOffset.UTC).withDayOfMonth(1);
+    Instant currentMonthStart = currentMonth.atStartOfDay().toInstant(ZoneOffset.UTC);
+    Instant nextMonthStart = currentMonth.plusMonths(1).atStartOfDay().toInstant(ZoneOffset.UTC);
+    Instant activeSince = Instant.now().minus(ACTIVE_WINDOW_DAYS, ChronoUnit.DAYS);
+
+    return new AdminCustomerKpiResponseDto(
+        userRepository.countByRole_Name(CUSTOMER_ROLE),
+        userRepository.countByRoleNameAndCreatedAtBetween(
+            CUSTOMER_ROLE, currentMonthStart, nextMonthStart),
+        userRepository.countInactiveCustomers(CUSTOMER_ROLE, activeSince),
+        orderRepository.averageOrderTotal());
+  }
+
+  @Override
   public AdminCustomerDetailsResponseDto getCustomerById(Long id) {
     log.debug("Get admin customer details id={}", id);
     User customer =
         userRepository
             .findById(id)
-            .filter(user -> "USER".equals(user.getRole().getName()))
+            .filter(user -> CUSTOMER_ROLE.equals(user.getRole().getName()))
             .orElseThrow(
                 () -> {
                   log.warn("Admin customer id={} was not found", id);
