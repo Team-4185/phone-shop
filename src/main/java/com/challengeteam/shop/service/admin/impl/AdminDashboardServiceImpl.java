@@ -7,6 +7,7 @@ import com.challengeteam.shop.dto.admin.dashboard.AdminDashboardSalesPointRespon
 import com.challengeteam.shop.dto.admin.dashboard.AdminDashboardSalesPeriod;
 import com.challengeteam.shop.dto.admin.dashboard.AdminDashboardSummaryResponseDto;
 import com.challengeteam.shop.dto.admin.dashboard.AdminDashboardTopProductResponseDto;
+import com.challengeteam.shop.dto.image.ImageMetadataResponseDto;
 import com.challengeteam.shop.entity.order.OrderStatus;
 import com.challengeteam.shop.entity.phone.ProductStatus;
 import com.challengeteam.shop.entity.order.Order;
@@ -17,6 +18,7 @@ import com.challengeteam.shop.persistence.repository.UserRepository;
 import com.challengeteam.shop.service.admin.AdminDashboardService;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.net.URI;
 import java.sql.Date;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -27,6 +29,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 /** Default read-side service for admin Dashboard analytics. */
 @Service
@@ -141,15 +144,17 @@ public class AdminDashboardServiceImpl implements AdminDashboardService {
         .map(
             row ->
                 new AdminDashboardTopProductResponseDto(
-                    toNullableLong(row[0]),
-                    (String) row[1],
-                    (String) row[2],
-                    toLong(row[3]),
-                    toBigDecimal(row[4]),
-                    toNullableInteger(row[5]),
-                    toNullableProductStatus(row[6]),
-                    null))
-        .toList();
+                     toNullableLong(row[0]),
+                     (String) row[1],
+                     (String) row[2],
+                     (String) row[3],
+                     toLong(row[4]),
+                     toBigDecimal(row[5]),
+                     toNullableInteger(row[6]),
+                     toNullableProductStatus(row[7]),
+                     null,
+                     toPreviewImage(row[8], row[9], row[10], row[11])))
+         .toList();
   }
 
   @Override
@@ -201,6 +206,27 @@ public class AdminDashboardServiceImpl implements AdminDashboardService {
 
   private ProductStatus toNullableProductStatus(Object value) {
     return value == null ? null : ProductStatus.valueOf(value.toString());
+  }
+
+  private ImageMetadataResponseDto toPreviewImage(
+      Object id, Object name, Object size, Object mimeType) {
+    if (id == null) {
+      return null;
+    }
+
+    Long imageId = toLong(id);
+    URI uri =
+        ServletUriComponentsBuilder.fromCurrentContextPath()
+            .path("/api/v1/images/{id}")
+            .buildAndExpand(imageId)
+            .toUri();
+
+    return new ImageMetadataResponseDto(
+        imageId,
+        (String) name,
+        uri.toString(),
+        toLong(size),
+        (String) mimeType);
   }
 
   private BigDecimal calculateChangePercent(long current, long previous) {
