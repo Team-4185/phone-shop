@@ -32,14 +32,39 @@
 
 ## Architecture
 
-```text
-Client
-  -> REST Controllers
-  -> Services
-  -> Validators / Mappers
-  -> Repositories / Storage Adapters
-  -> PostgreSQL / MinIO / SMTP
+```mermaid
+flowchart LR
+    Client[Web / Mobile Client]
+    Admin[Admin Client]
+
+    API[Gadget Room Backend<br/>Spring Boot REST API]
+    Auth[JWT Security<br/>Access / Refresh / Reset Tokens]
+    Domain[Domain Services<br/>Catalog / Cart / Orders / Admin]
+    Validation[Validation Layer<br/>DTOs / Custom Validators]
+    Persistence[Persistence Layer<br/>JPA Repositories / Specifications]
+    Storage[Image Storage Adapter<br/>MinIO Client]
+    Mail[Notification Adapter<br/>SMTP / Thymeleaf]
+
+    DB[(PostgreSQL<br/>Flyway-managed schema)]
+    MinIO[(MinIO<br/>Product images)]
+    SMTP[(SMTP Provider<br/>Order emails)]
+    Docs[OpenAPI / Swagger UI]
+
+    Client --> API
+    Admin --> API
+    API --> Auth
+    API --> Domain
+    API --> Docs
+    Domain --> Validation
+    Domain --> Persistence
+    Domain --> Storage
+    Domain --> Mail
+    Persistence --> DB
+    Storage --> MinIO
+    Mail --> SMTP
 ```
+
+Detailed architecture notes: [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)
 
 ## Main API Areas
 
