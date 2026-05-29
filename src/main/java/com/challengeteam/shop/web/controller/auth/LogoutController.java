@@ -36,7 +36,7 @@ public class LogoutController {
         Cookie cookie = new Cookie("refreshToken", "");
         cookie.setHttpOnly(true);
         cookie.setSecure(false);
-        cookie.setPath("/api/auth");
+        cookie.setPath("/api");
         cookie.setMaxAge(0);
         response.addCookie(cookie);
     }
