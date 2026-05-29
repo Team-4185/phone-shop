@@ -77,7 +77,7 @@ public class JwtAuthorizationServiceImpl implements JwtAuthorizationService {
 
         if (jwtService.isValid(refreshToken)) {
             if (tokenRevocationService.isRevoked(refreshToken)) {
-                throw new AccessDeniedException("User already logged out.");
+                throw new InvalidTokenException("User already logged out.");
             }
             String email = jwtService.getEmailFromToken(refreshToken);
             User user = userService
