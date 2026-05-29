@@ -689,7 +689,7 @@ class OrderControllerTest {
 
         @Test
         @DisplayName("No auth → 401")
-        void noAuth_returns401() throws Exception {
+        void noAuth_returns403() throws Exception {
             mockMvc.perform(get(ORDER_URL + "/{id}", 1L))
                     .andExpect(status().isUnauthorized());
         }
