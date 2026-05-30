@@ -62,8 +62,10 @@ public record PhoneUpdateRequestDto(
         @Size(max = 10, message = "Battery capacity must be at most {max} characters long")
         String batteryCapacity,
 
+        @Size(min = 1, message = "At least one color must be selected")
         Set<PhoneColor> colors,
 
+        @Size(min = 1, message = "At least one storage capacity must be selected")
         Set<StorageCapacity> storageCapacities
 ) {
 }

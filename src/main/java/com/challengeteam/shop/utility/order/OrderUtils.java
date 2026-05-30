@@ -6,6 +6,7 @@ import com.challengeteam.shop.entity.phone.PhoneColor;
 import com.challengeteam.shop.entity.phone.ProductStatus;
 import com.challengeteam.shop.entity.phone.StorageCapacity;
 import com.challengeteam.shop.exceptionHandling.exception.order.OrderCreationException;
+import com.challengeteam.shop.utility.ProductStatusResolver;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 
@@ -72,11 +73,7 @@ public class OrderUtils {
      * Updates the stock level of a phone after an order is placed.
      * <p>
      * Decreases the phone's stock by the ordered quantity and updates the product status
-     * based on the remaining stock:
-     * <ul>
-     *   <li>If remaining stock is 0, sets status to {@link ProductStatus#OUT_OF_STOCK}</li>
-     *   <li>If remaining stock is 5 or less, sets status to {@link ProductStatus#LOW_STOCK}</li>
-     * </ul>
+     * based on the shared {@link ProductStatusResolver} rules.
      * </p>
      *
      * @param phone           the {@link Phone} entity whose stock needs to be updated
@@ -85,14 +82,10 @@ public class OrderUtils {
     public static void updatePhoneStock(Phone phone, int orderedQuantity) {
         int remainingStock = phone.getStock() - orderedQuantity;
         phone.setStock(remainingStock);
-        log.info("Updated phone stock for phone: {} with remaining stock: {}", phone.getId(), remainingStock);
-        if (remainingStock == 0) {
-            log.info("Phone {} is out of stock", phone.getId());
-            phone.setStatus(ProductStatus.OUT_OF_STOCK);
-        } else if (remainingStock <= 5) {
-            log.info("Phone {} is low on stock", phone.getId());
-            phone.setStatus(ProductStatus.LOW_STOCK);
-        }
+        ProductStatus status = ProductStatusResolver.resolve(remainingStock);
+        phone.setStatus(status);
+        log.info("Updated phone stock for phone: {} with remaining stock: {} and status: {}",
+                phone.getId(), remainingStock, status);
     }
 
     public static void checkIfColorAndStorageAvailable(
