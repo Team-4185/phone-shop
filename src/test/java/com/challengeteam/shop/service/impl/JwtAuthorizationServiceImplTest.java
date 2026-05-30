@@ -1,16 +1,18 @@
 package com.challengeteam.shop.service.impl;
 
-import com.challengeteam.shop.dto.jwt.JwtResponseDto;
-import com.challengeteam.shop.dto.user.CreateUserDto;
 import com.challengeteam.shop.dto.auth.UserLoginRequestDto;
 import com.challengeteam.shop.dto.auth.UserRegisterRequestDto;
+import com.challengeteam.shop.dto.security.jwt.JwtResponseDto;
+import com.challengeteam.shop.dto.user.CreateUserDto;
 import com.challengeteam.shop.entity.user.User;
-import com.challengeteam.shop.exceptionHandling.exception.EmailOrPasswordWrongException;
 import com.challengeteam.shop.exceptionHandling.exception.InvalidAPIRequestException;
-import com.challengeteam.shop.exceptionHandling.exception.InvalidTokenException;
 import com.challengeteam.shop.exceptionHandling.exception.ResourceNotFoundException;
-import com.challengeteam.shop.service.JwtService;
+import com.challengeteam.shop.exceptionHandling.exception.security.EmailOrPasswordWrongException;
+import com.challengeteam.shop.exceptionHandling.exception.security.InvalidTokenException;
 import com.challengeteam.shop.service.UserService;
+import com.challengeteam.shop.service.security.auth.authorization.JwtAuthorizationServiceImpl;
+import com.challengeteam.shop.service.security.auth.jwt.JwtService;
+import com.challengeteam.shop.service.security.auth.logout.blackListTokenCache.TokenRevocationService;
 import com.challengeteam.shop.testData.user.UserTestData;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -38,6 +40,9 @@ public class JwtAuthorizationServiceImplTest {
 
     @Mock
     private AuthenticationManager authenticationManager;
+
+    @Mock
+    private TokenRevocationService tokenRevocationService;
 
     @InjectMocks
     private JwtAuthorizationServiceImpl jwtAuthorizationService;
@@ -200,6 +205,8 @@ public class JwtAuthorizationServiceImplTest {
                     .thenReturn(Optional.of(jeremy));
             Mockito.when(jwtService.refreshTokens(TestResources.REFRESH_TOKEN, jeremy))
                     .thenReturn(jwtResponseDto);
+            Mockito.when(tokenRevocationService.isRevoked(TestResources.REFRESH_TOKEN))
+                    .thenReturn(false);
 
             // when
             JwtResponseDto result = jwtAuthorizationService.refresh(TestResources.REFRESH_TOKEN);
@@ -248,6 +255,8 @@ public class JwtAuthorizationServiceImplTest {
                     .thenReturn(TestResources.USER_EMAIL);
             Mockito.when(userService.getByEmail(TestResources.USER_EMAIL))
                     .thenReturn(Optional.empty());
+            Mockito.when(tokenRevocationService.isRevoked(TestResources.REFRESH_TOKEN))
+                    .thenReturn(false);
 
             // when + then
             assertThrows(ResourceNotFoundException.class, () -> jwtAuthorizationService.refresh(TestResources.REFRESH_TOKEN));

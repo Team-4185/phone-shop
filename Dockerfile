@@ -4,11 +4,11 @@ FROM maven:3.9.6-eclipse-temurin-21 AS builder
 WORKDIR /app
 
 COPY pom.xml .
-RUN mvn dependency:go-offline -P prod
+RUN mvn dependency:go-offline -P dev
 
 COPY src ./src
 
-RUN mvn clean package -DskipTests -P prod
+RUN mvn clean package -DskipTests -P dev
 
 # Stage 2: Execute
 # Використовуємо офіційний образ amazoncorretto
@@ -23,4 +23,4 @@ COPY --from=builder /app/target/*.jar app.jar
 EXPOSE 8080
 
 # Команда для запуску додатку
-CMD ["java", "-jar", "app.jar", "--spring.profiles.active=prod"]
+CMD ["java", "-jar", "app.jar", "--spring.profiles.active=dev"]

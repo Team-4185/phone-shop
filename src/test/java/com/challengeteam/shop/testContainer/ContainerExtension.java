@@ -2,6 +2,7 @@ package com.challengeteam.shop.testContainer;
 
 import com.challengeteam.shop.testContainer.container.MinioContainer;
 import com.challengeteam.shop.testContainer.container.PostgresContainer;
+import com.challengeteam.shop.testContainer.container.RedisContainer;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.extension.BeforeAllCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
@@ -14,6 +15,6 @@ public class ContainerExtension implements BeforeAllCallback {
         log.info("Initialization test containers..");
         PostgresContainer.init();
         MinioContainer.init();
+        RedisContainer.init();
     }
-
 }

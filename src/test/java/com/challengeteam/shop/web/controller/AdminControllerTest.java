@@ -18,8 +18,8 @@ import com.challengeteam.shop.entity.phone.ProductStatus;
 import com.challengeteam.shop.entity.user.Role;
 import com.challengeteam.shop.entity.user.User;
 import com.challengeteam.shop.persistence.repository.*;
-import com.challengeteam.shop.service.JwtService;
 import com.challengeteam.shop.service.PhoneService;
+import com.challengeteam.shop.service.security.auth.jwt.JwtService;
 import com.challengeteam.shop.testContainer.ContainerExtension;
 import com.challengeteam.shop.testContainer.TestContextConfigurator;
 import com.challengeteam.shop.web.TestAuthHelper;
@@ -321,8 +321,8 @@ class AdminControllerTest {
     class GetAdminEntryPointTest {
 
         @Test
-        void whenRequestMissingToken_thenStatus403() throws Exception {
-            mockMvc.perform(get(ADMIN_ROOT_URL)).andExpect(status().isForbidden());
+        void whenRequestMissingToken_thenStatus401() throws Exception {
+            mockMvc.perform(get(ADMIN_ROOT_URL)).andExpect(status().isUnauthorized());
         }
 
         @Test
@@ -360,8 +360,8 @@ class AdminControllerTest {
     class GetAdminSidebarCountersTest {
 
         @Test
-        void whenRequestMissingToken_thenStatus403() throws Exception {
-            mockMvc.perform(get(ADMIN_SIDEBAR_COUNTERS_URL)).andExpect(status().isForbidden());
+        void whenRequestMissingToken_thenStatus401() throws Exception {
+            mockMvc.perform(get(ADMIN_SIDEBAR_COUNTERS_URL)).andExpect(status().isUnauthorized());
         }
 
         @Test

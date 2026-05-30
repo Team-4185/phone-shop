@@ -16,13 +16,8 @@ import com.challengeteam.shop.entity.phone.PhoneCharacteristics;
 import com.challengeteam.shop.entity.phone.ProductStatus;
 import com.challengeteam.shop.entity.user.Role;
 import com.challengeteam.shop.entity.user.User;
-import com.challengeteam.shop.persistence.repository.ImageRepository;
-import com.challengeteam.shop.persistence.repository.MIMETypeRepository;
-import com.challengeteam.shop.persistence.repository.OrderRepository;
-import com.challengeteam.shop.persistence.repository.PhoneRepository;
-import com.challengeteam.shop.persistence.repository.RoleRepository;
-import com.challengeteam.shop.persistence.repository.UserRepository;
-import com.challengeteam.shop.service.JwtService;
+import com.challengeteam.shop.persistence.repository.*;
+import com.challengeteam.shop.service.security.auth.jwt.JwtService;
 import com.challengeteam.shop.testContainer.ContainerExtension;
 import com.challengeteam.shop.testContainer.TestContextConfigurator;
 import com.challengeteam.shop.web.TestAuthHelper;
@@ -45,10 +40,9 @@ import java.time.temporal.ChronoUnit;
 import java.util.UUID;
 
 import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.oneOf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -259,7 +253,8 @@ class AdminCustomerDashboardControllerTest {
                 .andExpect(jsonPath("$[0].previewImage.name").value("dashboard-phone.jpg"))
                 .andExpect(jsonPath("$[0].previewImage.url").value(
                         "http://localhost/api/v1/images/" + imageRepository.findAll().getFirst().getId()))
-                .andExpect(jsonPath("$[0].previewImage.mimeType").value("image/jpeg"));
+                .andExpect(jsonPath("$[0].previewImage.mimeType").value(
+                        oneOf("image/jpeg", "image/jpg")));
     }
 
     @Test

@@ -7,6 +7,8 @@ services:
       POSTGRES_PASSWORD: post
     ports:
       - "5432:5432"
+    tmpfs:
+      - /var/lib/postgresql/data
 
   minio:
     image: minio/minio
@@ -17,3 +19,9 @@ services:
       MINIO_ROOT_USER: minioadmin
       MINIO_ROOT_PASSWORD: minioadmin
     command: server /data --console-address ":9001"
+
+  redis:
+    image: redis:latest
+    ports:
+      - '6379:6379'
+    restart: unless-stopped

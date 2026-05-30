@@ -2,14 +2,14 @@ package com.challengeteam.shop.service.impl;
 
 import com.challengeteam.shop.entity.token.PasswordResetToken;
 import com.challengeteam.shop.entity.user.User;
-import com.challengeteam.shop.exceptionHandling.exception.InvalidTokenException;
 import com.challengeteam.shop.exceptionHandling.exception.ResourceNotFoundException;
+import com.challengeteam.shop.exceptionHandling.exception.security.InvalidTokenException;
 import com.challengeteam.shop.persistence.repository.PasswordResetTokenRepository;
 import com.challengeteam.shop.persistence.repository.UserRepository;
 import com.challengeteam.shop.properties.JwtProperties;
 import com.challengeteam.shop.service.EmailService;
-import com.challengeteam.shop.service.JwtService;
 import com.challengeteam.shop.service.PasswordResetService;
+import com.challengeteam.shop.service.security.auth.jwt.JwtService;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.springframework.beans.factory.annotation.Value;

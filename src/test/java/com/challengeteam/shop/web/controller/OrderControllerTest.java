@@ -318,7 +318,7 @@ class OrderControllerTest {
             when(paymentMockService.pay(any(), any())).thenReturn(paid());
 
             Phone highStockPhone = phoneRepository.save(
-                    phone("Google Pixel 9", "Google", new BigDecimal("699.00"), 12, ProductStatus.LOW_STOCK));
+                    phone("Google Pixel 9", "Google", new BigDecimal("699.00"), 12, ProductStatus.IN_STOCK));
 
             mockMvc.perform(post(ORDER_URL)
                             .contentType(MediaType.APPLICATION_JSON)
@@ -616,10 +616,10 @@ class OrderControllerTest {
         }
 
         @Test
-        @DisplayName("Unauthenticated request → 403")
+        @DisplayName("Unauthenticated request → 401")
         void unauthenticatedRequest_returns401() throws Exception {
             mockMvc.perform(get(ORDER_URL + "/my"))
-                    .andExpect(status().isForbidden());
+                    .andExpect(status().isUnauthorized());
         }
 
         @Test
@@ -688,10 +688,10 @@ class OrderControllerTest {
         }
 
         @Test
-        @DisplayName("No auth → 403")
+        @DisplayName("No auth → 401")
         void noAuth_returns403() throws Exception {
             mockMvc.perform(get(ORDER_URL + "/{id}", 1L))
-                    .andExpect(status().isForbidden());
+                    .andExpect(status().isUnauthorized());
         }
 
         @Test

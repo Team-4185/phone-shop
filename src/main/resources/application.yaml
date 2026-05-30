@@ -5,5 +5,3 @@ spring:
   jackson:
     deserialization:
       accept-float-as-int: false
-  flyway:
-    enabled: true
