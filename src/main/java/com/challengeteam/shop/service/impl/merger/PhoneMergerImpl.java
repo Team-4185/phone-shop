@@ -1,19 +1,23 @@
 package com.challengeteam.shop.service.impl.merger;
 
-import com.challengeteam.shop.dto.phone.PhoneUpdateRequestDto;
+import com.challengeteam.shop.dto.phone.request.PhoneUpdateRequestDto;
 import com.challengeteam.shop.entity.phone.Phone;
+import com.challengeteam.shop.entity.phone.PhoneColor;
+import com.challengeteam.shop.entity.phone.StorageCapacity;
+import com.challengeteam.shop.utility.ProductStatusResolver;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
 import java.util.Objects;
+import java.util.Set;
 
 @Component
 public class PhoneMergerImpl implements PhoneMerger {
 
     @Override
     public void mergePhone(Phone phone, PhoneUpdateRequestDto newPhone) {
-        Objects.requireNonNull(phone,"phone");
-        Objects.requireNonNull(newPhone,"newPhone");
+        Objects.requireNonNull(phone, "phone");
+        Objects.requireNonNull(newPhone, "newPhone");
 
         String newName = newPhone.name();
         if (newName != null) {
@@ -38,6 +42,17 @@ public class PhoneMergerImpl implements PhoneMerger {
         Integer newReleaseYear = newPhone.releaseYear();
         if (newReleaseYear != null) {
             phone.setReleaseYear(newReleaseYear);
+        }
+
+        String newSku = newPhone.sku();
+        if (newSku != null) {
+            phone.setSku(newSku.trim().toUpperCase());
+        }
+
+        Integer newStock = newPhone.stock();
+        if (newStock != null) {
+            phone.setStock(newStock);
+            phone.setStatus(ProductStatusResolver.resolve(newStock));
         }
 
         String cpu = newPhone.cpu();
@@ -69,6 +84,21 @@ public class PhoneMergerImpl implements PhoneMerger {
         if (batteryCapacity != null) {
             phone.getPhoneCharacteristics().setBatteryCapacity(batteryCapacity.trim());
         }
-    }
 
+        Set<PhoneColor> newColors = newPhone.colors();
+        if (newColors != null && !newColors.isEmpty()) {
+            if (!phone.getPhoneCharacteristics().getPhoneColors().equals(newColors)) {
+                phone.getPhoneCharacteristics().getPhoneColors().clear();
+                phone.getPhoneCharacteristics().getPhoneColors().addAll(newColors);
+            }
+        }
+
+        Set<StorageCapacity> newStorageCapacities = newPhone.storageCapacities();
+        if (newStorageCapacities != null && !newStorageCapacities.isEmpty()) {
+            if (!phone.getPhoneCharacteristics().getStorageCapacities().equals(newStorageCapacities)) {
+                phone.getPhoneCharacteristics().getStorageCapacities().clear(); // ← исправлено
+                phone.getPhoneCharacteristics().getStorageCapacities().addAll(newStorageCapacities);
+            }
+        }
+    }
 }

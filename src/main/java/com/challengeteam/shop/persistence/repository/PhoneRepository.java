@@ -16,6 +16,10 @@ import java.util.Optional;
 @Repository
 public interface PhoneRepository extends JpaRepository<Phone, Long>, JpaSpecificationExecutor<Phone> {
 
+    boolean existsBySku(String sku);
+
+    boolean existsBySkuAndIdNot(String sku, Long id);
+
     @Query(value = """
             SELECT EXISTS(
                   SELECT 1
@@ -27,5 +31,16 @@ public interface PhoneRepository extends JpaRepository<Phone, Long>, JpaSpecific
 
     @Query("SELECT p FROM Phone p LEFT JOIN FETCH p.images WHERE p.id = :id")
     Optional<Phone> findByIdWithImages(@Param("id") Long id);
+
+    @Query("SELECT p FROM Phone p LEFT JOIN FETCH p.images WHERE p IN :phones")
+    List<Phone> findAllWithImages(@Param("phones") List<Phone> phones);
+
+    @Query("SELECT p FROM Phone p WHERE p.stock <= :threshold ORDER BY p.stock ASC, p.name ASC")
+    List<Phone> findLowStockProducts(@Param("threshold") int threshold, org.springframework.data.domain.Pageable pageable);
+
+    long countByStockLessThanEqual(Integer threshold);
+
+    @Query("SELECT COALESCE(SUM(p.stock), 0) FROM Phone p")
+    Long sumStock();
 
 }

@@ -4,6 +4,7 @@ import com.challengeteam.shop.dto.cart.CartItemAddRequestDto;
 import com.challengeteam.shop.dto.cart.CartItemRemoveRequestDto;
 import com.challengeteam.shop.entity.phone.Phone;
 import com.challengeteam.shop.entity.phone.PhoneCharacteristics;
+import com.challengeteam.shop.entity.phone.ProductStatus;
 import com.challengeteam.shop.persistence.repository.CartRepository;
 import com.challengeteam.shop.persistence.repository.PhoneRepository;
 import com.challengeteam.shop.service.UserCartService;
@@ -85,6 +86,9 @@ class UserCartControllerTest {
         phone.setPrice(testPhone.price);
         phone.setBrand(testPhone.brand);
         phone.setReleaseYear(testPhone.releaseYear);
+        phone.setSku(buildSku(testPhone));
+        phone.setStock(10);
+        phone.setStatus(ProductStatus.IN_STOCK);
         phone.setPhoneCharacteristics(
                 PhoneCharacteristics.builder()
                         .cpu(testPhone.cpu)
@@ -96,6 +100,10 @@ class UserCartControllerTest {
                         .build()
         );
         return phoneRepository.save(phone).getId();
+    }
+
+    private String buildSku(TestPhone testPhone) {
+        return ("SKU-" + testPhone.name()).replace('_', '-');
     }
 
     @Nested
@@ -149,16 +157,16 @@ class UserCartControllerTest {
         }
 
         @Test
-        void whenRequestMissingToken_thenStatus403() throws Exception {
+        void whenRequestMissingToken_thenStatus401() throws Exception {
             mockMvc.perform(get(URL))
-                    .andExpect(status().isForbidden());
+                    .andExpect(status().isUnauthorized());
         }
 
         @Test
-        void whenRequestHasInvalidToken_thenStatus403() throws Exception {
+        void whenRequestHasInvalidToken_thenStatus401() throws Exception {
             mockMvc.perform(get(URL)
                             .header(HttpHeaders.AUTHORIZATION, auth("some_invalid_text")))
-                    .andExpect(status().isForbidden());
+                    .andExpect(status().isUnauthorized());
         }
     }
 
@@ -262,24 +270,24 @@ class UserCartControllerTest {
         }
 
         @Test
-        void whenRequestMissingToken_thenStatus403() throws Exception {
+        void whenRequestMissingToken_thenStatus401() throws Exception {
             CartItemAddRequestDto request = buildCartItemAddRequestDto(phoneId1, VALID_CART_ITEM.amount);
 
             mockMvc.perform(post(URL)
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
-                    .andExpect(status().isForbidden());
+                    .andExpect(status().isUnauthorized());
         }
 
         @Test
-        void whenRequestHasInvalidToken_thenStatus403() throws Exception {
+        void whenRequestHasInvalidToken_thenStatus401() throws Exception {
             CartItemAddRequestDto request = buildCartItemAddRequestDto(phoneId1, VALID_CART_ITEM.amount);
 
             mockMvc.perform(post(URL)
                             .header(HttpHeaders.AUTHORIZATION, auth("some_invalid_text"))
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
-                    .andExpect(status().isForbidden());
+                    .andExpect(status().isUnauthorized());
         }
 
         // Validation tests
@@ -429,24 +437,24 @@ class UserCartControllerTest {
         }
 
         @Test
-        void whenRequestMissingToken_thenStatus403() throws Exception {
+        void whenRequestMissingToken_thenStatus401() throws Exception {
             CartItemRemoveRequestDto request = buildCartItemRemoveRequestDto(phoneId1, VALID_CART_ITEM.amount);
 
             mockMvc.perform(post(URL)
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
-                    .andExpect(status().isForbidden());
+                    .andExpect(status().isUnauthorized());
         }
 
         @Test
-        void whenRequestHasInvalidToken_thenStatus403() throws Exception {
+        void whenRequestHasInvalidToken_thenStatus401() throws Exception {
             CartItemRemoveRequestDto request = buildCartItemRemoveRequestDto(phoneId1, VALID_CART_ITEM.amount);
 
             mockMvc.perform(post(URL)
                             .header(HttpHeaders.AUTHORIZATION, auth("some_invalid_text"))
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
-                    .andExpect(status().isForbidden());
+                    .andExpect(status().isUnauthorized());
         }
 
         // Validation tests
@@ -578,16 +586,16 @@ class UserCartControllerTest {
         }
 
         @Test
-        void whenRequestMissingToken_thenStatus403() throws Exception {
+        void whenRequestMissingToken_thenStatus401() throws Exception {
             mockMvc.perform(post(URL))
-                    .andExpect(status().isForbidden());
+                    .andExpect(status().isUnauthorized());
         }
 
         @Test
-        void whenRequestHasInvalidToken_thenStatus403() throws Exception {
+        void whenRequestHasInvalidToken_thenStatus401() throws Exception {
             mockMvc.perform(post(URL)
                             .header(HttpHeaders.AUTHORIZATION, auth("some_invalid_text")))
-                    .andExpect(status().isForbidden());
+                    .andExpect(status().isUnauthorized());
         }
     }
 

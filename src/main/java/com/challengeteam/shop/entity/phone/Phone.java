@@ -3,7 +3,10 @@ package com.challengeteam.shop.entity.phone;
 import com.challengeteam.shop.entity.BaseEntity;
 import com.challengeteam.shop.entity.image.Image;
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 
 import java.math.BigDecimal;
@@ -15,7 +18,10 @@ import java.util.List;
 @NoArgsConstructor
 @SuperBuilder
 @Entity
-@Table(name = "phones")
+@Table(
+        name = "phones",
+        uniqueConstraints = @UniqueConstraint(name = "uk_phones_sku", columnNames = "sku")
+)
 public class Phone extends BaseEntity {
 
     @Column(nullable = false)
@@ -33,6 +39,16 @@ public class Phone extends BaseEntity {
     @Column(nullable = false)
     private Integer releaseYear;
 
+    @Column(nullable = false)
+    private String sku;
+
+    @Column(nullable = false)
+    private Integer stock;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private ProductStatus status;
+
     @Embedded
     private PhoneCharacteristics phoneCharacteristics;
 
@@ -45,8 +61,11 @@ public class Phone extends BaseEntity {
                 "name='" + name + '\'' +
                 ", description='" + description + '\'' +
                 ", price='" + price + '\'' +
-                ", brand='" + brand + '\'' +
+                ", brandName='" + brand + '\'' +
                 ", releaseYear='" + releaseYear + '\'' +
+                ", sku='" + sku + '\'' +
+                ", stock='" + stock +
+                ", status='" + status +
                 ", phoneCharacteristics='" + phoneCharacteristics + '\'' +
                 "} " + super.toString();
     }

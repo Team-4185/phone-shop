@@ -2,6 +2,14 @@ package com.challengeteam.shop.exceptionHandling;
 
 import com.challengeteam.shop.dto.validation.ValidationDetailsDto;
 import com.challengeteam.shop.exceptionHandling.exception.*;
+import com.challengeteam.shop.exceptionHandling.exception.order.InvalidOrderStatusTransitionException;
+import com.challengeteam.shop.exceptionHandling.exception.order.OrderCreationException;
+import com.challengeteam.shop.exceptionHandling.exception.order.OrderNotFoundException;
+import com.challengeteam.shop.exceptionHandling.exception.order.PaymentFailedException;
+import com.challengeteam.shop.exceptionHandling.exception.phone.PhoneAlreadyInCartException;
+import com.challengeteam.shop.exceptionHandling.exception.phone.PhoneNotFoundException;
+import com.challengeteam.shop.exceptionHandling.exception.security.*;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -20,6 +28,7 @@ import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.multipart.support.MissingServletRequestPartException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
+import java.net.URI;
 import java.util.List;
 
 @Slf4j
@@ -403,6 +412,34 @@ public class GlobalExceptionHandler {
                 .body(problem);
     }
 
+    @ExceptionHandler(InvalidPriceRangeException.class)
+    public ResponseEntity<ProblemDetail> handleInvalidPriceRangeException(InvalidPriceRangeException e) {
+        log.warn("400  {}", e.getMessage());
+
+        var problem = ProblemDetail.forStatus(HttpStatus.BAD_REQUEST.value());
+        problem.setTitle("Validation Failed");
+        problem.setDetail(e.getMessage());
+
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(problem);
+    }
+
+    @ExceptionHandler(InvalidOrderStatusTransitionException.class)
+    public ResponseEntity<ProblemDetail> handleInvalidOrderStatusTransitionException(InvalidOrderStatusTransitionException e) {
+        log.warn("400  Invalid order transition: {}", e.getMessage());
+
+        var problem = ProblemDetail.forStatus(HttpStatus.BAD_REQUEST.value());
+        problem.setTitle("Invalid Order Status Transition");
+        problem.setDetail(e.getMessage());
+
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(problem);
+    }
+
     @ExceptionHandler(MissingRequestCookieException.class)
     public ResponseEntity<ProblemDetail> handleMissingRequestCookieException(MissingRequestCookieException e) {
         log.warn("400  Missing cookie: {}", e.getMessage());
@@ -417,4 +454,56 @@ public class GlobalExceptionHandler {
                 .body(problem);
     }
 
+    @ExceptionHandler(PhoneNotFoundException.class)
+    public ResponseEntity<ProblemDetail> handlePhoneNotFoundException(PhoneNotFoundException e, HttpServletRequest request) {
+        log.warn("404  {}", e.getMessage());
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(
+                HttpStatus.NOT_FOUND, e.getMessage());
+        problem.setTitle("Phone Not Found");
+        problem.setInstance(URI.create(request.getRequestURI()));
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(problem);
+    }
+
+    @ExceptionHandler(OrderCreationException.class)
+    public ResponseEntity<ProblemDetail> handleOrderCreationException(
+            OrderCreationException ex, HttpServletRequest request) {
+        log.warn("422 {}", ex.getMessage());
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(
+                HttpStatus.UNPROCESSABLE_ENTITY, ex.getMessage());
+        problem.setTitle("Order Creation Failed");
+        problem.setInstance(URI.create(request.getRequestURI()));
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(problem);
+    }
+
+    @ExceptionHandler(PaymentFailedException.class)
+    public ResponseEntity<ProblemDetail> handlePaymentFailedException(
+            PaymentFailedException ex, HttpServletRequest request) {
+        log.warn("402 {}", ex.getMessage());
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(
+                HttpStatus.PAYMENT_REQUIRED, ex.getMessage());
+        problem.setTitle("Payment Failed");
+        problem.setInstance(URI.create(request.getRequestURI()));
+        return ResponseEntity.status(HttpStatus.PAYMENT_REQUIRED).body(problem);
+    }
+    @ExceptionHandler(OrderNotFoundException.class)
+    public ResponseEntity<ProblemDetail> handleOrderNotFoundException(
+            OrderNotFoundException ex, HttpServletRequest request) {
+        log.warn("404 {}", ex.getMessage());
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(
+                HttpStatus.NOT_FOUND, ex.getMessage());
+        problem.setTitle("Order Not Found");
+        problem.setInstance(URI.create(request.getRequestURI()));
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(problem);
+    }
+
+    @ExceptionHandler(UnauthorizedException.class)
+    public ResponseEntity<ProblemDetail> handleUnauthorizedException(
+            UnauthorizedException ex, HttpServletRequest request) {
+        log.warn("401 {}", ex.getMessage());
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(
+                HttpStatus.UNAUTHORIZED, ex.getMessage());
+        problem.setTitle("Unauthorized");
+        problem.setInstance(URI.create(request.getRequestURI()));
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(problem);
+    }
 }

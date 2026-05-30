@@ -1,8 +1,11 @@
 package com.challengeteam.shop.service.impl;
 
-import com.challengeteam.shop.dto.phone.PhoneCreateRequestDto;
+import com.challengeteam.shop.dto.phone.request.PhoneCreateRequestDto;
 import com.challengeteam.shop.dto.user.CreateUserDto;
 import com.challengeteam.shop.dto.user.UpdateProfileDto;
+import com.challengeteam.shop.entity.phone.PhoneColor;
+import com.challengeteam.shop.entity.phone.ProductStatus;
+import com.challengeteam.shop.entity.phone.StorageCapacity;
 import com.challengeteam.shop.entity.user.User;
 import com.challengeteam.shop.exceptionHandling.exception.CriticalSystemException;
 import com.challengeteam.shop.exceptionHandling.exception.InvalidAPIRequestException;
@@ -10,6 +13,7 @@ import com.challengeteam.shop.exceptionHandling.exception.TestDataGeneratorOutOf
 import com.challengeteam.shop.service.PhoneService;
 import com.challengeteam.shop.service.TestDataService;
 import com.challengeteam.shop.service.UserService;
+import com.challengeteam.shop.utility.ProductStatusResolver;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -24,6 +28,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import java.util.Set;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -103,7 +108,7 @@ public class TestDataServiceImpl implements TestDataService {
 
         // report
         String createdPhonesData = concatToStrings(createdPhones);
-        log.info("Generated {} fake phones: {}",createdPhones.size(), createdPhonesData);
+        log.info("Generated {} fake phones: {}", createdPhones.size(), createdPhonesData);
 
         return createdPhones.size();
     }
@@ -206,6 +211,7 @@ public class TestDataServiceImpl implements TestDataService {
                 "4500 mAh", "4800 mAh", "5000 mAh", "5200 mAh"
         };
 
+        private final int[] stockValues = {0, 3, 8, 12, 25, 50, 100};
 
         public List<PhoneCreateRequestDto> generatePhones(int amount) {
             List<PhoneCreateRequestDto> result = new ArrayList<>(amount);
@@ -216,6 +222,9 @@ public class TestDataServiceImpl implements TestDataService {
                 String description = getRandomDescription(name);
                 BigDecimal price = getRandomPrice();
                 int releaseYear = getRandomReleaseYear();
+                String sku = getRandomSku(brand, i);
+                int stock = getRandomStock();
+                ProductStatus status = ProductStatusResolver.resolve(stock);
                 String cpu = getRandomCpu();
                 int coresNumber = getRandomCoresNumber();
                 String screenSize = getRandomScreenSize();
@@ -229,17 +238,31 @@ public class TestDataServiceImpl implements TestDataService {
                         price,
                         brand.name(),
                         releaseYear,
+                        sku,
+                        stock,
+                        status,
                         cpu,
                         coresNumber,
                         screenSize,
                         frontCamera,
                         mainCamera,
-                        batteryCapacity
+                        batteryCapacity,
+                        Set.of(PhoneColor.BLUE, PhoneColor.GOLD, PhoneColor.BLACK),
+                        Set.of(StorageCapacity.CAPACITY_64GB, StorageCapacity.CAPACITY_1TB, StorageCapacity.CAPACITY_128GB)
                 );
                 result.add(phone);
             }
 
             return result;
+        }
+
+
+        private String getRandomSku(PhoneBrand brand, int index) {
+            return (brand.name() + "-" + (index + 1)).toUpperCase();
+        }
+
+        private int getRandomStock() {
+            return stockValues[random.nextInt(stockValues.length)];
         }
 
         private String getRandomBatteryCapacity() {

@@ -1,16 +1,21 @@
 package com.challengeteam.shop.service.impl.merger;
 
-import com.challengeteam.shop.dto.phone.PhoneUpdateRequestDto;
-import com.challengeteam.shop.entity.phone.Phone;
-import com.challengeteam.shop.entity.phone.PhoneCharacteristics;
+import com.challengeteam.shop.dto.phone.request.PhoneUpdateRequestDto;
+import com.challengeteam.shop.entity.phone.*;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 
 import static com.challengeteam.shop.service.impl.merger.PhoneMergerImplTest.TestResources.*;
 import static org.junit.jupiter.api.Assertions.*;
 
+@ExtendWith(MockitoExtension.class)
 class PhoneMergerImplTest {
     private final PhoneMergerImpl phoneMerger = new PhoneMergerImpl();
 
@@ -34,7 +39,12 @@ class PhoneMergerImplTest {
                     null,
                     null,
                     null,
-                    null
+                    null,
+                    null,
+                    null,
+                    null,
+                    COLORS,
+                    STORAGE_CAPACITY
             );
 
             // mockito
@@ -50,6 +60,9 @@ class PhoneMergerImplTest {
             assertEquals(dto.price(), phone.getPrice());
             assertNotEquals(dto.brand(), phone.getBrand());
             assertNotEquals(dto.releaseYear(), phone.getReleaseYear());
+            assertNotEquals(dto.sku(), phone.getSku());
+            assertNotEquals(dto.stock(), phone.getStock());
+            assertNotEquals(dto.status(), phone.getStatus());
             assertNotEquals(dto.cpu(), phone.getPhoneCharacteristics().getCpu());
             assertNotEquals(dto.coresNumber(), phone.getPhoneCharacteristics().getCoresNumber());
             assertNotEquals(dto.screenSize(), phone.getPhoneCharacteristics().getScreenSize());
@@ -68,12 +81,17 @@ class PhoneMergerImplTest {
                     SAMSUNG_PRICE,
                     "  " + SAMSUNG_BRAND + "  ",
                     SAMSUNG_RELEASE_YEAR,
+                    "  " + SAMSUNG_SKU + "  ",
+                    SAMSUNG_STOCK,
+                    SAMSUNG_STATUS,
                     "  " + SAMSUNG_CPU + "  ",
                     SAMSUNG_CORES_NUMBER,
                     "  " + SAMSUNG_SCREEN_SIZE + "  ",
                     "  " + SAMSUNG_FRONT_CAMERA + "  ",
                     "  " + SAMSUNG_MAIN_CAMERA + "  ",
-                    "  " + SAMSUNG_BATTERY_CAPACITY + "  "
+                    "  " + SAMSUNG_BATTERY_CAPACITY + "  ",
+                    COLORS,
+                    STORAGE_CAPACITY
             );
 
             // when
@@ -85,6 +103,9 @@ class PhoneMergerImplTest {
             assertEquals(SAMSUNG_PRICE, phone.getPrice());
             assertEquals(SAMSUNG_BRAND, phone.getBrand());
             assertEquals(SAMSUNG_RELEASE_YEAR, phone.getReleaseYear());
+            assertEquals(SAMSUNG_SKU, phone.getSku());
+            assertEquals(SAMSUNG_STOCK, phone.getStock());
+            assertEquals(SAMSUNG_STATUS, phone.getStatus());
             assertEquals(SAMSUNG_CPU, phone.getPhoneCharacteristics().getCpu());
             assertEquals(SAMSUNG_CORES_NUMBER, phone.getPhoneCharacteristics().getCoresNumber());
             assertEquals(SAMSUNG_SCREEN_SIZE, phone.getPhoneCharacteristics().getScreenSize());
@@ -94,12 +115,48 @@ class PhoneMergerImplTest {
         }
 
         @Test
+        void whenStockIsUpdated_thenDeriveStatusFromStock() {
+            // given
+            Phone phone = getIphone();
+            var dto = new PhoneUpdateRequestDto(
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    XIAOMI_STOCK,
+                    ProductStatus.IN_STOCK,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    COLORS,
+                    STORAGE_CAPACITY
+            );
+
+            // when
+            phoneMerger.mergePhone(phone, dto);
+
+            // then
+            assertEquals(XIAOMI_STOCK, phone.getStock());
+            assertEquals(ProductStatus.OUT_OF_STOCK, phone.getStatus());
+        }
+
+        @Test
         void whenParameterPhoneIsNull_thenThrowException() {
             // given
             var dto = new PhoneUpdateRequestDto(
                     "new iphone",
                     "new description",
                     BigDecimal.valueOf(1999.99),
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
                     null,
                     null,
                     null,
@@ -131,6 +188,192 @@ class PhoneMergerImplTest {
         }
     }
 
+    /**
+     * cases:
+     * if colors are null -> keep old colors
+     * if colors are empty -> keep old colors
+     * if colors are not empty -> merge new colors
+     */
+    @Nested
+    class MergePhoneColorsTest {
+
+        @Test
+        void whenColorsAreNull_thenKeepOldColors() {
+            Phone phone = getIphone();
+            var dto = new PhoneUpdateRequestDto(
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null
+            );
+
+            phoneMerger.mergePhone(phone, dto);
+
+            assertEquals(IPHONE_NAME, phone.getName());
+            assertEquals(COLORS, phone.getPhoneCharacteristics().getPhoneColors());
+        }
+
+        @Test
+        void whenColorsAreEmpty_thenKeepOldColors() {
+            Phone phone = getIphone();
+            var dto = new PhoneUpdateRequestDto(
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    Collections.emptySet(),
+                    null
+            );
+
+            phoneMerger.mergePhone(phone, dto);
+
+            assertEquals(IPHONE_NAME, phone.getName());
+            assertEquals(COLORS, phone.getPhoneCharacteristics().getPhoneColors());
+        }
+
+        @Test
+        void whenColorsAreNotEmpty_thenMergeNewColors() {
+            Phone phone = getIphone();
+            Set<PhoneColor> newColors = Set.of(PhoneColor.WHITE);
+
+            var dto = new PhoneUpdateRequestDto(
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    newColors,
+                    null
+            );
+
+            phoneMerger.mergePhone(phone, dto);
+
+            assertEquals(IPHONE_NAME, phone.getName());
+            assertEquals(newColors, phone.getPhoneCharacteristics().getPhoneColors());
+        }
+
+    }
+
+    /**
+     * cases:
+     * if storage capacities are null -> keep old storage capacities
+     * if storage capacities are empty -> keep old storage capacities
+     * if storage capacities are not empty -> merge new storage capacities
+     */
+    @Nested
+    class MergePhoneStorageCapacityTest {
+        @Test
+        void whenStorageCapacitiesAreNull_thenKeepOldStorageCapacities() {
+            Phone phone = getIphone();
+            var dto = new PhoneUpdateRequestDto(
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null
+            );
+            phoneMerger.mergePhone(phone, dto);
+            assertEquals(IPHONE_NAME, phone.getName());
+            assertEquals(STORAGE_CAPACITY, phone.getPhoneCharacteristics().getStorageCapacities());
+        }
+
+        @Test
+        void whenStorageCapacitiesAreEmpty_thenKeepOldStorageCapacities() {
+            Phone phone = getIphone();
+            var dto = new PhoneUpdateRequestDto(
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    Collections.emptySet()
+            );
+            phoneMerger.mergePhone(phone, dto);
+            assertEquals(IPHONE_NAME, phone.getName());
+            assertEquals(STORAGE_CAPACITY, phone.getPhoneCharacteristics().getStorageCapacities());
+        }
+
+        @Test
+        void whenStorageCapacitiesAreNotEmpty_thenMergeNewStorageCapacities() {
+            Phone phone = getIphone();
+            Set<StorageCapacity> newStorageCapacities = Set.of(StorageCapacity.CAPACITY_512GB, StorageCapacity.CAPACITY_1TB);
+            var dto = new PhoneUpdateRequestDto(
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    newStorageCapacities
+            );
+            phoneMerger.mergePhone(phone, dto);
+            assertEquals(IPHONE_NAME, phone.getName());
+            assertEquals(newStorageCapacities, phone.getPhoneCharacteristics().getStorageCapacities());
+        }
+    }
+
+
     static class TestResources {
 
         public static final Long IPHONE_ID = 1L;
@@ -139,6 +382,9 @@ class PhoneMergerImplTest {
         public static final String IPHONE_BRAND = "Apple";
         public static final BigDecimal IPHONE_PRICE = BigDecimal.valueOf(1499.99);
         public static final int IPHONE_RELEASE_YEAR = 2023;
+        public static final String IPHONE_SKU = "IPHONE-15-001";
+        public static final Integer IPHONE_STOCK = 45;
+        public static final ProductStatus IPHONE_STATUS = ProductStatus.IN_STOCK;
         public static final String IPHONE_CPU = "Apple A16 Bionic";
         public static final Integer IPHONE_CORES_NUMBER = 6;
         public static final String IPHONE_SCREEN_SIZE = "6.1\"";
@@ -152,12 +398,20 @@ class PhoneMergerImplTest {
         public static final String SAMSUNG_BRAND = "Samsung";
         public static final BigDecimal SAMSUNG_PRICE = BigDecimal.valueOf(1399.00);
         public static final int SAMSUNG_RELEASE_YEAR = 2024;
+        public static final String SAMSUNG_SKU = "SAMSUNG-S24-001";
+        public static final Integer SAMSUNG_STOCK = 8;
+        public static final ProductStatus SAMSUNG_STATUS = ProductStatus.LOW_STOCK;
         public static final String SAMSUNG_CPU = "Exynos 2400";
         public static final Integer SAMSUNG_CORES_NUMBER = 10;
         public static final String SAMSUNG_SCREEN_SIZE = "6.2\"";
         public static final String SAMSUNG_FRONT_CAMERA = "12 MP";
         public static final String SAMSUNG_MAIN_CAMERA = "50 MP";
         public static final String SAMSUNG_BATTERY_CAPACITY = "4000 mAh";
+        public static final Set<PhoneColor> COLORS = new HashSet<>(
+                Set.of(PhoneColor.BLUE, PhoneColor.GOLD));
+
+        public static final Set<StorageCapacity> STORAGE_CAPACITY = new HashSet<>(
+                Set.of(StorageCapacity.CAPACITY_64GB, StorageCapacity.CAPACITY_128GB));
 
         public static final Long XIAOMI_ID = 3L;
         public static final String XIAOMI_NAME = "Xiaomi 14 Pro";
@@ -165,6 +419,9 @@ class PhoneMergerImplTest {
         public static final String XIAOMI_BRAND = "Xiaomi";
         public static final BigDecimal XIAOMI_PRICE = BigDecimal.valueOf(899.50);
         public static final int XIAOMI_RELEASE_YEAR = 2023;
+        public static final String XIAOMI_SKU = "XIAOMI-14P-001";
+        public static final Integer XIAOMI_STOCK = 0;
+        public static final ProductStatus XIAOMI_STATUS = ProductStatus.OUT_OF_STOCK;
         public static final String XIAOMI_CPU = "Snapdragon 8 Gen 3";
         public static final Integer XIAOMI_CORES_NUMBER = 8;
         public static final String XIAOMI_SCREEN_SIZE = "6.73\"";
@@ -178,6 +435,9 @@ class PhoneMergerImplTest {
         public static final String GOOGLE_BRAND = "Google";
         public static final BigDecimal GOOGLE_PRICE = BigDecimal.valueOf(1199.00);
         public static final int GOOGLE_RELEASE_YEAR = 2024;
+        public static final String GOOGLE_SKU = "PIXEL-9-001";
+        public static final Integer GOOGLE_STOCK = 12;
+        public static final ProductStatus GOOGLE_STATUS = ProductStatus.IN_STOCK;
         public static final String GOOGLE_CPU = "Google Tensor G4";
         public static final Integer GOOGLE_CORES_NUMBER = 8;
         public static final String GOOGLE_SCREEN_SIZE = "6.3\"";
@@ -192,6 +452,9 @@ class PhoneMergerImplTest {
                     .brand(IPHONE_BRAND)
                     .price(IPHONE_PRICE)
                     .releaseYear(IPHONE_RELEASE_YEAR)
+                    .sku(IPHONE_SKU)
+                    .stock(IPHONE_STOCK)
+                    .status(IPHONE_STATUS)
                     .phoneCharacteristics(
                             PhoneCharacteristics.builder()
                                     .cpu(IPHONE_CPU)
@@ -200,6 +463,8 @@ class PhoneMergerImplTest {
                                     .frontCamera(IPHONE_FRONT_CAMERA)
                                     .mainCamera(IPHONE_MAIN_CAMERA)
                                     .batteryCapacity(IPHONE_BATTERY_CAPACITY)
+                                    .phoneColors(COLORS)
+                                    .storageCapacities(STORAGE_CAPACITY)
                                     .build()
                     )
                     .build();
@@ -214,6 +479,9 @@ class PhoneMergerImplTest {
                     .brand(SAMSUNG_BRAND)
                     .price(SAMSUNG_PRICE)
                     .releaseYear(SAMSUNG_RELEASE_YEAR)
+                    .sku(SAMSUNG_SKU)
+                    .stock(SAMSUNG_STOCK)
+                    .status(SAMSUNG_STATUS)
                     .phoneCharacteristics(
                             PhoneCharacteristics.builder()
                                     .cpu(SAMSUNG_CPU)
@@ -222,6 +490,8 @@ class PhoneMergerImplTest {
                                     .frontCamera(SAMSUNG_FRONT_CAMERA)
                                     .mainCamera(SAMSUNG_MAIN_CAMERA)
                                     .batteryCapacity(SAMSUNG_BATTERY_CAPACITY)
+                                    .phoneColors(COLORS)
+                                    .storageCapacities(STORAGE_CAPACITY)
                                     .build()
                     )
                     .build();
@@ -236,6 +506,9 @@ class PhoneMergerImplTest {
                     .brand(XIAOMI_BRAND)
                     .price(XIAOMI_PRICE)
                     .releaseYear(XIAOMI_RELEASE_YEAR)
+                    .sku(XIAOMI_SKU)
+                    .stock(XIAOMI_STOCK)
+                    .status(XIAOMI_STATUS)
                     .phoneCharacteristics(
                             PhoneCharacteristics.builder()
                                     .cpu(XIAOMI_CPU)
@@ -244,6 +517,8 @@ class PhoneMergerImplTest {
                                     .frontCamera(XIAOMI_FRONT_CAMERA)
                                     .mainCamera(XIAOMI_MAIN_CAMERA)
                                     .batteryCapacity(XIAOMI_BATTERY_CAPACITY)
+                                    .phoneColors(COLORS)
+                                    .storageCapacities(STORAGE_CAPACITY)
                                     .build()
                     )
                     .build();
@@ -258,6 +533,9 @@ class PhoneMergerImplTest {
                     .brand(GOOGLE_BRAND)
                     .price(GOOGLE_PRICE)
                     .releaseYear(GOOGLE_RELEASE_YEAR)
+                    .sku(GOOGLE_SKU)
+                    .stock(GOOGLE_STOCK)
+                    .status(GOOGLE_STATUS)
                     .phoneCharacteristics(
                             PhoneCharacteristics.builder()
                                     .cpu(GOOGLE_CPU)
@@ -266,6 +544,8 @@ class PhoneMergerImplTest {
                                     .frontCamera(GOOGLE_FRONT_CAMERA)
                                     .mainCamera(GOOGLE_MAIN_CAMERA)
                                     .batteryCapacity(GOOGLE_BATTERY_CAPACITY)
+                                    .phoneColors(COLORS)
+                                    .storageCapacities(STORAGE_CAPACITY)
                                     .build()
                     )
                     .build();

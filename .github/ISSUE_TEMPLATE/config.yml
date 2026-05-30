@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Security vulnerability
+    url: https://github.com/Team-4185/phone-shop/security/policy
+    about: Please report security vulnerabilities privately.
+  - name: API documentation
+    url: https://gadget-room.up.railway.app/docs
+    about: Check the live OpenAPI documentation.

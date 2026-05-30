@@ -4,7 +4,7 @@ import com.challengeteam.shop.dto.image.ImageDataDto;
 import com.challengeteam.shop.dto.image.ImageMetadataResponseDto;
 import com.challengeteam.shop.entity.image.Image;
 import com.challengeteam.shop.exceptionHandling.exception.ResourceNotFoundException;
-import com.challengeteam.shop.mapper.ImageMapper;
+import com.challengeteam.shop.mapper.image.ImageMapper;
 import com.challengeteam.shop.service.ImageService;
 import com.challengeteam.shop.web.resolver.headerResolver.imageHeaderResolver.ImageHeadersResolver;
 import io.swagger.v3.oas.annotations.Operation;

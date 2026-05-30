@@ -1,22 +1,23 @@
 package com.challengeteam.shop.web.controller;
 
 import com.challengeteam.shop.dto.image.ImageMetadataResponseDto;
-import com.challengeteam.shop.dto.pagination.PageRequestDto;
-import com.challengeteam.shop.dto.pagination.PageResponseDto;
-import com.challengeteam.shop.dto.pagination.PhoneFilterDto;
-import com.challengeteam.shop.dto.phone.PhoneCreateRequestDto;
-import com.challengeteam.shop.dto.phone.PhoneResponseDto;
-import com.challengeteam.shop.dto.phone.PhoneUpdateRequestDto;
+import com.challengeteam.shop.dto.pagination.paginationRequest.PageRequestDto;
+import com.challengeteam.shop.dto.pagination.paginationRequest.PhoneFilterDto;
+import com.challengeteam.shop.dto.pagination.paginationResponse.PageResponseDto;
+import com.challengeteam.shop.dto.phone.request.PhoneCreateRequestDto;
+import com.challengeteam.shop.dto.phone.request.PhoneUpdateRequestDto;
+import com.challengeteam.shop.dto.phone.response.PhoneResponseDto;
 import com.challengeteam.shop.entity.image.Image;
 import com.challengeteam.shop.entity.phone.Phone;
+import com.challengeteam.shop.exceptionHandling.exception.InvalidPriceRangeException;
 import com.challengeteam.shop.exceptionHandling.exception.ResourceNotFoundException;
-import com.challengeteam.shop.mapper.ImageMapper;
-import com.challengeteam.shop.mapper.PhoneMapper;
+import com.challengeteam.shop.mapper.image.ImageMapper;
+import com.challengeteam.shop.mapper.phone.PhoneMapper;
 import com.challengeteam.shop.service.PhoneService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
-import lombok.*;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -28,6 +29,7 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 @RestController
 @RequestMapping("/api/v1/phones")
@@ -41,23 +43,25 @@ public class PhoneController {
 
     @Operation(
             summary = "Get paginated list of phones",
-            description = "Returns a paginated list of phones. " +
-                          "Use 'page' and 'size' query parameters to control pagination."
+            description = "Returns a paginated list of phones. Use 'page' and 'size' query parameters to control pagination."
     )
     @GetMapping
     public ResponseEntity<PageResponseDto<PhoneResponseDto>> getAllPhones(
             @Valid PageRequestDto pageRequestDto,
             @Valid PhoneFilterDto filterDto
     ) {
-
         int page = pageRequestDto.page() - 1;
         int size = pageRequestDto.size();
+
+        if (filterDto.minPrice() != null && filterDto.maxPrice() != null && filterDto.minPrice().compareTo(filterDto.maxPrice()) > 0)
+            throw new InvalidPriceRangeException("minPrice cannot be greater than maxPrice");
 
         Page<Phone> phones = phoneService.getPhones(page, size, filterDto);
         Page<PhoneResponseDto> response = phones.map(phoneMapper::toResponse);
 
         return ResponseEntity.ok(PageResponseDto.of(response));
     }
+
 
     @Operation(
             summary = "Get phone by id",
@@ -74,9 +78,18 @@ public class PhoneController {
     }
 
     @Operation(
+            summary = "Get available phone brands",
+            description = "Returns a set of all available phone brands."
+    )
+    @GetMapping("/brands")
+    public ResponseEntity<Set<String>> getBrands() {
+        return ResponseEntity.ok(phoneService.getAvailableBrands());
+    }
+
+    @Operation(
             summary = "Create new phone",
             description = "Creates a new phone based on input data and also adds provided images. " +
-                          "Images are optional."
+                    "Images are optional."
     )
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Void> createPhone(@Valid @RequestPart("phone") PhoneCreateRequestDto phoneCreateRequestDto,
@@ -96,7 +109,7 @@ public class PhoneController {
     @Operation(
             summary = "Update phone by id",
             description = "Updates phone by id, based on input data. Where field is empty," +
-                          " there will be no changes in this field."
+                    " there will be no changes in this field."
     )
     @PutMapping("/{id:\\d+}")
     public ResponseEntity<Void> updatePhone(@PathVariable Long id,

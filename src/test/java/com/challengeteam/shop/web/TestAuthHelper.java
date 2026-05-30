@@ -1,10 +1,10 @@
 package com.challengeteam.shop.web;
 
-import com.challengeteam.shop.dto.jwt.JwtResponseDto;
-import com.challengeteam.shop.dto.user.UserLoginRequestDto;
-import com.challengeteam.shop.dto.user.UserRegisterRequestDto;
+import com.challengeteam.shop.dto.auth.UserLoginRequestDto;
+import com.challengeteam.shop.dto.auth.UserRegisterRequestDto;
+import com.challengeteam.shop.dto.security.jwt.JwtResponseDto;
 import com.challengeteam.shop.exceptionHandling.exception.EmailAlreadyExistsException;
-import com.challengeteam.shop.service.JwtAuthorizationService;
+import com.challengeteam.shop.service.security.auth.authorization.JwtAuthorizationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -43,4 +43,13 @@ public class TestAuthHelper {
         }
     }
 
+    public String authorizeAsNewUser(String email, String password) {
+        UserRegisterRequestDto register = new UserRegisterRequestDto(email, password, password);
+        UserLoginRequestDto login = new UserLoginRequestDto(email, password, false);
+        try {
+            return authService.register(register).accessToken();
+        } catch (EmailAlreadyExistsException e) {
+            return authService.login(login).accessToken();
+        }
+    }
 }

@@ -5,7 +5,7 @@ import com.challengeteam.shop.dto.user.UpdateProfileDto;
 import com.challengeteam.shop.dto.user.UserResponseDto;
 import com.challengeteam.shop.entity.user.User;
 import com.challengeteam.shop.exceptionHandling.exception.ResourceNotFoundException;
-import com.challengeteam.shop.mapper.UserMapper;
+import com.challengeteam.shop.mapper.user.UserMapper;
 import com.challengeteam.shop.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
