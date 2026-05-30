@@ -2,14 +2,18 @@ package com.challengeteam.shop.utility.order;
 
 import com.challengeteam.shop.dto.order.request.item.OrderItemRequestDto;
 import com.challengeteam.shop.entity.phone.Phone;
+import com.challengeteam.shop.entity.phone.PhoneColor;
+import com.challengeteam.shop.entity.phone.ProductStatus;
+import com.challengeteam.shop.entity.phone.StorageCapacity;
+import com.challengeteam.shop.exceptionHandling.exception.order.OrderCreationException;
 import com.challengeteam.shop.utility.ProductStatusResolver;
-import com.challengeteam.shop.exceptionHandling.exception.OrderCreationException;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Utility class providing helper methods for order processing operations.
@@ -69,12 +73,7 @@ public class OrderUtils {
      * Updates the stock level of a phone after an order is placed.
      * <p>
      * Decreases the phone's stock by the ordered quantity and updates the product status
-     * based on the remaining stock:
-     * <ul>
-     *   <li>If remaining stock is 0, sets status to OUT_OF_STOCK</li>
-     *   <li>If remaining stock is 1-9, sets status to LOW_STOCK</li>
-     *   <li>If remaining stock is 10 or more, sets status to IN_STOCK</li>
-     * </ul>
+     * based on the shared {@link ProductStatusResolver} rules.
      * </p>
      *
      * @param phone           the {@link Phone} entity whose stock needs to be updated
@@ -83,7 +82,29 @@ public class OrderUtils {
     public static void updatePhoneStock(Phone phone, int orderedQuantity) {
         int remainingStock = phone.getStock() - orderedQuantity;
         phone.setStock(remainingStock);
-        phone.setStatus(ProductStatusResolver.resolve(remainingStock));
-        log.info("Updated phone stock for phone: {} with remaining stock: {}", phone.getId(), remainingStock);
+        ProductStatus status = ProductStatusResolver.resolve(remainingStock);
+        phone.setStatus(status);
+        log.info("Updated phone stock for phone: {} with remaining stock: {} and status: {}",
+                phone.getId(), remainingStock, status);
+    }
+
+    public static void checkIfColorAndStorageAvailable(
+            Map<Long, Phone> phoneMap, List<OrderItemRequestDto> items) {
+        for (OrderItemRequestDto item : items) {
+            Phone phone = phoneMap.get(item.phoneId());
+            Set<PhoneColor> availableColors = phone.getPhoneCharacteristics().getPhoneColors();
+            Set<StorageCapacity> availableStorages = phone.getPhoneCharacteristics().getStorageCapacities();
+
+            if (!availableColors.contains(item.color())) {
+                log.error("Color {} is not available for phone: {}", item.color(), phone.getName());
+                throw new OrderCreationException(
+                        "Color " + item.color() + " is not available for phone: " + phone.getName());
+            }
+            if (!availableStorages.contains(item.storage())) {
+                log.error("Storage {} is not available for phone: {}", item.storage(), phone.getName());
+                throw new OrderCreationException(
+                        "Storage " + item.storage() + " is not available for phone: " + phone.getName());
+            }
+        }
     }
 }

@@ -1,6 +1,6 @@
 package com.challengeteam.shop.service.impl;
 
-import com.challengeteam.shop.dto.phone.PhoneResponseDto;
+import com.challengeteam.shop.dto.phone.response.PhoneResponseDto;
 import com.challengeteam.shop.entity.favorite.Favorite;
 import com.challengeteam.shop.entity.phone.Phone;
 import com.challengeteam.shop.entity.user.User;

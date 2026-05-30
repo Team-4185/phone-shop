@@ -1,6 +1,6 @@
 package com.challengeteam.shop.service;
 
-import com.challengeteam.shop.dto.phone.PhoneResponseDto;
+import com.challengeteam.shop.dto.phone.response.PhoneResponseDto;
 
 import java.util.List;
 

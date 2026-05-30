@@ -2,20 +2,20 @@ package com.challengeteam.shop.web.controller;
 
 import com.challengeteam.shop.dto.auth.ForgotPasswordRequestDto;
 import com.challengeteam.shop.dto.auth.ResetPasswordRequestDto;
-import com.challengeteam.shop.dto.jwt.JwtResponseDto;
-import com.challengeteam.shop.dto.user.CreateUserDto;
 import com.challengeteam.shop.dto.auth.UserLoginRequestDto;
 import com.challengeteam.shop.dto.auth.UserRegisterRequestDto;
+import com.challengeteam.shop.dto.security.jwt.JwtResponseDto;
+import com.challengeteam.shop.dto.user.CreateUserDto;
 import com.challengeteam.shop.entity.token.PasswordResetToken;
 import com.challengeteam.shop.entity.user.Role;
 import com.challengeteam.shop.entity.user.User;
 import com.challengeteam.shop.persistence.repository.PasswordResetTokenRepository;
 import com.challengeteam.shop.persistence.repository.UserRepository;
 import com.challengeteam.shop.properties.JwtProperties;
-import com.challengeteam.shop.service.JwtService;
 import com.challengeteam.shop.service.UserService;
-import com.challengeteam.shop.service.impl.JwtServiceImpl;
 import com.challengeteam.shop.service.impl.UserServiceImpl;
+import com.challengeteam.shop.service.security.auth.jwt.JwtService;
+import com.challengeteam.shop.service.security.auth.jwt.JwtServiceImpl;
 import com.challengeteam.shop.testContainer.ContainerExtension;
 import com.challengeteam.shop.testContainer.TestContextConfigurator;
 import com.challengeteam.shop.web.TestAuthHelper;
@@ -335,12 +335,12 @@ public class AuthControllerTest {
         @Test
         void whenRememberMeIsString_thenReturn400() throws Exception {
             String json = """
-        {
-          "email": "existing.email@valid.com",
-          "password": "Password123!",
-          "rememberMe": "true"
-        }
-    """;
+                        {
+                          "email": "existing.email@valid.com",
+                          "password": "Password123!",
+                          "rememberMe": "true"
+                        }
+                    """;
 
             var request = post(URL)
                     .contentType(MediaType.APPLICATION_JSON)
@@ -354,12 +354,12 @@ public class AuthControllerTest {
         @Test
         void whenRememberMeIsNumber_thenReturn400() throws Exception {
             String json = """
-        {
-          "email": "existing.email@valid.com",
-          "password": "Password123!",
-          "rememberMe": 1
-        }
-    """;
+                        {
+                          "email": "existing.email@valid.com",
+                          "password": "Password123!",
+                          "rememberMe": 1
+                        }
+                    """;
 
             var request = post(URL)
                     .contentType(MediaType.APPLICATION_JSON)
@@ -844,5 +844,4 @@ public class AuthControllerTest {
         }
 
     }
-
 }

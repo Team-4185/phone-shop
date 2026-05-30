@@ -3,8 +3,8 @@ package com.challengeteam.shop.service.order.find;
 import com.challengeteam.shop.dto.order.OrderResponseDto;
 import com.challengeteam.shop.entity.order.Order;
 import com.challengeteam.shop.entity.user.User;
-import com.challengeteam.shop.exceptionHandling.exception.OrderNotFoundException;
-import com.challengeteam.shop.exceptionHandling.exception.UnauthorizedException;
+import com.challengeteam.shop.exceptionHandling.exception.order.OrderNotFoundException;
+import com.challengeteam.shop.exceptionHandling.exception.security.UnauthorizedException;
 import com.challengeteam.shop.mapper.order.OrderMapper;
 import com.challengeteam.shop.persistence.repository.OrderRepository;
 import com.challengeteam.shop.utility.AuthenticationUserExtractorHelper;
@@ -53,7 +53,7 @@ public class OrderFetchServiceImpl implements OrderFetchService {
      * Retrieves a specific order by its unique identifier.
      * The order is fetched with its associated items eagerly loaded.
      *
-     * @param id the unique identifier of the order to retrieve
+     * @param orderID the unique identifier of the order to retrieve
      * @return an {@link OrderResponseDto} containing the order details
      * @throws OrderNotFoundException if no order is found with the given ID
      */

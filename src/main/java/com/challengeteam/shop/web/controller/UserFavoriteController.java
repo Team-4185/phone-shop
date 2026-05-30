@@ -1,12 +1,14 @@
 package com.challengeteam.shop.web.controller;
 
-import com.challengeteam.shop.dto.phone.PhoneResponseDto;
+import com.challengeteam.shop.dto.phone.response.PhoneResponseDto;
 import com.challengeteam.shop.security.SimpleUserDetailsService.SimpleUserDetails;
 import com.challengeteam.shop.service.UserFavoriteService;
+import jakarta.validation.constraints.Positive;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -20,6 +22,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/v1/me/favorites")
 @RequiredArgsConstructor
+@Validated
 public class UserFavoriteController {
 
     private final UserFavoriteService userFavoriteService;
@@ -36,7 +39,7 @@ public class UserFavoriteController {
     @PostMapping("/{phoneId}")
     public ResponseEntity<List<PhoneResponseDto>> addProductToFavorites(
             @AuthenticationPrincipal SimpleUserDetails simpleUserDetails,
-            @PathVariable Long phoneId
+            @PathVariable @Positive Long phoneId
     ) {
         Long userId = simpleUserDetails.getUserId();
 
@@ -46,7 +49,7 @@ public class UserFavoriteController {
     @DeleteMapping("/{phoneId}")
     public ResponseEntity<List<PhoneResponseDto>> removeProductFromFavorites(
             @AuthenticationPrincipal SimpleUserDetails simpleUserDetails,
-            @PathVariable Long phoneId
+            @PathVariable @Positive Long phoneId
     ) {
         Long userId = simpleUserDetails.getUserId();
 

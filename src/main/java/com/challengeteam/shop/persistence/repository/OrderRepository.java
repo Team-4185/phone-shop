@@ -13,6 +13,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.Instant;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -57,9 +58,14 @@ public interface OrderRepository extends JpaRepository<Order, Long>, JpaSpecific
     @Query("SELECT COALESCE(SUM(o.total), 0) FROM CustomerOrder o WHERE o.createdAt >= :start AND o.createdAt < :end")
     java.math.BigDecimal sumRevenueBetween(@Param("start") Instant start, @Param("end") Instant end);
 
+    @Query(value = "SELECT COALESCE(AVG(total), 0) FROM orders", nativeQuery = true)
+    java.math.BigDecimal averageOrderTotal();
+
     long countByCreatedAtGreaterThanEqualAndCreatedAtLessThan(Instant start, Instant end);
 
     long countByStatus(OrderStatus status);
+
+    long countByStatusIn(Collection<OrderStatus> statuses);
 
     @Query(
             value =
@@ -122,16 +128,37 @@ public interface OrderRepository extends JpaRepository<Order, Long>, JpaSpecific
                     SELECT oi.fk_phone_id AS phone_id,
                            MIN(oi.product_name) AS name,
                            oi.sku AS sku,
+                           COALESCE(MIN(p.brand), 'Unknown') AS brand,
                            COALESCE(SUM(oi.quantity), 0) AS units_sold,
                            COALESCE(SUM(oi.total_price), 0) AS revenue,
                            MIN(p.stock) AS stock,
-                           MIN(p.status) AS status
-                    FROM orders_items oi
-                    LEFT JOIN phones p ON p.id = oi.fk_phone_id
-                    GROUP BY oi.fk_phone_id, oi.sku
-                    ORDER BY units_sold DESC, revenue DESC
-                    LIMIT :limit
-                    """,
+                           MIN(p.status) AS status,
+                           preview_image.id AS preview_image_id,
+                           preview_image.name AS preview_image_name,
+                           preview_image.size AS preview_image_size,
+                           mime_type.type AS preview_image_mime_type
+                     FROM orders_items oi
+                     LEFT JOIN phones p ON p.id = oi.fk_phone_id
+                     LEFT JOIN LATERAL (
+                         SELECT image.id,
+                                image.name,
+                                image.size,
+                                image.fk_mime_type_id
+                           FROM images image
+                          WHERE image.fk_phone_id = p.id
+                          ORDER BY image.id
+                          LIMIT 1
+                     ) preview_image ON TRUE
+                     LEFT JOIN mime_types mime_type ON mime_type.id = preview_image.fk_mime_type_id
+                     GROUP BY oi.fk_phone_id,
+                              oi.sku,
+                              preview_image.id,
+                              preview_image.name,
+                              preview_image.size,
+                              mime_type.type
+                     ORDER BY units_sold DESC, revenue DESC
+                     LIMIT :limit
+                     """,
             nativeQuery = true)
     List<Object[]> findTopSellingProducts(@Param("limit") int limit);
 

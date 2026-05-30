@@ -4,6 +4,7 @@ import com.challengeteam.shop.entity.BaseEntity;
 import com.challengeteam.shop.entity.phone.Phone;
 import com.challengeteam.shop.entity.user.User;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
@@ -29,11 +30,11 @@ import lombok.experimental.SuperBuilder;
 )
 public class Favorite extends BaseEntity {
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(nullable = false, name = "fk_user_id")
     private User user;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(nullable = false, name = "fk_phone_id")
     private Phone phone;
 }

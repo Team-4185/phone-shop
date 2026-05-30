@@ -10,6 +10,7 @@ OpenAPI definition/
 .idea/jarRepositories.xml
 .idea/compiler.xml
 .idea/libraries/
+.junie
 *.iws
 *.iml
 *.ipr

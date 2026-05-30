@@ -2,6 +2,8 @@ package com.challengeteam.shop.web.controller.admin;
 
 import com.challengeteam.shop.dto.admin.AdminEntryResponseDto;
 import com.challengeteam.shop.dto.admin.AdminSectionResponseDto;
+import com.challengeteam.shop.dto.admin.AdminSidebarCountersResponseDto;
+import com.challengeteam.shop.service.admin.AdminSidebarCountersService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.RequiredArgsConstructor;
@@ -15,7 +17,10 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/v1/admin")
 @SecurityRequirement(name = "bearer-jwt")
+@RequiredArgsConstructor
 public class AdminController {
+
+  private final AdminSidebarCountersService adminSidebarCountersService;
 
   @Operation(
       summary = "Get admin API entry point",
@@ -31,5 +36,13 @@ public class AdminController {
                 new AdminSectionResponseDto("dashboard", "/api/v1/admin/dashboard", true)));
 
     return ResponseEntity.ok(response);
+  }
+
+  @Operation(
+      summary = "Get admin sidebar counters",
+      description = "Returns counters required for admin sidebar navigation badges.")
+  @GetMapping("/sidebar-counters")
+  public ResponseEntity<AdminSidebarCountersResponseDto> getSidebarCounters() {
+    return ResponseEntity.ok(adminSidebarCountersService.getSidebarCounters());
   }
 }

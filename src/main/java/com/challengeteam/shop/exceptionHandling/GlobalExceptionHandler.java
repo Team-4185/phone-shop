@@ -2,6 +2,13 @@ package com.challengeteam.shop.exceptionHandling;
 
 import com.challengeteam.shop.dto.validation.ValidationDetailsDto;
 import com.challengeteam.shop.exceptionHandling.exception.*;
+import com.challengeteam.shop.exceptionHandling.exception.order.InvalidOrderStatusTransitionException;
+import com.challengeteam.shop.exceptionHandling.exception.order.OrderCreationException;
+import com.challengeteam.shop.exceptionHandling.exception.order.OrderNotFoundException;
+import com.challengeteam.shop.exceptionHandling.exception.order.PaymentFailedException;
+import com.challengeteam.shop.exceptionHandling.exception.phone.PhoneAlreadyInCartException;
+import com.challengeteam.shop.exceptionHandling.exception.phone.PhoneNotFoundException;
+import com.challengeteam.shop.exceptionHandling.exception.security.*;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;

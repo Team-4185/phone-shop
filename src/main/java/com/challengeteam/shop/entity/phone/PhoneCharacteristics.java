@@ -1,10 +1,10 @@
 package com.challengeteam.shop.entity.phone;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Embeddable;
+import jakarta.persistence.*;
 import lombok.*;
 
 import java.util.Objects;
+import java.util.Set;
 
 @Getter
 @Setter
@@ -31,6 +31,24 @@ public class PhoneCharacteristics {
 
     @Column(name = "battery_capacity", nullable = false, length = 20)
     private String batteryCapacity;
+
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(
+            name = "phone_storages",
+            joinColumns = @JoinColumn(name = "phone_id")
+    )
+    @Enumerated(EnumType.STRING)
+    @Column(name = "storage", nullable = false, length = 30)
+    private Set<StorageCapacity> storageCapacities;
+
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(
+            name = "phone_colors",
+            joinColumns = @JoinColumn(name = "phone_id")
+    )
+    @Enumerated(EnumType.STRING)
+    @Column(name = "color", nullable = false, length = 30)
+    private Set<PhoneColor> phoneColors;
 
     @Override
     public boolean equals(Object o) {

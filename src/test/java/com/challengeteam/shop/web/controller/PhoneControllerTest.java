@@ -1,9 +1,11 @@
 package com.challengeteam.shop.web.controller;
 
-import com.challengeteam.shop.dto.phone.PhoneCreateRequestDto;
-import com.challengeteam.shop.dto.phone.PhoneUpdateRequestDto;
+import com.challengeteam.shop.dto.phone.request.PhoneCreateRequestDto;
+import com.challengeteam.shop.dto.phone.request.PhoneUpdateRequestDto;
 import com.challengeteam.shop.entity.image.Image;
+import com.challengeteam.shop.entity.phone.PhoneColor;
 import com.challengeteam.shop.entity.phone.ProductStatus;
+import com.challengeteam.shop.entity.phone.StorageCapacity;
 import com.challengeteam.shop.persistence.repository.PhoneRepository;
 import com.challengeteam.shop.service.PhoneService;
 import com.challengeteam.shop.testContainer.ContainerExtension;
@@ -29,6 +31,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 import static com.challengeteam.shop.web.controller.PhoneControllerTest.TestPhone.VALID_PHONE_BOUNDARY_MAX;
 import static com.challengeteam.shop.web.controller.PhoneControllerTest.TestPhone.VALID_PHONE_BOUNDARY_MIN;
@@ -150,16 +153,16 @@ class PhoneControllerTest {
         }
 
         @Test
-        void whenRequestMissingToken_thenStatus403() throws Exception {
+        void whenRequestMissingToken_thenStatus401() throws Exception {
             mockMvc.perform(get(URL))
-                    .andExpect(status().isForbidden());
+                    .andExpect(status().isUnauthorized());
         }
 
         @Test
-        void whenRequestHasInvalidToken_thenStatus403() throws Exception {
+        void whenRequestHasInvalidToken_thenStatus401() throws Exception {
             mockMvc.perform(get(URL)
                             .header(HttpHeaders.AUTHORIZATION, auth("some_invalid_text")))
-                    .andExpect(status().isForbidden());
+                    .andExpect(status().isUnauthorized());
         }
 
         @Test
@@ -561,16 +564,16 @@ class PhoneControllerTest {
         }
 
         @Test
-        void whenRequestMissingToken_thenStatus403() throws Exception {
+        void whenRequestMissingToken_thenStatus401() throws Exception {
             mockMvc.perform(get(URL, phone1))
-                    .andExpect(status().isForbidden());
+                    .andExpect(status().isUnauthorized());
         }
 
         @Test
-        void whenRequestHasInvalidToken_thenStatus403() throws Exception {
+        void whenRequestHasInvalidToken_thenStatus401() throws Exception {
             mockMvc.perform(get(URL, phone1)
                             .header(HttpHeaders.AUTHORIZATION, auth("some_invalid_text")))
-                    .andExpect(status().isForbidden());
+                    .andExpect(status().isUnauthorized());
         }
 
         @Test
@@ -651,7 +654,7 @@ class PhoneControllerTest {
         }
 
         @Test
-        void whenRequestMissingToken_thenStatus403() throws Exception {
+        void whenRequestMissingToken_thenStatus401() throws Exception {
             PhoneCreateRequestDto json = buildPhoneCreateRequestDto(TestPhone.VALID_PHONE);
             byte[] content = objectMapper.writeValueAsBytes(json);
 
@@ -660,11 +663,11 @@ class PhoneControllerTest {
                     .file((MockMultipartFile) buildMultipartFile("images"));
 
             mockMvc.perform(request)
-                    .andExpect(status().isForbidden());
+                    .andExpect(status().isUnauthorized());
         }
 
         @Test
-        void whenRequestHasInvalidToken_thenStatus403() throws Exception {
+        void whenRequestHasInvalidToken_thenStatus401() throws Exception {
             PhoneCreateRequestDto json = buildPhoneCreateRequestDto(TestPhone.VALID_PHONE);
             byte[] content = objectMapper.writeValueAsBytes(json);
 
@@ -674,7 +677,7 @@ class PhoneControllerTest {
                     .header(HttpHeaders.AUTHORIZATION, auth("some_invalid_text"));
 
             mockMvc.perform(request)
-                    .andExpect(status().isForbidden());
+                    .andExpect(status().isUnauthorized());
         }
 
         // Validation tests
@@ -997,24 +1000,24 @@ class PhoneControllerTest {
         }
 
         @Test
-        void whenRequestMissingToken_thenStatus403() throws Exception {
+        void whenRequestMissingToken_thenStatus401() throws Exception {
             PhoneUpdateRequestDto request = buildPhoneUpdateRequestDto(TestPhone.VALID_PHONE);
 
             mockMvc.perform(put(URL, phone1)
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
-                    .andExpect(status().isForbidden());
+                    .andExpect(status().isUnauthorized());
         }
 
         @Test
-        void whenRequestHasInvalidToken_thenStatus403() throws Exception {
+        void whenRequestHasInvalidToken_thenStatus401() throws Exception {
             PhoneUpdateRequestDto request = buildPhoneUpdateRequestDto(TestPhone.VALID_PHONE);
 
             mockMvc.perform(put(URL, phone1)
                             .header(HttpHeaders.AUTHORIZATION, auth("some_invalid_text"))
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
-                    .andExpect(status().isForbidden());
+                    .andExpect(status().isUnauthorized());
         }
 
         @Test
@@ -1220,16 +1223,16 @@ class PhoneControllerTest {
         }
 
         @Test
-        void whenRequestMissingToken_thenStatus403() throws Exception {
+        void whenRequestMissingToken_thenStatus401() throws Exception {
             mockMvc.perform(delete(URL, phone1))
-                    .andExpect(status().isForbidden());
+                    .andExpect(status().isUnauthorized());
         }
 
         @Test
-        void whenRequestHasInvalidToken_thenStatus403() throws Exception {
+        void whenRequestHasInvalidToken_thenStatus401() throws Exception {
             mockMvc.perform(delete(URL, phone1)
                             .header(HttpHeaders.AUTHORIZATION, auth("some_invalid_text")))
-                    .andExpect(status().isForbidden());
+                    .andExpect(status().isUnauthorized());
         }
 
         @Test
@@ -1288,16 +1291,16 @@ class PhoneControllerTest {
         }
 
         @Test
-        void whenRequestMissingToken_thenStatus403() throws Exception {
+        void whenRequestMissingToken_thenStatus401() throws Exception {
             mockMvc.perform(get(URL, phone1))
-                    .andExpect(status().isForbidden());
+                    .andExpect(status().isUnauthorized());
         }
 
         @Test
-        void whenRequestHasInvalidToken_thenStatus403() throws Exception {
+        void whenRequestHasInvalidToken_thenStatus401() throws Exception {
             mockMvc.perform(get(URL, phone1)
                             .header(HttpHeaders.AUTHORIZATION, auth("some_invalid_text")))
-                    .andExpect(status().isForbidden());
+                    .andExpect(status().isUnauthorized());
         }
 
         @Test
@@ -1358,24 +1361,24 @@ class PhoneControllerTest {
         }
 
         @Test
-        void whenRequestMissingToken_thenStatus403() throws Exception {
+        void whenRequestMissingToken_thenStatus401() throws Exception {
             var request = multipart(URL, phone1)
                     .file((MockMultipartFile) buildUnsupportedMultipartFile("image"))
                     .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
 
             mockMvc.perform(request)
-                    .andExpect(status().isForbidden());
+                    .andExpect(status().isUnauthorized());
         }
 
         @Test
-        void whenRequestHasInvalidToken_thenStatus403() throws Exception {
+        void whenRequestHasInvalidToken_thenStatus401() throws Exception {
             var request = multipart(URL, phone1)
                     .file((MockMultipartFile) buildUnsupportedMultipartFile("image"))
                     .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
                     .header(HttpHeaders.AUTHORIZATION, auth("not_valid_token"));
 
             mockMvc.perform(request)
-                    .andExpect(status().isForbidden());
+                    .andExpect(status().isUnauthorized());
         }
 
         @Test
@@ -1445,16 +1448,16 @@ class PhoneControllerTest {
         }
 
         @Test
-        void whenRequestMissingToken_thenStatus403() throws Exception {
+        void whenRequestMissingToken_thenStatus401() throws Exception {
             mockMvc.perform(delete(URL, phone3, phone3Images.get(0).getId()))
-                    .andExpect(status().isForbidden());
+                    .andExpect(status().isUnauthorized());
         }
 
         @Test
-        void whenRequestHasInvalidToken_thenStatus403() throws Exception {
+        void whenRequestHasInvalidToken_thenStatus401() throws Exception {
             mockMvc.perform(delete(URL, phone3, phone3Images.get(0).getId())
                             .header(HttpHeaders.AUTHORIZATION, auth("some_invalid_text")))
-                    .andExpect(status().isForbidden());
+                    .andExpect(status().isUnauthorized());
         }
 
         @Test
@@ -1509,7 +1512,9 @@ class PhoneControllerTest {
                     testPhone.screenSize,
                     testPhone.frontCamera,
                     testPhone.mainCamera,
-                    testPhone.batteryCapacity
+                    testPhone.batteryCapacity,
+                    Set.of(PhoneColor.BLUE, PhoneColor.GOLD),
+                    Set.of(StorageCapacity.CAPACITY_64GB, StorageCapacity.CAPACITY_128GB)
             );
         }
 
@@ -1529,7 +1534,9 @@ class PhoneControllerTest {
                     testPhone.screenSize,
                     testPhone.frontCamera,
                     testPhone.mainCamera,
-                    testPhone.batteryCapacity
+                    testPhone.batteryCapacity,
+                    Set.of(PhoneColor.BLUE, PhoneColor.GOLD),
+                    Set.of(StorageCapacity.CAPACITY_64GB, StorageCapacity.CAPACITY_128GB)
             );
         }
 
@@ -1666,15 +1673,15 @@ class PhoneControllerTest {
 
         // Invalid cpu
         INVALID_CPU_NULL(
-        "Phone", "description", new BigDecimal("100.00"), "Brand", 2020,
+                "Phone", "description", new BigDecimal("100.00"), "Brand", 2020,
                 null, 8, "6.7\"", "12 MP", "50-12 MP", "5000 mAh"),
 
         INVALID_CPU_BLANK(
-        "Phone", "description", new BigDecimal("100.00"), "Brand", 2020,
+                "Phone", "description", new BigDecimal("100.00"), "Brand", 2020,
                 "", 8, "6.7\"", "12 MP", "50-12 MP", "5000 mAh"),
 
         INVALID_CPU_TOO_LONG(
-        "Phone", "description", new BigDecimal("100.00"), "Brand", 2020,
+                "Phone", "description", new BigDecimal("100.00"), "Brand", 2020,
                 "C".repeat(101), 8, "6.7\"", "12 MP", "50-12 MP", "5000 mAh"),
 
 
@@ -1786,7 +1793,6 @@ class PhoneControllerTest {
         INVALID_BATTERY_TOO_LONG(
                 "Phone", "description", new BigDecimal("100.00"), "Brand", 2020,
                 "Snapdragon 8 Gen 3", 8, "6.7\"", "12 MP", "50-12 MP", "5000000 mAh");
-
 
 
         private final String name;

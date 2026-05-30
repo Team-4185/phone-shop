@@ -2,9 +2,7 @@ package com.challengeteam.shop.web.controller;
 
 import com.challengeteam.shop.dto.payment.TransactionResult;
 import com.challengeteam.shop.entity.order.payment.PaymentStatus;
-import com.challengeteam.shop.entity.phone.Phone;
-import com.challengeteam.shop.entity.phone.PhoneCharacteristics;
-import com.challengeteam.shop.entity.phone.ProductStatus;
+import com.challengeteam.shop.entity.phone.*;
 import com.challengeteam.shop.persistence.repository.OrderRepository;
 import com.challengeteam.shop.persistence.repository.PhoneRepository;
 import com.challengeteam.shop.service.mock.PaymentMockService;
@@ -27,6 +25,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.hamcrest.Matchers.hasSize;
@@ -103,6 +102,8 @@ class OrderControllerTest {
                 .frontCamera("12MP")
                 .mainCamera("48MP")
                 .batteryCapacity("3274mAh")
+                .phoneColors(Set.of(PhoneColor.WHITE, PhoneColor.GOLD, PhoneColor.BLACK, PhoneColor.SILVER, PhoneColor.YELLOW))
+                .storageCapacities(Set.of(StorageCapacity.CAPACITY_64GB, StorageCapacity.CAPACITY_128GB, StorageCapacity.CAPACITY_512GB))
                 .build());
 
         return p;
@@ -141,6 +142,7 @@ class OrderControllerTest {
         );
     }
 
+
     private String cardCourierBody(Long phoneId, int quantity) throws Exception {
         return objectMapper.writeValueAsString(Map.of(
                 "customerEmail", "customer@example.com",
@@ -151,7 +153,7 @@ class OrderControllerTest {
                 "paymentDetails", cardDetails(),
                 "deliveryMethod", "COURIER",
                 "shippingAddress", courierAddress(),
-                "items", List.of(Map.of("phoneId", phoneId, "quantity", quantity))
+                "items", List.of(item(phoneId, quantity))
         ));
     }
 
@@ -163,7 +165,7 @@ class OrderControllerTest {
                 "customerPhoneNumber", "+380991234567",
                 "paymentMethod", "CASH_ON_DELIVERY",
                 "deliveryMethod", "PICKUP",
-                "items", List.of(Map.of("phoneId", phoneId, "quantity", quantity))
+                "items", List.of(item(phoneId, quantity))
         ));
     }
 
@@ -176,9 +178,19 @@ class OrderControllerTest {
                 "paymentMethod", "CASH_ON_DELIVERY",
                 "deliveryMethod", "POST_OFFICE",
                 "shippingAddress", postOfficeAddress(),
-                "items", List.of(Map.of("phoneId", phoneId, "quantity", quantity))
+                "items", List.of(item(phoneId, quantity))
         ));
     }
+
+    private Map<String, Object> item(Long phoneId, int quantity) {
+        return Map.of(
+                "phoneId", phoneId,
+                "quantity", quantity,
+                "color", "BLACK",
+                "storage", "CAPACITY_128GB"
+        );
+    }
+
 
     private TransactionResult paid() {
         return new TransactionResult(PaymentStatus.PAID, "tx-123", null);
@@ -260,8 +272,18 @@ class OrderControllerTest {
                                     "deliveryMethod", "COURIER",
                                     "shippingAddress", courierAddress(),
                                     "items", List.of(
-                                            Map.of("phoneId", iphone.getId(), "quantity", 1),
-                                            Map.of("phoneId", samsung.getId(), "quantity", 2)
+                                            Map.of(
+                                                    "phoneId", iphone.getId(),
+                                                    "quantity", 1,
+                                                    "color", "BLACK",
+                                                    "storage", "CAPACITY_128GB"
+                                            ),
+                                            Map.of(
+                                                    "phoneId", samsung.getId(),
+                                                    "quantity", 2,
+                                                    "color", "BLACK",
+                                                    "storage", "CAPACITY_128GB"
+                                            )
                                     )
                             ))))
                     .andExpect(status().isCreated())
@@ -318,7 +340,7 @@ class OrderControllerTest {
             when(paymentMockService.pay(any(), any())).thenReturn(paid());
 
             Phone highStockPhone = phoneRepository.save(
-                    phone("Google Pixel 9", "Google", new BigDecimal("699.00"), 12, ProductStatus.LOW_STOCK));
+                    phone("Google Pixel 9", "Google", new BigDecimal("699.00"), 12, ProductStatus.IN_STOCK));
 
             mockMvc.perform(post(ORDER_URL)
                             .contentType(MediaType.APPLICATION_JSON)
@@ -553,6 +575,7 @@ class OrderControllerTest {
                             ))))
                     .andExpect(status().isBadRequest());
         }
+
         @Test
         @DisplayName("Missing deliveryMethod with shippingAddress → 400")
         void missingDeliveryMethodWithShippingAddress_returns400() throws Exception {
@@ -616,10 +639,10 @@ class OrderControllerTest {
         }
 
         @Test
-        @DisplayName("Unauthenticated request → 403")
+        @DisplayName("Unauthenticated request → 401")
         void unauthenticatedRequest_returns401() throws Exception {
             mockMvc.perform(get(ORDER_URL + "/my"))
-                    .andExpect(status().isForbidden());
+                    .andExpect(status().isUnauthorized());
         }
 
         @Test
@@ -688,10 +711,10 @@ class OrderControllerTest {
         }
 
         @Test
-        @DisplayName("No auth → 403")
-        void noAuth_returns403() throws Exception {
+        @DisplayName("No auth → 401")
+        void noAuth_returns401() throws Exception {
             mockMvc.perform(get(ORDER_URL + "/{id}", 1L))
-                    .andExpect(status().isForbidden());
+                    .andExpect(status().isUnauthorized());
         }
 
         @Test

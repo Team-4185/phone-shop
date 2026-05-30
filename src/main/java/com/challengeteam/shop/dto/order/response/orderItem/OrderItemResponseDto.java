@@ -1,6 +1,8 @@
 package com.challengeteam.shop.dto.order.response.orderItem;
 
-import com.challengeteam.shop.dto.phone.PhoneResponseDto;
+import com.challengeteam.shop.dto.phone.response.PhoneResponseDto;
+import com.challengeteam.shop.entity.phone.PhoneColor;
+import com.challengeteam.shop.entity.phone.StorageCapacity;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
@@ -12,6 +14,8 @@ public record OrderItemResponseDto(Long id,
                                    PhoneResponseDto phone,
                                    String productName,
                                    String sku,
+                                   PhoneColor selectedColor,
+                                   StorageCapacity selectedStorage,
                                    BigDecimal unitPrice,
                                    Integer quantity,
                                    BigDecimal totalPrice) implements Serializable {

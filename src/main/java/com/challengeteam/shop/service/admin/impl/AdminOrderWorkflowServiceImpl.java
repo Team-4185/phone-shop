@@ -1,11 +1,12 @@
 package com.challengeteam.shop.service.admin.impl;
 
 import com.challengeteam.shop.entity.order.OrderStatus;
-import com.challengeteam.shop.exceptionHandling.exception.InvalidOrderStatusTransitionException;
+import com.challengeteam.shop.exceptionHandling.exception.order.InvalidOrderStatusTransitionException;
 import com.challengeteam.shop.service.admin.AdminOrderWorkflowService;
+import org.springframework.stereotype.Service;
+
 import java.util.List;
 import java.util.Map;
-import org.springframework.stereotype.Service;
 
 /** Central order workflow definition used by admin action endpoints and response metadata. */
 @Service

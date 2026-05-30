@@ -2,7 +2,7 @@ package com.challengeteam.shop.web.controller;
 
 import com.challengeteam.shop.dto.admin.product.AdminProductCreateRequestDto;
 import com.challengeteam.shop.dto.admin.product.AdminProductUpdateRequestDto;
-import com.challengeteam.shop.dto.phone.PhoneCreateRequestDto;
+import com.challengeteam.shop.dto.phone.request.PhoneCreateRequestDto;
 import com.challengeteam.shop.entity.image.Image;
 import com.challengeteam.shop.entity.order.DeliveryMethod;
 import com.challengeteam.shop.entity.order.Order;
@@ -14,12 +14,14 @@ import com.challengeteam.shop.entity.order.payment.PaymentStatus;
 import com.challengeteam.shop.entity.order.shipping.LogisticsCompany;
 import com.challengeteam.shop.entity.order.shipping.ShippingAddress;
 import com.challengeteam.shop.entity.phone.Phone;
+import com.challengeteam.shop.entity.phone.PhoneColor;
 import com.challengeteam.shop.entity.phone.ProductStatus;
+import com.challengeteam.shop.entity.phone.StorageCapacity;
 import com.challengeteam.shop.entity.user.Role;
 import com.challengeteam.shop.entity.user.User;
 import com.challengeteam.shop.persistence.repository.*;
-import com.challengeteam.shop.service.JwtService;
 import com.challengeteam.shop.service.PhoneService;
+import com.challengeteam.shop.service.security.auth.jwt.JwtService;
 import com.challengeteam.shop.testContainer.ContainerExtension;
 import com.challengeteam.shop.testContainer.TestContextConfigurator;
 import com.challengeteam.shop.web.TestAuthHelper;
@@ -43,6 +45,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Set;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -56,6 +59,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ExtendWith(ContainerExtension.class)
 class AdminControllerTest {
     private static final String ADMIN_ROOT_URL = "/api/v1/admin";
+    private static final String ADMIN_SIDEBAR_COUNTERS_URL = "/api/v1/admin/sidebar-counters";
     private static final String ADMIN_PRODUCTS_URL = "/api/v1/admin/products";
     private static final String ADMIN_ORDERS_URL = "/api/v1/admin/orders";
     private static final String ADMIN_EMAIL = "admin.test@valid.com";
@@ -320,8 +324,8 @@ class AdminControllerTest {
     class GetAdminEntryPointTest {
 
         @Test
-        void whenRequestMissingToken_thenStatus403() throws Exception {
-            mockMvc.perform(get(ADMIN_ROOT_URL)).andExpect(status().isForbidden());
+        void whenRequestMissingToken_thenStatus401() throws Exception {
+            mockMvc.perform(get(ADMIN_ROOT_URL)).andExpect(status().isUnauthorized());
         }
 
         @Test
@@ -351,6 +355,41 @@ class AdminControllerTest {
                     .andExpect(jsonPath("$.sections[3].name").value("dashboard"))
                     .andExpect(jsonPath("$.sections[3].path").value("/api/v1/admin/dashboard"))
                     .andExpect(jsonPath("$.sections[3].implemented").value(true));
+        }
+    }
+
+    @Nested
+    @DisplayName("GET /api/v1/admin/sidebar-counters")
+    class GetAdminSidebarCountersTest {
+
+        @Test
+        void whenRequestMissingToken_thenStatus401() throws Exception {
+            mockMvc.perform(get(ADMIN_SIDEBAR_COUNTERS_URL)).andExpect(status().isUnauthorized());
+        }
+
+        @Test
+        void whenAuthenticatedUserHasNoAdminRole_thenStatus403() throws Exception {
+            mockMvc
+                    .perform(get(ADMIN_SIDEBAR_COUNTERS_URL).header(HttpHeaders.AUTHORIZATION, auth(userToken)))
+                    .andExpect(status().isForbidden());
+        }
+
+        @Test
+        void whenAuthenticatedUserIsAdmin_thenReturnSidebarCounters() throws Exception {
+            createOrder(OrderStatus.NEW, "100.00", 1);
+            createOrder(OrderStatus.CONFIRMED, "100.00", 1);
+            createOrder(OrderStatus.PROCESSING, "100.00", 1);
+            createOrder(OrderStatus.SHIPPED, "100.00", 1);
+            createOrder(OrderStatus.DELIVERED, "100.00", 1);
+            createOrder(OrderStatus.CANCELLED, "100.00", 1);
+
+            mockMvc
+                    .perform(get(ADMIN_SIDEBAR_COUNTERS_URL).header(HttpHeaders.AUTHORIZATION, auth(adminToken)))
+                    .andExpect(status().isOk())
+                    .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                    .andExpect(jsonPath("$.productsCount").value(1))
+                    .andExpect(jsonPath("$.ordersCount").value(4))
+                    .andExpect(jsonPath("$.customersCount").value(1));
         }
     }
 
@@ -705,6 +744,8 @@ class AdminControllerTest {
                             .sku(phone.getSku())
                             .unitPrice(phone.getPrice())
                             .quantity(quantity)
+                            .selectedColor(PhoneColor.GOLD)
+                            .selectedStorage(StorageCapacity.CAPACITY_128GB)
                             .totalPrice(phone.getPrice().multiply(BigDecimal.valueOf(quantity)))
                             .build());
 
@@ -777,7 +818,10 @@ class AdminControllerTest {
                 "6.5\"",
                 "12 MP",
                 "50 MP",
-                "4500 mAh");
+                "4500 mAh",
+                Set.of(PhoneColor.BLUE, PhoneColor.GOLD),
+                Set.of(StorageCapacity.CAPACITY_64GB, StorageCapacity.CAPACITY_128GB)
+                );
     }
 
     private static PhoneCreateRequestDto buildOtherPhoneCreateRequestDto() {
@@ -795,7 +839,9 @@ class AdminControllerTest {
                 "6.1\"",
                 "10 MP",
                 "30 MP",
-                "4000 mAh");
+                "4000 mAh",
+                Set.of(PhoneColor.BLUE, PhoneColor.GOLD),
+                Set.of(StorageCapacity.CAPACITY_64GB, StorageCapacity.CAPACITY_128GB));
     }
 
     private static PhoneCreateRequestDto buildMoreExpensivePhoneCreateRequestDto() {
@@ -813,7 +859,9 @@ class AdminControllerTest {
                 "6.8\"",
                 "16 MP",
                 "108 MP",
-                "5000 mAh");
+                "5000 mAh",
+                Set.of(PhoneColor.BLUE, PhoneColor.GOLD),
+                Set.of(StorageCapacity.CAPACITY_64GB, StorageCapacity.CAPACITY_128GB));
     }
 
     private AdminProductCreateRequestDto buildAdminProductCreateRequestDto(String name, String sku) {
@@ -898,6 +946,8 @@ class AdminControllerTest {
                         .sku(phone.getSku())
                         .unitPrice(phone.getPrice())
                         .quantity(quantity)
+                        .selectedColor(PhoneColor.GOLD)
+                        .selectedStorage(StorageCapacity.CAPACITY_128GB)
                         .totalPrice(phone.getPrice().multiply(BigDecimal.valueOf(quantity)))
                         .build());
 

@@ -2,6 +2,8 @@ package com.challengeteam.shop.entity.order;
 
 import com.challengeteam.shop.entity.BaseEntity;
 import com.challengeteam.shop.entity.phone.Phone;
+import com.challengeteam.shop.entity.phone.PhoneColor;
+import com.challengeteam.shop.entity.phone.StorageCapacity;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -39,6 +41,14 @@ public class OrderItem extends BaseEntity {
 
     @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal unitPrice;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 30)
+    private PhoneColor selectedColor;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 30)
+    private StorageCapacity selectedStorage;
 
     @Column(nullable = false)
     private Integer quantity;

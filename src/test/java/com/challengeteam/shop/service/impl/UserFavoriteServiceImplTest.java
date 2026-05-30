@@ -1,6 +1,8 @@
 package com.challengeteam.shop.service.impl;
 
-import com.challengeteam.shop.dto.phone.PhoneResponseDto;
+import com.challengeteam.shop.dto.phone.response.PhoneResponseDto;
+import com.challengeteam.shop.dto.phone.response.PhoneColorResponseDto;
+import com.challengeteam.shop.dto.phone.response.StorageCapacityResponseDto;
 import com.challengeteam.shop.entity.favorite.Favorite;
 import com.challengeteam.shop.entity.phone.Phone;
 import com.challengeteam.shop.entity.user.User;
@@ -21,6 +23,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import static com.challengeteam.shop.service.impl.UserFavoriteServiceImplTest.TestResources.*;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -231,6 +234,8 @@ class UserFavoriteServiceImplTest {
                     null,
                     null,
                     null,
+                    Set.of(new PhoneColorResponseDto("BLACK", "Black", "#000000")),
+                    Set.of(new StorageCapacityResponseDto("CAPACITY_128GB", 128, "GB")),
                     List.of()
             );
         }

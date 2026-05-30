@@ -3,7 +3,6 @@ package com.challengeteam.shop.web.controller;
 import com.challengeteam.shop.entity.image.Image;
 import com.challengeteam.shop.entity.image.MIMEType;
 import com.challengeteam.shop.persistence.repository.ImageRepository;
-import com.challengeteam.shop.persistence.repository.MIMETypeRepository;
 import com.challengeteam.shop.service.ImageService;
 import com.challengeteam.shop.service.MIMETypeService;
 import com.challengeteam.shop.testContainer.ContainerExtension;
@@ -23,14 +22,12 @@ import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.io.InputStream;
 
 import static com.challengeteam.shop.web.controller.ImageControllerTest.TestResources.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -107,16 +104,16 @@ class ImageControllerTest {
         }
 
         @Test
-        void whenRequestMissingToken_thenStatus403() throws Exception {
+        void whenRequestMissingToken_thenStatus401() throws Exception {
             mockMvc.perform(get(URL, imageId))
-                    .andExpect(status().isForbidden());
+                    .andExpect(status().isUnauthorized());
         }
 
         @Test
-        void whenRequestHasInvalidToken_thenStatus403() throws Exception {
+        void whenRequestHasInvalidToken_thenStatus401() throws Exception {
             mockMvc.perform(get(URL, imageId)
                             .header(HttpHeaders.AUTHORIZATION, auth("some_invalid_text")))
-                    .andExpect(status().isForbidden());
+                    .andExpect(status().isUnauthorized());
         }
 
         @Test
@@ -153,16 +150,16 @@ class ImageControllerTest {
         }
 
         @Test
-        void whenRequestMissingToken_thenStatus403() throws Exception {
+        void whenRequestMissingToken_thenStatus401() throws Exception {
             mockMvc.perform(get(URL, imageId))
-                    .andExpect(status().isForbidden());
+                    .andExpect(status().isUnauthorized());
         }
 
         @Test
-        void whenRequestHasInvalidToken_thenStatus403() throws Exception {
+        void whenRequestHasInvalidToken_thenStatus401() throws Exception {
             mockMvc.perform(get(URL, imageId)
                             .header(HttpHeaders.AUTHORIZATION, auth("some_invalid_text")))
-                    .andExpect(status().isForbidden());
+                    .andExpect(status().isUnauthorized());
         }
     }
 

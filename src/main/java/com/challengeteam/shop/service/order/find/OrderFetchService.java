@@ -1,8 +1,8 @@
 package com.challengeteam.shop.service.order.find;
 
 import com.challengeteam.shop.dto.order.OrderResponseDto;
-import com.challengeteam.shop.exceptionHandling.exception.OrderNotFoundException;
-import com.challengeteam.shop.exceptionHandling.exception.UnauthorizedException;
+import com.challengeteam.shop.exceptionHandling.exception.order.OrderNotFoundException;
+import com.challengeteam.shop.exceptionHandling.exception.security.UnauthorizedException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.Authentication;

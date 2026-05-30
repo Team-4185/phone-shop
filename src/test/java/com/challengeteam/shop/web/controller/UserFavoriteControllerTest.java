@@ -1,6 +1,8 @@
 package com.challengeteam.shop.web.controller;
 
-import com.challengeteam.shop.dto.phone.PhoneResponseDto;
+import com.challengeteam.shop.dto.phone.response.PhoneResponseDto;
+import com.challengeteam.shop.dto.phone.response.PhoneColorResponseDto;
+import com.challengeteam.shop.dto.phone.response.StorageCapacityResponseDto;
 import com.challengeteam.shop.entity.user.Role;
 import com.challengeteam.shop.entity.user.User;
 import com.challengeteam.shop.exceptionHandling.GlobalExceptionHandler;
@@ -26,6 +28,7 @@ import org.springframework.web.method.support.ModelAndViewContainer;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Set;
 
 import static com.challengeteam.shop.web.controller.UserFavoriteControllerTest.TestResources.*;
 import static org.hamcrest.Matchers.hasSize;
@@ -211,6 +214,8 @@ class UserFavoriteControllerTest {
                     "12 MP",
                     "48 MP",
                     "3349 mAh",
+                    Set.of(new PhoneColorResponseDto("BLACK", "Black", "#000000")),
+                    Set.of(new StorageCapacityResponseDto("CAPACITY_128GB", 128, "GB")),
                     List.of()
             );
         }

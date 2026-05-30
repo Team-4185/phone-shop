@@ -2,6 +2,7 @@ package com.challengeteam.shop.web.controller.admin;
 
 import com.challengeteam.shop.dto.admin.customer.AdminCustomerDetailsResponseDto;
 import com.challengeteam.shop.dto.admin.customer.AdminCustomerFilterDto;
+import com.challengeteam.shop.dto.admin.customer.AdminCustomerKpiResponseDto;
 import com.challengeteam.shop.dto.admin.customer.AdminCustomerListItemResponseDto;
 import com.challengeteam.shop.dto.pagination.paginationRequest.PageRequestDto;
 import com.challengeteam.shop.dto.pagination.paginationResponse.PageResponseDto;
@@ -44,6 +45,15 @@ public class AdminCustomerController {
         adminCustomerService.getCustomers(page, size, filterDto);
 
     return ResponseEntity.ok(PageResponseDto.of(customers));
+  }
+
+  @Operation(
+      summary = "Get admin customer KPI cards",
+      description = "Returns KPI card data required for the admin Customers page header.")
+  @GetMapping("/kpi")
+  public ResponseEntity<AdminCustomerKpiResponseDto> getCustomerKpi() {
+    log.debug("Admin customer KPI request");
+    return ResponseEntity.ok(adminCustomerService.getCustomerKpi());
   }
 
   @Operation(
