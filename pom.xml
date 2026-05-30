@@ -23,7 +23,7 @@
         <springdoc-openapi.version>2.8.0</springdoc-openapi.version>
         <jjwt.version>0.13.0</jjwt.version>
         <mapstruct.version>1.6.3</mapstruct.version>
-        <minio.version>8.5.17</minio.version>
+        <minio.version>9.0.1</minio.version>
         <testcontainers.minio.version>2.0.1</testcontainers.minio.version>
         <testcontainers.postgres.version>2.0.1</testcontainers.postgres.version>
         <jacoco.version>0.8.11</jacoco.version>
