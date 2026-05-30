@@ -11,6 +11,7 @@ import com.challengeteam.shop.exceptionHandling.exception.ResourceNotFoundExcept
 import com.challengeteam.shop.exceptionHandling.exception.security.*;
 import com.challengeteam.shop.service.UserService;
 import com.challengeteam.shop.service.security.auth.jwt.JwtService;
+import com.challengeteam.shop.service.security.auth.logout.blackListTokenCache.TokenRevocationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.*;
@@ -27,6 +28,7 @@ public class JwtAuthorizationServiceImpl implements JwtAuthorizationService {
     private final AuthenticationManager authenticationManager;
     private final UserService userService;
     private final JwtService jwtService;
+    private final TokenRevocationService tokenRevocationService;
 
 
     @Override
@@ -74,6 +76,9 @@ public class JwtAuthorizationServiceImpl implements JwtAuthorizationService {
         }
 
         if (jwtService.isValid(refreshToken)) {
+            if (tokenRevocationService.isRevoked(refreshToken)) {
+                throw new InvalidTokenException("User already logged out.");
+            }
             String email = jwtService.getEmailFromToken(refreshToken);
             User user = userService
                     .getByEmail(email)

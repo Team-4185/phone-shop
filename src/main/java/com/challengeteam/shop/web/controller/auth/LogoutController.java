@@ -1,4 +1,4 @@
-package com.challengeteam.shop.web.auth;
+package com.challengeteam.shop.web.controller.auth;
 
 import com.challengeteam.shop.service.security.auth.logout.LogoutService;
 import com.challengeteam.shop.utility.web.headers.AccessTokenHeaderExtractor;
@@ -36,7 +36,7 @@ public class LogoutController {
         Cookie cookie = new Cookie("refreshToken", "");
         cookie.setHttpOnly(true);
         cookie.setSecure(false);
-        cookie.setPath("/api/auth");
+        cookie.setPath("/api");
         cookie.setMaxAge(0);
         response.addCookie(cookie);
     }

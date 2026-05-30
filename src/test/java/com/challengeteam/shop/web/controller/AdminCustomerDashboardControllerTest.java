@@ -251,8 +251,8 @@ class AdminCustomerDashboardControllerTest {
                 .andExpect(jsonPath("$[0].previewImage.name").value("dashboard-phone.jpg"))
                 .andExpect(jsonPath("$[0].previewImage.url").value(
                         "http://localhost/api/v1/images/" + imageRepository.findAll().getFirst().getId()))
-                .andExpect(jsonPath("$[0].previewImage.mimeType")
-                        .value(oneOf("image/jpeg", "image/jpg")));
+                .andExpect(jsonPath("$[0].previewImage.mimeType").value(
+                        oneOf("image/jpeg", "image/jpg")));
     }
 
     @Test

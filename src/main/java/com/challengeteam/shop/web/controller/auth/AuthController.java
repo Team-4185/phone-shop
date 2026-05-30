@@ -1,4 +1,4 @@
-package com.challengeteam.shop.web.auth;
+package com.challengeteam.shop.web.controller.auth;
 
 import com.challengeteam.shop.dto.auth.ForgotPasswordRequestDto;
 import com.challengeteam.shop.dto.auth.ResetPasswordRequestDto;
@@ -118,7 +118,7 @@ public class AuthController {
         Cookie cookie = new Cookie("refreshToken", refreshToken);
         cookie.setHttpOnly(true);
         cookie.setSecure(false);
-        cookie.setPath("/api/auth");
+        cookie.setPath("/api");
         cookie.setMaxAge(maxAge);
         httpServletResponse.addCookie(cookie);
     }
