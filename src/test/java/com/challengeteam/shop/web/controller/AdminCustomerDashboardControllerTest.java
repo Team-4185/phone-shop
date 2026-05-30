@@ -11,9 +11,7 @@ import com.challengeteam.shop.entity.order.payment.PaymentMethod;
 import com.challengeteam.shop.entity.order.payment.PaymentStatus;
 import com.challengeteam.shop.entity.order.shipping.LogisticsCompany;
 import com.challengeteam.shop.entity.order.shipping.ShippingAddress;
-import com.challengeteam.shop.entity.phone.Phone;
-import com.challengeteam.shop.entity.phone.PhoneCharacteristics;
-import com.challengeteam.shop.entity.phone.ProductStatus;
+import com.challengeteam.shop.entity.phone.*;
 import com.challengeteam.shop.entity.user.Role;
 import com.challengeteam.shop.entity.user.User;
 import com.challengeteam.shop.persistence.repository.*;
@@ -382,6 +380,8 @@ class AdminCustomerDashboardControllerTest {
                 .unitPrice(phone.getPrice())
                 .quantity(quantity)
                 .totalPrice(phone.getPrice().multiply(BigDecimal.valueOf(quantity)))
+                .selectedColor(PhoneColor.GOLD)
+                .selectedStorage(StorageCapacity.CAPACITY_128GB)
                 .build());
 
         Order savedOrder = orderRepository.save(order);

@@ -53,7 +53,7 @@ public class OrderFetchServiceImpl implements OrderFetchService {
      * Retrieves a specific order by its unique identifier.
      * The order is fetched with its associated items eagerly loaded.
      *
-     * @param id the unique identifier of the order to retrieve
+     * @param orderID the unique identifier of the order to retrieve
      * @return an {@link OrderResponseDto} containing the order details
      * @throws OrderNotFoundException if no order is found with the given ID
      */

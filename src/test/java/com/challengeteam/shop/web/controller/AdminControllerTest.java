@@ -2,7 +2,7 @@ package com.challengeteam.shop.web.controller;
 
 import com.challengeteam.shop.dto.admin.product.AdminProductCreateRequestDto;
 import com.challengeteam.shop.dto.admin.product.AdminProductUpdateRequestDto;
-import com.challengeteam.shop.dto.phone.PhoneCreateRequestDto;
+import com.challengeteam.shop.dto.phone.request.PhoneCreateRequestDto;
 import com.challengeteam.shop.entity.image.Image;
 import com.challengeteam.shop.entity.order.DeliveryMethod;
 import com.challengeteam.shop.entity.order.Order;
@@ -14,7 +14,9 @@ import com.challengeteam.shop.entity.order.payment.PaymentStatus;
 import com.challengeteam.shop.entity.order.shipping.LogisticsCompany;
 import com.challengeteam.shop.entity.order.shipping.ShippingAddress;
 import com.challengeteam.shop.entity.phone.Phone;
+import com.challengeteam.shop.entity.phone.PhoneColor;
 import com.challengeteam.shop.entity.phone.ProductStatus;
+import com.challengeteam.shop.entity.phone.StorageCapacity;
 import com.challengeteam.shop.entity.user.Role;
 import com.challengeteam.shop.entity.user.User;
 import com.challengeteam.shop.persistence.repository.*;
@@ -43,6 +45,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Set;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -741,6 +744,8 @@ class AdminControllerTest {
                             .sku(phone.getSku())
                             .unitPrice(phone.getPrice())
                             .quantity(quantity)
+                            .selectedColor(PhoneColor.GOLD)
+                            .selectedStorage(StorageCapacity.CAPACITY_128GB)
                             .totalPrice(phone.getPrice().multiply(BigDecimal.valueOf(quantity)))
                             .build());
 
@@ -813,7 +818,10 @@ class AdminControllerTest {
                 "6.5\"",
                 "12 MP",
                 "50 MP",
-                "4500 mAh");
+                "4500 mAh",
+                Set.of(PhoneColor.BLUE, PhoneColor.GOLD),
+                Set.of(StorageCapacity.CAPACITY_64GB, StorageCapacity.CAPACITY_128GB)
+                );
     }
 
     private static PhoneCreateRequestDto buildOtherPhoneCreateRequestDto() {
@@ -831,7 +839,9 @@ class AdminControllerTest {
                 "6.1\"",
                 "10 MP",
                 "30 MP",
-                "4000 mAh");
+                "4000 mAh",
+                Set.of(PhoneColor.BLUE, PhoneColor.GOLD),
+                Set.of(StorageCapacity.CAPACITY_64GB, StorageCapacity.CAPACITY_128GB));
     }
 
     private static PhoneCreateRequestDto buildMoreExpensivePhoneCreateRequestDto() {
@@ -849,7 +859,9 @@ class AdminControllerTest {
                 "6.8\"",
                 "16 MP",
                 "108 MP",
-                "5000 mAh");
+                "5000 mAh",
+                Set.of(PhoneColor.BLUE, PhoneColor.GOLD),
+                Set.of(StorageCapacity.CAPACITY_64GB, StorageCapacity.CAPACITY_128GB));
     }
 
     private AdminProductCreateRequestDto buildAdminProductCreateRequestDto(String name, String sku) {
@@ -934,6 +946,8 @@ class AdminControllerTest {
                         .sku(phone.getSku())
                         .unitPrice(phone.getPrice())
                         .quantity(quantity)
+                        .selectedColor(PhoneColor.GOLD)
+                        .selectedStorage(StorageCapacity.CAPACITY_128GB)
                         .totalPrice(phone.getPrice().multiply(BigDecimal.valueOf(quantity)))
                         .build());
 

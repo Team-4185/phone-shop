@@ -15,8 +15,7 @@ import com.challengeteam.shop.entity.order.payment.PaymentDetails;
 import com.challengeteam.shop.entity.order.payment.PaymentMethod;
 import com.challengeteam.shop.entity.order.payment.PaymentStatus;
 import com.challengeteam.shop.entity.order.shipping.ShippingAddress;
-import com.challengeteam.shop.entity.phone.Phone;
-import com.challengeteam.shop.entity.phone.ProductStatus;
+import com.challengeteam.shop.entity.phone.*;
 import com.challengeteam.shop.entity.user.User;
 import com.challengeteam.shop.exceptionHandling.exception.order.OrderCreationException;
 import com.challengeteam.shop.exceptionHandling.exception.order.PaymentFailedException;
@@ -45,6 +44,7 @@ import org.springframework.security.core.Authentication;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
@@ -116,6 +116,16 @@ class OrderCreatorServiceTest {
     // Test data builders
     // =========================================================================
 
+    private PhoneCharacteristics buildCharacteristics() {
+        return PhoneCharacteristics.builder()
+                .phoneColors(Set.of(PhoneColor.GOLD))
+                .storageCapacities(Set.of(StorageCapacity.CAPACITY_128GB))
+                .coresNumber(123)
+                .batteryCapacity("800")
+                .mainCamera("25")
+                .build();
+    }
+
     private Phone buildPhoneInStock(Long id, BigDecimal price, int stock) {
         Phone phone = new Phone();
         phone.setId(id);
@@ -124,6 +134,7 @@ class OrderCreatorServiceTest {
         phone.setPrice(price);
         phone.setStock(stock);
         phone.setStatus(ProductStatus.IN_STOCK);
+        phone.setPhoneCharacteristics(buildCharacteristics());
         return phone;
     }
 
@@ -135,11 +146,12 @@ class OrderCreatorServiceTest {
         phone.setPrice(BigDecimal.valueOf(999));
         phone.setStock(0);
         phone.setStatus(ProductStatus.OUT_OF_STOCK);
+        phone.setPhoneCharacteristics(buildCharacteristics());
         return phone;
     }
 
     private OrderItemRequestDto item(Long phoneId, int quantity) {
-        return new OrderItemRequestDto(phoneId, quantity);
+        return new OrderItemRequestDto(phoneId, quantity, PhoneColor.GOLD, StorageCapacity.CAPACITY_128GB);
     }
 
     private PaymentDetailsRequestDto validCardDetails() {

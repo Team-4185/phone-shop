@@ -69,6 +69,7 @@ public class OrderCreatorServiceImpl implements OrderCreatorService {
     public OrderResponseDto create(OrderRequestDto request, Authentication authentication) {
         Map<Long, Phone> phoneMap = resolveAndValidatePhones(request.items());
         OrderUtils.checkIfStockAvailable(phoneMap, request.items());
+        OrderUtils.checkIfColorAndStorageAvailable(phoneMap, request.items());
 
         Order order = buildOrder(request, authentication, phoneMap);
         PaymentDetails paymentDetails = processPayment(request, order.getTotal());
@@ -127,6 +128,8 @@ public class OrderCreatorServiceImpl implements OrderCreatorService {
                     .phone(phone)
                     .productName(phone.getName())
                     .sku(phone.getSku())
+                    .selectedColor(item.color())
+                    .selectedStorage(item.storage())
                     .unitPrice(phone.getPrice())
                     .quantity(item.quantity())
                     .totalPrice(itemTotal)

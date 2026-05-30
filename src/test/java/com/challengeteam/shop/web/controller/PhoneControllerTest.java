@@ -1,9 +1,11 @@
 package com.challengeteam.shop.web.controller;
 
-import com.challengeteam.shop.dto.phone.PhoneCreateRequestDto;
-import com.challengeteam.shop.dto.phone.PhoneUpdateRequestDto;
+import com.challengeteam.shop.dto.phone.request.PhoneCreateRequestDto;
+import com.challengeteam.shop.dto.phone.request.PhoneUpdateRequestDto;
 import com.challengeteam.shop.entity.image.Image;
+import com.challengeteam.shop.entity.phone.PhoneColor;
 import com.challengeteam.shop.entity.phone.ProductStatus;
+import com.challengeteam.shop.entity.phone.StorageCapacity;
 import com.challengeteam.shop.persistence.repository.PhoneRepository;
 import com.challengeteam.shop.service.PhoneService;
 import com.challengeteam.shop.testContainer.ContainerExtension;
@@ -29,6 +31,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 import static com.challengeteam.shop.web.controller.PhoneControllerTest.TestPhone.VALID_PHONE_BOUNDARY_MAX;
 import static com.challengeteam.shop.web.controller.PhoneControllerTest.TestPhone.VALID_PHONE_BOUNDARY_MIN;
@@ -1509,7 +1512,9 @@ class PhoneControllerTest {
                     testPhone.screenSize,
                     testPhone.frontCamera,
                     testPhone.mainCamera,
-                    testPhone.batteryCapacity
+                    testPhone.batteryCapacity,
+                    Set.of(PhoneColor.BLUE, PhoneColor.GOLD),
+                    Set.of(StorageCapacity.CAPACITY_64GB, StorageCapacity.CAPACITY_128GB)
             );
         }
 
@@ -1529,7 +1534,9 @@ class PhoneControllerTest {
                     testPhone.screenSize,
                     testPhone.frontCamera,
                     testPhone.mainCamera,
-                    testPhone.batteryCapacity
+                    testPhone.batteryCapacity,
+                    Set.of(PhoneColor.BLUE, PhoneColor.GOLD),
+                    Set.of(StorageCapacity.CAPACITY_64GB, StorageCapacity.CAPACITY_128GB)
             );
         }
 
@@ -1666,15 +1673,15 @@ class PhoneControllerTest {
 
         // Invalid cpu
         INVALID_CPU_NULL(
-        "Phone", "description", new BigDecimal("100.00"), "Brand", 2020,
+                "Phone", "description", new BigDecimal("100.00"), "Brand", 2020,
                 null, 8, "6.7\"", "12 MP", "50-12 MP", "5000 mAh"),
 
         INVALID_CPU_BLANK(
-        "Phone", "description", new BigDecimal("100.00"), "Brand", 2020,
+                "Phone", "description", new BigDecimal("100.00"), "Brand", 2020,
                 "", 8, "6.7\"", "12 MP", "50-12 MP", "5000 mAh"),
 
         INVALID_CPU_TOO_LONG(
-        "Phone", "description", new BigDecimal("100.00"), "Brand", 2020,
+                "Phone", "description", new BigDecimal("100.00"), "Brand", 2020,
                 "C".repeat(101), 8, "6.7\"", "12 MP", "50-12 MP", "5000 mAh"),
 
 
@@ -1786,7 +1793,6 @@ class PhoneControllerTest {
         INVALID_BATTERY_TOO_LONG(
                 "Phone", "description", new BigDecimal("100.00"), "Brand", 2020,
                 "Snapdragon 8 Gen 3", 8, "6.7\"", "12 MP", "50-12 MP", "5000000 mAh");
-
 
 
         private final String name;

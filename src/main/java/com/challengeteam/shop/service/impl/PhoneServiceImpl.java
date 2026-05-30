@@ -1,8 +1,8 @@
 package com.challengeteam.shop.service.impl;
 
 import com.challengeteam.shop.dto.pagination.paginationRequest.PhoneFilterDto;
-import com.challengeteam.shop.dto.phone.PhoneCreateRequestDto;
-import com.challengeteam.shop.dto.phone.PhoneUpdateRequestDto;
+import com.challengeteam.shop.dto.phone.request.PhoneCreateRequestDto;
+import com.challengeteam.shop.dto.phone.request.PhoneUpdateRequestDto;
 import com.challengeteam.shop.entity.image.Image;
 import com.challengeteam.shop.entity.phone.Phone;
 import com.challengeteam.shop.entity.phone.PhoneCharacteristics;
@@ -95,6 +95,8 @@ public class PhoneServiceImpl implements PhoneService {
                 .frontCamera(phoneCreateRequestDto.frontCamera())
                 .mainCamera(phoneCreateRequestDto.mainCamera())
                 .batteryCapacity(phoneCreateRequestDto.batteryCapacity())
+                .phoneColors(phoneCreateRequestDto.colors())
+                .storageCapacities(phoneCreateRequestDto.storageCapacities())
                 .build();
 
         var phone = Phone.builder()
