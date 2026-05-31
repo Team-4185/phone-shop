@@ -81,51 +81,52 @@ INSERT INTO orders (id, fk_user_id, customer_email, customer_first_name, custome
                     apartment_number, house_number, logistics_company, logistic_post_office, tracking_number,
                     street, city, region, country, zip_code,
                     payment_status, transaction_id,
+                    payment_provider, delivery_provider, delivery_price,
                     total, created_at, updated_at)
     OVERRIDING SYSTEM VALUE
 VALUES
 -- anon CARD, COURIER, DELIVERED, PAID
 (1, NULL, 'anon1@email.com', 'John', 'Doe', '+380991234567', 'DELIVERED', 'CARD', 'COURIER', '12A', '25', 'DHL', NULL,
- 'TRK-001', 'Khreshchatyk St', 'Kyiv', 'Kyiv Oblast', 'Ukraine', '01001', 'PAID', 'TXN-001', 999.99,
- NOW() - INTERVAL '30 days', NOW() - INTERVAL '25 days'),
+ 'TRK-001', 'Khreshchatyk St', 'Kyiv', 'Kyiv Oblast', 'Ukraine', '01001', 'PAID', 'TXN-001',
+ 'mock', 'mock', 0.00, 999.99, NOW() - INTERVAL '30 days', NOW() - INTERVAL '25 days'),
 -- anon, CASH_ON_DELIVERY, POST_OFFICE, CANCELLED, PENDING
 (2, NULL, 'anon2@email.com', 'Anna', 'Smith', '+380992345678', 'CANCELLED', 'CASH_ON_DELIVERY', 'POST_OFFICE', NULL,
  '10', 'NOVA_POSHTA', 'NP #5 Lviv', NULL, 'Svobody Ave', 'Lviv', 'Lviv Oblast', 'Ukraine', '79000', 'PENDING', NULL,
- 449.99, NOW() - INTERVAL '20 days', NOW() - INTERVAL '18 days'),
+ 'mock', 'mock', 0.00, 449.99, NOW() - INTERVAL '20 days', NOW() - INTERVAL '18 days'),
 -- anon, CARD, PICKUP, PROCESSING, PAID
 (3, NULL, 'anon3@email.com', 'Mike', 'Brown', '+380993456789', 'PROCESSING', 'CARD', 'PICKUP', NULL, NULL, NULL, NULL,
- 'TRK-003', NULL, NULL, NULL, NULL, NULL, 'PAID', 'TXN-003', 1199.99,
- NOW() - INTERVAL '5 days', NULL),
+ 'TRK-003', NULL, NULL, NULL, NULL, NULL, 'PAID', 'TXN-003',
+ 'mock', 'mock', 0.00, 1199.99, NOW() - INTERVAL '5 days', NULL),
 -- us1, CARD, COURIER, NEW, PENDING
 (4, 2, 'us1@email.com', 'User1', 'User1', '+380994567890', 'NEW', 'CARD', 'COURIER', '5B', '33', 'NOVA_POSHTA', NULL,
  NULL,
- 'Derybasivska St', 'Odesa', 'Odesa Oblast', 'Ukraine', '65000', 'PENDING', NULL, 799.99, NOW() - INTERVAL '1 day',
+ 'Derybasivska St', 'Odesa', 'Odesa Oblast', 'Ukraine', '65000', 'PENDING', NULL, 'mock', 'mock', 0.00, 799.99, NOW() - INTERVAL '1 day',
  NULL),
 -- us1, CASH_ON_DELIVERY, POST_OFFICE, SHIPPED, PENDING
 (5, 2, 'us1@email.com', 'User1', 'User1', '+380994567890', 'SHIPPED', 'CASH_ON_DELIVERY', 'POST_OFFICE', NULL, NULL,
  'UKR_POSHTA', 'UP #12 Dnipro', 'TRK-005', NULL, 'Dnipro', 'Dnipro Oblast', 'Ukraine', '49000', 'PENDING',
- NULL, 249.99, NOW() - INTERVAL '10 days', NOW() - INTERVAL '7 days'),
+ NULL, 'mock', 'mock', 0.00, 249.99, NOW() - INTERVAL '10 days', NOW() - INTERVAL '7 days'),
 -- us2, CARD, COURIER, CONFIRMED, PAID
 (6, 3, 'us2@email.com', 'User2', 'User2', '+380995678901', 'CONFIRMED', 'CARD', 'COURIER', '3', '15', 'DHL', NULL, NULL,
- 'Shevchenko Blvd', 'Zaporizhzhia', 'Zaporizhzhia Oblast', 'Ukraine', '69000', 'PAID', 'TXN-006', 1799.98,
- NOW() - INTERVAL '3 days', NOW() - INTERVAL '2 days'),
+ 'Shevchenko Blvd', 'Zaporizhzhia', 'Zaporizhzhia Oblast', 'Ukraine', '69000', 'PAID', 'TXN-006',
+ 'mock', 'mock', 0.00, 1799.98, NOW() - INTERVAL '3 days', NOW() - INTERVAL '2 days'),
 -- us2, CARD, PICKUP, DELIVERED, PAID
 (7, 3, 'us2@email.com', 'User2', 'User2', '+380995678901', 'DELIVERED', 'CARD', 'PICKUP', NULL, NULL, NULL, NULL,
- 'TRK-007', NULL, NULL, NULL, NULL, NULL, 'PAID', 'TXN-007', 599.99,
- NOW() - INTERVAL '45 days', NOW() - INTERVAL '40 days'),
+ 'TRK-007', NULL, NULL, NULL, NULL, NULL, 'PAID', 'TXN-007',
+ 'mock', 'mock', 0.00, 599.99, NOW() - INTERVAL '45 days', NOW() - INTERVAL '40 days'),
 -- us3, CASH_ON_DELIVERY, POST_OFFICE, DELIVERED, PAID
 (8, 4, 'us3@email.com', 'User3', 'User3', '+380996789012', 'DELIVERED', 'CASH_ON_DELIVERY', 'POST_OFFICE', NULL, '88',
  'NOVA_POSHTA', 'NP #3 Kharkiv', 'TRK-008', NULL, 'Kharkiv', 'Kharkiv Oblast', 'Ukraine', '61022', 'PAID', NULL,
- 899.99, NOW() - INTERVAL '60 days', NOW() - INTERVAL '55 days'),
+ 'mock', 'mock', 0.00, 899.99, NOW() - INTERVAL '60 days', NOW() - INTERVAL '55 days'),
 -- us3, CARD, COURIER, PROCESSING, FAILED
 (9, 4, 'us3@email.com', 'User3', 'User3', '+380996789012', 'PROCESSING', 'CARD', 'COURIER', '1A', '4', 'DHL', NULL,
  NULL,
- 'Lesi Ukrainky Blvd', 'Kyiv', 'Kyiv Oblast', 'Ukraine', '01133', 'FAILED', 'TXN-009', 1299.99,
- NOW() - INTERVAL '2 days', NULL),
+ 'Lesi Ukrainky Blvd', 'Kyiv', 'Kyiv Oblast', 'Ukraine', '01133', 'FAILED', 'TXN-009',
+ 'mock', 'mock', 0.00, 1299.99, NOW() - INTERVAL '2 days', NULL),
 -- anon, CARD, POST_OFFICE, NEW, PENDING
 (10, NULL, 'anon4@email.com', 'Kate', 'Wilson', '+380997890123', 'NEW', 'CARD', 'POST_OFFICE', NULL, '19',
  'NOVA_POSHTA', 'NP #7 Odesa', NULL, 'Velyka Arnautska', 'Odesa', 'Odesa Oblast', 'Ukraine', '65012', 'PENDING', NULL,
- 699.99, NOW(), NULL)
+ 'mock', 'mock', 0.00, 699.99, NOW(), NULL)
 ON CONFLICT (id) DO NOTHING;
 
 -- orders_items
