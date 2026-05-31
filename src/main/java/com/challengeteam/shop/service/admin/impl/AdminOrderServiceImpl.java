@@ -6,13 +6,17 @@ import com.challengeteam.shop.dto.admin.order.AdminOrderKpiResponseDto;
 import com.challengeteam.shop.dto.admin.order.AdminOrderListItemResponseDto;
 import com.challengeteam.shop.entity.order.Order;
 import com.challengeteam.shop.entity.order.OrderStatus;
+import com.challengeteam.shop.entity.order.payment.PaymentMethod;
+import com.challengeteam.shop.entity.order.payment.PaymentStatus;
 import com.challengeteam.shop.exceptionHandling.exception.InvalidPriceRangeException;
 import com.challengeteam.shop.exceptionHandling.exception.ResourceNotFoundException;
+import com.challengeteam.shop.exceptionHandling.exception.order.InvalidOrderStatusTransitionException;
 import com.challengeteam.shop.mapper.admin.AdminOrderMapper;
 import com.challengeteam.shop.persistence.repository.OrderRepository;
 import com.challengeteam.shop.persistence.specification.AdminOrderSpecification;
 import com.challengeteam.shop.service.admin.AdminOrderService;
 import com.challengeteam.shop.service.admin.AdminOrderWorkflowService;
+import com.challengeteam.shop.service.payment.PaymentProviderResolver;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
@@ -43,6 +47,7 @@ public class AdminOrderServiceImpl implements AdminOrderService {
   private final OrderRepository orderRepository;
   private final AdminOrderMapper adminOrderMapper;
   private final AdminOrderWorkflowService adminOrderWorkflowService;
+  private final PaymentProviderResolver paymentProviderResolver;
 
   @Override
   public Page<AdminOrderListItemResponseDto> getOrders(
@@ -110,6 +115,7 @@ public class AdminOrderServiceImpl implements AdminOrderService {
     OrderStatus targetStatus = adminOrderWorkflowService.resolveTargetStatus(previousStatus, action);
 
     order.setStatus(targetStatus);
+    refundIfNeeded(order, targetStatus);
     Order savedOrder = orderRepository.save(order);
     log.info(
         "Admin order status changed orderId={} action={} from={} to={}",
@@ -119,6 +125,38 @@ public class AdminOrderServiceImpl implements AdminOrderService {
         targetStatus);
 
     return adminOrderMapper.toDetails(savedOrder);
+  }
+
+  @Override
+  @Transactional
+  public AdminOrderDetailsResponseDto shipOrder(Long id, String trackingNumber) {
+    Order order = findOrderWithDetails(id);
+    OrderStatus targetStatus =
+        adminOrderWorkflowService.resolveTargetStatus(order.getStatus(), "ship");
+
+    if (trackingNumber != null && !trackingNumber.isBlank()) {
+      if (order.getShippingAddress() == null) {
+        throw new InvalidOrderStatusTransitionException(
+            "Cannot assign tracking number to an order without shipping address");
+      }
+      order.getShippingAddress().setTrackingNumber(trackingNumber.strip());
+    }
+
+    order.setStatus(targetStatus);
+    return adminOrderMapper.toDetails(orderRepository.save(order));
+  }
+
+  private void refundIfNeeded(Order order, OrderStatus targetStatus) {
+    if (targetStatus != OrderStatus.CANCELLED
+        || order.getPaymentMethod() == PaymentMethod.CASH_ON_DELIVERY
+        || order.getPaymentDetails().getPaymentStatus() != PaymentStatus.PAID) {
+      return;
+    }
+
+    paymentProviderResolver
+        .getProvider(order.getPaymentProvider())
+        .refund(order.getPaymentDetails().getTransactionId(), order.getTotal());
+    order.getPaymentDetails().setPaymentStatus(PaymentStatus.REFUNDED);
   }
 
   private Order findOrderWithDetails(Long id) {

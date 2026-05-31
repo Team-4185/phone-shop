@@ -27,6 +27,8 @@ public class AdminOrderMapper {
                 order.getPaymentMethod(),
                 order.getPaymentDetails().getPaymentStatus(),
                 order.getDeliveryMethod(),
+                order.getPaymentProvider(),
+                order.getDeliveryProvider(),
                 order.getTotal(),
                 order.getItems().stream().mapToInt(OrderItem::getQuantity).sum(),
                 order.getCreatedAt(),
@@ -48,6 +50,14 @@ public class AdminOrderMapper {
                 order.getPaymentMethod(),
                 order.getPaymentDetails().getPaymentStatus(),
                 order.getDeliveryMethod(),
+                order.getPaymentProvider(),
+                order.getDeliveryProvider(),
+                order.getPickupPointId(),
+                order.getShippingAddress() == null
+                        ? null
+                        : order.getShippingAddress().getTrackingNumber(),
+                order.getEstimatedDeliveryDate(),
+                order.getDeliveryPrice(),
                 order.getTotal(),
                 adminOrderWorkflowService.getAvailableActions(order.getStatus()),
                 order.getItems().stream().map(this::toItem).toList(),

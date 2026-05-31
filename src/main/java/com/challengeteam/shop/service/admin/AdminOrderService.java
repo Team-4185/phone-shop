@@ -16,4 +16,6 @@ public interface AdminOrderService {
   AdminOrderDetailsResponseDto getOrderById(Long id);
 
   AdminOrderDetailsResponseDto applyAction(Long id, String action);
+
+  AdminOrderDetailsResponseDto shipOrder(Long id, String trackingNumber);
 }
