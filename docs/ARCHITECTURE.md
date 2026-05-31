@@ -37,6 +37,7 @@ flowchart TB
     subgraph Runtime[Docker Compose Runtime]
         App[Spring Boot Application<br/>Java 21]
         DB[(PostgreSQL<br/>Business data)]
+        Redis[(Redis<br/>Revoked tokens)]
         ObjectStorage[(MinIO<br/>Product images)]
     end
 
@@ -45,6 +46,7 @@ flowchart TB
 
     Browser -->|HTTPS / REST| App
     App -->|JDBC| DB
+    App -->|Spring Data Redis| Redis
     App -->|S3-compatible API| ObjectStorage
     App -->|SMTP| MailProvider
 ```
@@ -142,6 +144,7 @@ sequenceDiagram
 | Product image metadata | Image domain | PostgreSQL |
 | Product image binaries | Image storage adapter | MinIO |
 | Password reset tokens | Auth domain | PostgreSQL |
+| Revoked access and refresh tokens | Auth domain | Redis |
 
 ## Security Model
 
@@ -157,7 +160,7 @@ sequenceDiagram
 - Pull requests to `develop` and `main` run the CI pipeline.
 - CI executes Maven verification.
 - JaCoCo enforces 70% minimum line coverage.
-- Integration tests use Testcontainers for PostgreSQL and MinIO.
+- Integration tests use Testcontainers for PostgreSQL, Redis and MinIO.
 
 ## Design Decisions
 
