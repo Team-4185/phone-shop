@@ -7,8 +7,15 @@ import jakarta.validation.constraints.NotNull;
 import java.io.Serializable;
 
 public record PaymentWebhookRequestDto(
-        @NotBlank String eventId,
-        @NotBlank String transactionId,
-        @NotNull PaymentStatus paymentStatus,
-        String errorMessage) implements Serializable {
+        @NotBlank(message = "eventId is required")
+        String eventId,
+        
+        @NotBlank(message = "transactionId is required")
+        String transactionId,
+        
+        @NotNull(message = "paymentStatus is required")
+        PaymentStatus paymentStatus,
+        
+        String errorMessage
+) implements Serializable {
 }
