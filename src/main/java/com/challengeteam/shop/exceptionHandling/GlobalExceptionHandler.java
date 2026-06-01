@@ -61,16 +61,9 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ProblemDetail> handleCriticalSystemException(CriticalSystemException e) {
         log.error("500  A critical error occurred that should not have occurred: {}", e.getMessage(), e);
 
-        // todo: error showing should be cut out after developing end
-        String message = """
-                Occurred an unexpected error on the server side. We are already working on it. Please, try again later.
-                
-                error occurred:
-                %s
-                """.formatted(e.getMessage());
         var problem = ProblemDetail.forStatus(HttpStatus.INTERNAL_SERVER_ERROR.value());
         problem.setTitle("Unexpected Internal Server Error");
-        problem.setDetail(message);
+        problem.setDetail("An unexpected server error occurred. Please try again later.");
 
         return ResponseEntity
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -90,16 +83,9 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ProblemDetail> handleException(Exception e) {
         log.error("500  Unhandled exception: {}", e.getMessage(), e);
 
-        // todo: error showing should be cut out after developing end
-        String message = """
-                Occurred unhandled error on the server side. We are already working on it. Please, try again later.
-                
-                error occurred:
-                %s
-                """.formatted(e.getMessage());
         var problem = ProblemDetail.forStatus(HttpStatus.INTERNAL_SERVER_ERROR.value());
         problem.setTitle("Internal Server Error");
-        problem.setDetail(message);
+        problem.setDetail("An unexpected server error occurred. Please try again later.");
 
         return ResponseEntity
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)
