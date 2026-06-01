@@ -1,5 +1,7 @@
 package com.challengeteam.shop.service.admin.impl;
 
+import com.challengeteam.shop.constants.notification.type.Notification_type;
+import com.challengeteam.shop.dto.email.Notification;
 import com.challengeteam.shop.dto.admin.order.AdminOrderDetailsResponseDto;
 import com.challengeteam.shop.dto.admin.order.AdminOrderFilterDto;
 import com.challengeteam.shop.dto.admin.order.AdminOrderKpiResponseDto;
@@ -13,6 +15,8 @@ import com.challengeteam.shop.persistence.repository.OrderRepository;
 import com.challengeteam.shop.persistence.specification.AdminOrderSpecification;
 import com.challengeteam.shop.service.admin.AdminOrderService;
 import com.challengeteam.shop.service.admin.AdminOrderWorkflowService;
+import com.challengeteam.shop.service.notification.NotificationSenderService;
+import com.challengeteam.shop.utility.notification.email.OrderStatusEmailBuilder;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
@@ -43,6 +47,8 @@ public class AdminOrderServiceImpl implements AdminOrderService {
   private final OrderRepository orderRepository;
   private final AdminOrderMapper adminOrderMapper;
   private final AdminOrderWorkflowService adminOrderWorkflowService;
+  private final NotificationSenderService notificationSenderService;
+  private final OrderStatusEmailBuilder orderStatusEmailBuilder;
 
   @Override
   public Page<AdminOrderListItemResponseDto> getOrders(
@@ -111,6 +117,7 @@ public class AdminOrderServiceImpl implements AdminOrderService {
 
     order.setStatus(targetStatus);
     Order savedOrder = orderRepository.save(order);
+    sendStatusChangedNotification(savedOrder, previousStatus, targetStatus);
     log.info(
         "Admin order status changed orderId={} action={} from={} to={}",
         id,
@@ -119,6 +126,13 @@ public class AdminOrderServiceImpl implements AdminOrderService {
         targetStatus);
 
     return adminOrderMapper.toDetails(savedOrder);
+  }
+
+  private void sendStatusChangedNotification(
+      Order order, OrderStatus previousStatus, OrderStatus targetStatus) {
+    Notification notification =
+        orderStatusEmailBuilder.buildOrderStatusChangedNotification(order, previousStatus, targetStatus);
+    notificationSenderService.sendNotification(notification, Notification_type.EMAIL);
   }
 
   private Order findOrderWithDetails(Long id) {

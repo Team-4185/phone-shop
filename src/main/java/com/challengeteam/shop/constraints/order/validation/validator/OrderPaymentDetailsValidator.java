@@ -1,6 +1,7 @@
 package com.challengeteam.shop.constraints.order.validation.validator;
 
 import com.challengeteam.shop.constraints.order.validation.annotation.ValidateCorrectPaymentDetails;
+import com.challengeteam.shop.dto.order.request.OrderDetailsRequest;
 import com.challengeteam.shop.dto.order.request.order.OrderRequestDto;
 import com.challengeteam.shop.dto.order.request.payment.PaymentDetailsRequestDto;
 import com.challengeteam.shop.entity.order.payment.PaymentMethod;
@@ -24,7 +25,7 @@ import java.util.Set;
  * @see PaymentMethod
  */
 public class OrderPaymentDetailsValidator
-        implements ConstraintValidator<ValidateCorrectPaymentDetails, OrderRequestDto> {
+        implements ConstraintValidator<ValidateCorrectPaymentDetails, OrderDetailsRequest> {
 
     /**
      * The validator instance used for validating payment details.
@@ -59,7 +60,10 @@ public class OrderPaymentDetailsValidator
      * @return {@code true} if the payment details are valid, {@code false} otherwise
      */
     @Override
-    public boolean isValid(OrderRequestDto value, ConstraintValidatorContext context) {
+    public boolean isValid(OrderDetailsRequest value, ConstraintValidatorContext context) {
+        if (value == null || value.paymentMethod() == null) {
+            return true;
+        }
         if (value.paymentMethod() == PaymentMethod.CASH_ON_DELIVERY) {
             return value.paymentDetails() == null;
         }

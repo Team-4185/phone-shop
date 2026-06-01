@@ -1,10 +1,15 @@
 package com.challengeteam.shop.web.controller;
 
 import com.challengeteam.shop.dto.payment.TransactionResult;
+import com.challengeteam.shop.constants.notification.type.Notification_type;
+import com.challengeteam.shop.entity.order.Order;
+import com.challengeteam.shop.entity.order.OrderStatus;
 import com.challengeteam.shop.entity.order.payment.PaymentStatus;
 import com.challengeteam.shop.entity.phone.*;
+import com.challengeteam.shop.persistence.repository.CartRepository;
 import com.challengeteam.shop.persistence.repository.OrderRepository;
 import com.challengeteam.shop.persistence.repository.PhoneRepository;
+import com.challengeteam.shop.service.UserCartService;
 import com.challengeteam.shop.service.mock.PaymentMockService;
 import com.challengeteam.shop.service.notification.EmailNotificationSenderService;
 import com.challengeteam.shop.testContainer.ContainerExtension;
@@ -30,6 +35,9 @@ import java.util.Set;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.hamcrest.Matchers.hasSize;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -50,7 +58,11 @@ class OrderControllerTest {
     @Autowired
     private PhoneRepository phoneRepository;
     @Autowired
+    private CartRepository cartRepository;
+    @Autowired
     private OrderRepository orderRepository;
+    @Autowired
+    private UserCartService userCartService;
     @Autowired
     private TestAuthHelper testAuthHelper;
 
@@ -70,6 +82,7 @@ class OrderControllerTest {
 
     @BeforeEach
     void setUp() {
+        cartRepository.deleteAll();
         orderRepository.deleteAll();
         phoneRepository.deleteAll();
 
@@ -81,6 +94,7 @@ class OrderControllerTest {
 
     @AfterEach
     void tearDown() {
+        cartRepository.deleteAll();
         orderRepository.deleteAll();
         phoneRepository.deleteAll();
     }
@@ -179,6 +193,22 @@ class OrderControllerTest {
                 "deliveryMethod", "POST_OFFICE",
                 "shippingAddress", postOfficeAddress(),
                 "items", List.of(item(phoneId, quantity))
+        ));
+    }
+
+    private String checkoutBody(Long phoneId) throws Exception {
+        return objectMapper.writeValueAsString(Map.of(
+                "customerEmail", "customer@example.com",
+                "customerFirstName", "John",
+                "customerLastName", "Doe",
+                "customerPhoneNumber", "+380991234567",
+                "paymentMethod", "CASH_ON_DELIVERY",
+                "deliveryMethod", "PICKUP",
+                "itemSelections", List.of(Map.of(
+                        "phoneId", phoneId,
+                        "color", "BLACK",
+                        "storage", "CAPACITY_128GB"
+                ))
         ));
     }
 
@@ -594,6 +624,71 @@ class OrderControllerTest {
         }
     }
 
+    @Nested
+    @DisplayName("POST /api/v1/orders/checkout - checkout current user cart")
+    class CheckoutTests {
+
+        @Test
+        @DisplayName("Authenticated user checks out cart -> 201, order created, cart cleared")
+        void authenticatedUserCheckout_returns201AndClearsCart() throws Exception {
+            Long userId = testAuthHelper.authorizeAndReturnTokens().userId();
+            userCartService.putItemToUserCart(userId, new com.challengeteam.shop.dto.cart.CartItemAddRequestDto(
+                    iphone.getId(), 2));
+
+            mockMvc.perform(post(ORDER_URL + "/checkout")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .header("Authorization", "Bearer " + userToken)
+                            .content(checkoutBody(iphone.getId())))
+                    .andExpect(status().isCreated())
+                    .andExpect(jsonPath("$.status").value("NEW"))
+                    .andExpect(jsonPath("$.paymentDetails.paymentStatus").value("PENDING"))
+                    .andExpect(jsonPath("$.items.length()").value(1))
+                    .andExpect(jsonPath("$.items[0].quantity").value(2))
+                    .andExpect(jsonPath("$.total").value(1998.00));
+
+            assertThat(cartRepository.findByUserId(userId).orElseThrow().getCartItems().size()).isZero();
+            assertThat(phoneRepository.findById(iphone.getId()).orElseThrow().getStock()).isEqualTo(8);
+        }
+
+        @Test
+        @DisplayName("Checkout with missing cart item selection -> 400 and cart remains unchanged")
+        void missingCartItemSelection_returns400AndKeepsCart() throws Exception {
+            Long userId = testAuthHelper.authorizeAndReturnTokens().userId();
+            userCartService.putItemToUserCart(userId, new com.challengeteam.shop.dto.cart.CartItemAddRequestDto(
+                    iphone.getId(), 1));
+
+            mockMvc.perform(post(ORDER_URL + "/checkout")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .header("Authorization", "Bearer " + userToken)
+                            .content(objectMapper.writeValueAsString(Map.of(
+                                    "customerEmail", "customer@example.com",
+                                    "customerFirstName", "John",
+                                    "customerLastName", "Doe",
+                                    "customerPhoneNumber", "+380991234567",
+                                    "paymentMethod", "CASH_ON_DELIVERY",
+                                    "deliveryMethod", "PICKUP",
+                                    "itemSelections", List.of(Map.of(
+                                            "phoneId", samsung.getId(),
+                                            "color", "BLACK",
+                                            "storage", "CAPACITY_128GB"
+                                    ))
+                            ))))
+                    .andExpect(status().isBadRequest());
+
+            assertThat(cartRepository.findByUserId(userId).orElseThrow().getCartItems().size()).isEqualTo(1);
+            assertThat(orderRepository.count()).isZero();
+        }
+
+        @Test
+        @DisplayName("Unauthenticated checkout -> 401")
+        void unauthenticatedCheckout_returns401() throws Exception {
+            mockMvc.perform(post(ORDER_URL + "/checkout")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(checkoutBody(iphone.getId())))
+                    .andExpect(status().isUnauthorized());
+        }
+    }
+
     // -------------------------------------------------------------------------
     @Nested
     @DisplayName("GET /api/v1/orders/my — get current user orders")
@@ -734,6 +829,70 @@ class OrderControllerTest {
             String otherToken = testAuthHelper.authorizeAsNewUser("other@gmail.com", "password");
 
             mockMvc.perform(get(ORDER_URL + "/{id}", orderId)
+                            .header("Authorization", "Bearer " + otherToken))
+                    .andExpect(status().isNotFound());
+        }
+    }
+
+    @Nested
+    @DisplayName("POST /api/v1/orders/{id}/cancel - cancel current user's order")
+    class CancelOrderTests {
+
+        @Test
+        @DisplayName("Owner cancels NEW order -> 200, status CANCELLED, notification sent")
+        void ownerCancelsNewOrder_returns200AndSendsNotification() throws Exception {
+            String responseBody = mockMvc.perform(post(ORDER_URL)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .header("Authorization", "Bearer " + userToken)
+                            .content(cashPickupBody(iphone.getId(), 1)))
+                    .andExpect(status().isCreated())
+                    .andReturn().getResponse().getContentAsString();
+
+            Long orderId = objectMapper.readTree(responseBody).get("id").asLong();
+
+            mockMvc.perform(post(ORDER_URL + "/{id}/cancel", orderId)
+                            .header("Authorization", "Bearer " + userToken))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.status").value("CANCELLED"));
+
+            verify(emailNotificationSenderService, times(2))
+                    .sendNotification(any(), eq(Notification_type.EMAIL));
+        }
+
+        @Test
+        @DisplayName("Owner cannot cancel SHIPPED order -> 400")
+        void ownerCannotCancelShippedOrder_returns400() throws Exception {
+            String responseBody = mockMvc.perform(post(ORDER_URL)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .header("Authorization", "Bearer " + userToken)
+                            .content(cashPickupBody(iphone.getId(), 1)))
+                    .andExpect(status().isCreated())
+                    .andReturn().getResponse().getContentAsString();
+
+            Long orderId = objectMapper.readTree(responseBody).get("id").asLong();
+            Order savedOrder = orderRepository.findById(orderId).orElseThrow();
+            savedOrder.setStatus(OrderStatus.SHIPPED);
+            orderRepository.save(savedOrder);
+
+            mockMvc.perform(post(ORDER_URL + "/{id}/cancel", orderId)
+                            .header("Authorization", "Bearer " + userToken))
+                    .andExpect(status().isBadRequest());
+        }
+
+        @Test
+        @DisplayName("Another user cannot cancel order -> 404")
+        void anotherUserCannotCancelOrder_returns404() throws Exception {
+            String responseBody = mockMvc.perform(post(ORDER_URL)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .header("Authorization", "Bearer " + userToken)
+                            .content(cashPickupBody(iphone.getId(), 1)))
+                    .andExpect(status().isCreated())
+                    .andReturn().getResponse().getContentAsString();
+
+            Long orderId = objectMapper.readTree(responseBody).get("id").asLong();
+            String otherToken = testAuthHelper.authorizeAsNewUser("cancel-other@gmail.com", "password");
+
+            mockMvc.perform(post(ORDER_URL + "/{id}/cancel", orderId)
                             .header("Authorization", "Bearer " + otherToken))
                     .andExpect(status().isNotFound());
         }
