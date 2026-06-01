@@ -75,6 +75,12 @@ minio:
   username: ${MINIO_USERNAME}
   password: ${MINIO_PASSWORD}
 
+payment:
+  provider: ${PAYMENT_PROVIDER:mock}
+
+delivery:
+  provider: ${DELIVERY_PROVIDER:mock}
+
 logging:
   level:
     root: ${LOG_LEVEL:INFO}

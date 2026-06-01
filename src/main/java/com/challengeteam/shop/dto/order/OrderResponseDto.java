@@ -11,6 +11,7 @@ import com.challengeteam.shop.entity.order.payment.PaymentMethod;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.List;
 
 /**
@@ -27,6 +28,11 @@ public record OrderResponseDto(Long id,
                                OrderStatus status,
                                PaymentMethod paymentMethod,
                                DeliveryMethod deliveryMethod,
+                               String paymentProvider,
+                               String deliveryProvider,
+                               String pickupPointId,
+                               LocalDate estimatedDeliveryDate,
+                               BigDecimal deliveryPrice,
                                ShippingAddressResponseDto shippingAddress,
                                PaymentDetailsResponseDto paymentDetails,
                                BigDecimal total,

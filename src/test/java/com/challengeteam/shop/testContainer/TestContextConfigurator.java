@@ -44,6 +44,8 @@ public class TestContextConfigurator {
         propertyRegistry.add("spring.datasource.url", () -> DEFAULT_DB_URL);
         propertyRegistry.add("spring.datasource.username", () -> DEFAULT_DB_USERNAME);
         propertyRegistry.add("spring.datasource.password", () -> DEFAULT_DB_PASSWORD);
+        propertyRegistry.add("spring.datasource.hikari.maximum-pool-size", () -> "2");
+        propertyRegistry.add("spring.datasource.hikari.minimum-idle", () -> "0");
         propertyRegistry.add("security.jwt.private-key", () -> DEFAULT_JWT_PRIVATE_KEY);
         propertyRegistry.add("security.jwt.public-key", () -> DEFAULT_JWT_PUBLIC_KEY);
         propertyRegistry.add("security.jwt.reset-secret", () -> DEFAULT_JWT_RESET_SECRET);

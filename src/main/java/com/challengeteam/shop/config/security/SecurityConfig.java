@@ -70,6 +70,8 @@ public class SecurityConfig {
                         .requestMatchers("/api/v1/test-data/**").permitAll()
                         .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
                         .requestMatchers("/api/v1/filter/**").permitAll()
+                        .requestMatchers("/api/v1/delivery/**").permitAll()
+                        .requestMatchers("/api/v1/payments/webhooks/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/orders").permitAll()
                         .requestMatchers("/api/v1/orders/**").authenticated()
                         .anyRequest().authenticated()

@@ -40,6 +40,8 @@ public interface OrderRepository extends JpaRepository<Order, Long>, JpaSpecific
     @Query("SELECT o FROM CustomerOrder o WHERE o.id = :id")
     Optional<Order> findByIdWithItems(@Param("id") Long id);
 
+    Optional<Order> findByPaymentDetailsTransactionId(String transactionId);
+
     @EntityGraph(value = "Order.withItems")
     Page<Order> findByUser(User user, Pageable pageable);
 

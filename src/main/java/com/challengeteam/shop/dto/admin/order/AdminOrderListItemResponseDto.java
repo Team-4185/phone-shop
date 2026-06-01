@@ -16,6 +16,8 @@ public record AdminOrderListItemResponseDto(
     PaymentMethod paymentMethod,
     PaymentStatus paymentStatus,
     DeliveryMethod deliveryMethod,
+    String paymentProvider,
+    String deliveryProvider,
     BigDecimal total,
     Integer itemsCount,
     Instant createdAt,
