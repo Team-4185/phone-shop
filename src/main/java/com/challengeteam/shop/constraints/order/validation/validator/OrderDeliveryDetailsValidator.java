@@ -3,6 +3,7 @@ package com.challengeteam.shop.constraints.order.validation.validator;
 import com.challengeteam.shop.constraints.order.validation.annotation.delivery.ValidateCorrectDeliveryDetails;
 import com.challengeteam.shop.constraints.order.validation.annotation.delivery.group.CourierGroupValidation;
 import com.challengeteam.shop.constraints.order.validation.annotation.delivery.group.PostOfficeGroupValidation;
+import com.challengeteam.shop.dto.order.request.OrderDetailsRequest;
 import com.challengeteam.shop.dto.order.request.order.OrderRequestDto;
 import com.challengeteam.shop.dto.order.request.shippingAddress.ShippingAddressRequestDto;
 import com.challengeteam.shop.entity.order.DeliveryMethod;
@@ -27,7 +28,7 @@ import java.util.Set;
  * @see DeliveryMethod
  */
 public class OrderDeliveryDetailsValidator
-        implements ConstraintValidator<ValidateCorrectDeliveryDetails, OrderRequestDto> {
+        implements ConstraintValidator<ValidateCorrectDeliveryDetails, OrderDetailsRequest> {
     /**
      * The validator instance used for validating shipping address with specific validation groups.
      */
@@ -61,7 +62,10 @@ public class OrderDeliveryDetailsValidator
      * @return {@code true} if the delivery details are valid, {@code false} otherwise
      */
     @Override
-    public boolean isValid(OrderRequestDto value, ConstraintValidatorContext context) {
+    public boolean isValid(OrderDetailsRequest value, ConstraintValidatorContext context) {
+        if (value == null) {
+            return true;
+        }
         DeliveryMethod method = value.deliveryMethod();
         ShippingAddressRequestDto address = value.shippingAddress();
         if (method == null) {

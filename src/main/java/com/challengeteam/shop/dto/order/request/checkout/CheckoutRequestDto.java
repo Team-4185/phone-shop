@@ -1,10 +1,9 @@
-package com.challengeteam.shop.dto.order.request.order;
+package com.challengeteam.shop.dto.order.request.checkout;
 
 import com.challengeteam.shop.constraints.order.validation.annotation.ValidateCorrectPaymentDetails;
 import com.challengeteam.shop.constraints.order.validation.annotation.delivery.ValidateCorrectDeliveryDetails;
 import com.challengeteam.shop.constraints.userData.InputUserValidationRules;
 import com.challengeteam.shop.dto.order.request.OrderDetailsRequest;
-import com.challengeteam.shop.dto.order.request.item.OrderItemRequestDto;
 import com.challengeteam.shop.dto.order.request.payment.PaymentDetailsRequestDto;
 import com.challengeteam.shop.dto.order.request.shippingAddress.ShippingAddressRequestDto;
 import com.challengeteam.shop.entity.order.DeliveryMethod;
@@ -18,12 +17,9 @@ import jakarta.validation.constraints.Size;
 import java.io.Serializable;
 import java.util.List;
 
-/**
- * DTO for {@link com.challengeteam.shop.entity.order.Order}
- */
 @ValidateCorrectPaymentDetails
 @ValidateCorrectDeliveryDetails
-public record OrderRequestDto(
+public record CheckoutRequestDto(
         @NotNull(message = "Customer email is required")
         @Email(regexp = InputUserValidationRules.EMAIL_PATTERN_CONSTRAINT,
                 message = "Email format is invalid")
@@ -49,8 +45,9 @@ public record OrderRequestDto(
         @NotNull(message = "Customer delivery method is required")
         DeliveryMethod deliveryMethod,
         ShippingAddressRequestDto shippingAddress,
-        @NotNull
-        @Size(min = 1)
+        @NotNull(message = "Cart item selections are required")
+        @Size(min = 1, message = "Cart item selections must not be empty")
         @Valid
-        List<OrderItemRequestDto> items) implements OrderDetailsRequest, Serializable {
+        List<CartItemSelectionRequestDto> itemSelections
+) implements OrderDetailsRequest, Serializable {
 }

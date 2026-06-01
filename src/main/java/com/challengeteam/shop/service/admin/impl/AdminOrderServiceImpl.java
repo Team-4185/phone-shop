@@ -1,9 +1,11 @@
 package com.challengeteam.shop.service.admin.impl;
 
+import com.challengeteam.shop.constants.notification.type.Notification_type;
 import com.challengeteam.shop.dto.admin.order.AdminOrderDetailsResponseDto;
 import com.challengeteam.shop.dto.admin.order.AdminOrderFilterDto;
 import com.challengeteam.shop.dto.admin.order.AdminOrderKpiResponseDto;
 import com.challengeteam.shop.dto.admin.order.AdminOrderListItemResponseDto;
+import com.challengeteam.shop.dto.email.Notification;
 import com.challengeteam.shop.entity.order.Order;
 import com.challengeteam.shop.entity.order.OrderStatus;
 import com.challengeteam.shop.entity.order.payment.PaymentMethod;
@@ -16,7 +18,9 @@ import com.challengeteam.shop.persistence.repository.OrderRepository;
 import com.challengeteam.shop.persistence.specification.AdminOrderSpecification;
 import com.challengeteam.shop.service.admin.AdminOrderService;
 import com.challengeteam.shop.service.admin.AdminOrderWorkflowService;
+import com.challengeteam.shop.service.notification.NotificationSenderService;
 import com.challengeteam.shop.service.payment.PaymentProviderResolver;
+import com.challengeteam.shop.utility.notification.email.OrderStatusEmailBuilder;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
@@ -47,6 +51,8 @@ public class AdminOrderServiceImpl implements AdminOrderService {
   private final OrderRepository orderRepository;
   private final AdminOrderMapper adminOrderMapper;
   private final AdminOrderWorkflowService adminOrderWorkflowService;
+  private final NotificationSenderService notificationSenderService;
+  private final OrderStatusEmailBuilder orderStatusEmailBuilder;
   private final PaymentProviderResolver paymentProviderResolver;
 
   @Override
@@ -117,6 +123,7 @@ public class AdminOrderServiceImpl implements AdminOrderService {
     order.setStatus(targetStatus);
     refundIfNeeded(order, targetStatus);
     Order savedOrder = orderRepository.save(order);
+    sendStatusChangedNotification(savedOrder, previousStatus, targetStatus);
     log.info(
         "Admin order status changed orderId={} action={} from={} to={}",
         id,
@@ -131,8 +138,9 @@ public class AdminOrderServiceImpl implements AdminOrderService {
   @Transactional
   public AdminOrderDetailsResponseDto shipOrder(Long id, String trackingNumber) {
     Order order = findOrderWithDetails(id);
+    OrderStatus previousStatus = order.getStatus();
     OrderStatus targetStatus =
-        adminOrderWorkflowService.resolveTargetStatus(order.getStatus(), "ship");
+        adminOrderWorkflowService.resolveTargetStatus(previousStatus, "ship");
 
     if (trackingNumber != null && !trackingNumber.isBlank()) {
       if (order.getShippingAddress() == null) {
@@ -143,7 +151,9 @@ public class AdminOrderServiceImpl implements AdminOrderService {
     }
 
     order.setStatus(targetStatus);
-    return adminOrderMapper.toDetails(orderRepository.save(order));
+    Order savedOrder = orderRepository.save(order);
+    sendStatusChangedNotification(savedOrder, previousStatus, targetStatus);
+    return adminOrderMapper.toDetails(savedOrder);
   }
 
   private void refundIfNeeded(Order order, OrderStatus targetStatus) {
@@ -157,6 +167,13 @@ public class AdminOrderServiceImpl implements AdminOrderService {
         .getProvider(order.getPaymentProvider())
         .refund(order.getPaymentDetails().getTransactionId(), order.getTotal());
     order.getPaymentDetails().setPaymentStatus(PaymentStatus.REFUNDED);
+  }
+
+  private void sendStatusChangedNotification(
+      Order order, OrderStatus previousStatus, OrderStatus targetStatus) {
+    Notification notification =
+        orderStatusEmailBuilder.buildOrderStatusChangedNotification(order, previousStatus, targetStatus);
+    notificationSenderService.sendNotification(notification, Notification_type.EMAIL);
   }
 
   private Order findOrderWithDetails(Long id) {
