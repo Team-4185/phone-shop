@@ -27,7 +27,7 @@
         <testcontainers.minio.version>2.0.1</testcontainers.minio.version>
         <testcontainers.postgres.version>2.0.1</testcontainers.postgres.version>
         <jacoco.version>0.8.11</jacoco.version>
-        <spring-boot-starter-thymeleaf.version>3.5.14</spring-boot-starter-thymeleaf.version>
+        <spring-boot-starter-thymeleaf.version>4.0.6</spring-boot-starter-thymeleaf.version>
         <spring-boot-starter-data-redis.version>3.5.14</spring-boot-starter-data-redis.version>
     </properties>
 
