@@ -8,7 +8,8 @@
 
 ## Testing
 
-- [ ] `mvn clean verify -Dspring.profiles.active=dev`
+- [ ] `mvn -B clean verify -Dspring.profiles.active=dev`
+- [ ] Production-only behavior was checked when this PR changes security, docs, health, or profile configuration
 
 ## Checklist
 
