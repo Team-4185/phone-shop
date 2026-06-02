@@ -12,13 +12,14 @@
 - [x] **Admin Panel API:** product, order, customer and dashboard endpoints protected by admin role.
 - [x] **Image Storage:** product image upload, metadata retrieval and binary image serving through MinIO.
 - [x] **Email Notifications:** order confirmation emails with server-side templates.
-- [x] **API Documentation:** OpenAPI documentation with JWT bearer authentication support.
+- [x] **API Documentation:** OpenAPI documentation with JWT bearer authentication support for local/dev usage.
 
 ## Engineering Highlights
 
 - [x] **Layered Architecture:** controllers, services, repositories, mappers, validators and DTO contracts are separated.
 - [x] **Database Versioning:** Flyway migrations keep schema changes explicit and reproducible.
 - [x] **Security:** stateless JWT authentication, BCrypt password hashing, role-based authorization and configurable CORS.
+- [x] **Production Hardening:** production profile disables dev-only endpoints and public API docs, rate-limits auth-sensitive endpoints, and exposes safe health checks.
 - [x] **Object Storage:** MinIO integration isolates image files from relational data.
 - [x] **Token Revocation Store:** Redis keeps revoked access and refresh tokens available across app restarts.
 - [x] **Validation:** custom validators cover order delivery, payment details, cart rules and filter constraints.
@@ -84,10 +85,27 @@ Detailed architecture notes: [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)
 
 ## API Documentation
 
-- Production Swagger UI: `https://gadget-room.up.railway.app/swagger-ui.html`
-- Production OpenAPI JSON: `https://gadget-room.up.railway.app/v3/api-docs`
+- Swagger UI and OpenAPI JSON are enabled for local/dev usage only.
 - Local Swagger UI: `http://localhost:8080/swagger-ui.html`
 - Local OpenAPI JSON: `http://localhost:8080/v3/api-docs`
+
+## Production Readiness
+
+The `prod` profile is the release profile for externally reachable environments:
+
+- `/api/v1/test-data/**` is not registered in `prod`.
+- Swagger UI and `/v3/api-docs` are disabled in `prod`.
+- `/actuator/health`, `/actuator/health/liveness`, and `/actuator/health/readiness` are public health endpoints.
+- Other actuator endpoints are protected by the admin role and are not exposed unless explicitly included.
+- Health checks include application liveness/readiness, PostgreSQL, Redis and MinIO.
+- Auth-sensitive endpoints are rate-limited: login, refresh token, forgot password and reset password.
+
+Production rate limits can be tuned with:
+
+```text
+AUTH_RATE_LIMIT_REQUESTS_PER_WINDOW=10
+AUTH_RATE_LIMIT_WINDOW=1m
+```
 
 ## QA Guides
 
@@ -145,7 +163,7 @@ docker compose --env-file test.env -f docker-compose-dev.yml up -d
 ## Tests
 
 ```bash
-mvn clean verify -Dspring.profiles.active=dev
+mvn -B clean verify -Dspring.profiles.active=dev
 ```
 
 Coverage report:
@@ -162,3 +180,5 @@ GitHub Actions runs on pull requests to `develop` and `main`:
 - tests
 - JaCoCo coverage check
 - coverage report artifact
+
+The same verification also runs on pushes to `develop` and `main`; keep the workflow as a required status check before merging release PRs.

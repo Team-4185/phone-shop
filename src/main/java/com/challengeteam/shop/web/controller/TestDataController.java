@@ -4,6 +4,7 @@ import com.challengeteam.shop.dto.testData.TestDataResponse;
 import com.challengeteam.shop.service.TestDataService;
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.annotation.Profile;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -12,6 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RequiredArgsConstructor
 @RestController
+@Profile("!prod")
 @RequestMapping("/api/v1/test-data")
 public class TestDataController {
     private final TestDataService testDataService;

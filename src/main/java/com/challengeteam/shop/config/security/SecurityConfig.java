@@ -1,6 +1,7 @@
 package com.challengeteam.shop.config.security;
 
 import com.challengeteam.shop.properties.CorsProperties;
+import com.challengeteam.shop.security.filter.AuthRateLimitFilter;
 import com.challengeteam.shop.security.filter.JwtTokenFilter;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -8,6 +9,8 @@ import lombok.SneakyThrows;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.env.Environment;
+import org.springframework.core.env.Profiles;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -58,25 +61,38 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http,
                                                    JwtTokenFilter jwtTokenFilter,
+                                                   AuthRateLimitFilter authRateLimitFilter,
+                                                   Environment environment,
                                                    @Qualifier("mainCorsConfig") CorsConfigurationSource corsConfig) throws Exception {
         return http
                 .csrf(AbstractHttpConfigurer::disable)
                 .cors(corsConfigurer -> corsConfigurer.configurationSource(corsConfig))
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/v1/logout").authenticated()
-                        .requestMatchers("/api/auth/**").permitAll()
-                        .requestMatchers("/docs/**", "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
-                        .requestMatchers("/api/v1/test-data/**").permitAll()
-                        .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
-                        .requestMatchers("/api/v1/filter/**").permitAll()
-                        .requestMatchers("/api/v1/delivery/**").permitAll()
-                        .requestMatchers("/api/v1/payments/webhooks/**").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/v1/orders").permitAll()
-                        .requestMatchers("/api/v1/orders/**").authenticated()
-                        .requestMatchers("/api/v1/users/me").authenticated()
-                        .anyRequest().authenticated()
+                .authorizeHttpRequests(auth -> {
+                    auth
+                            .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                            .requestMatchers("/actuator/health", "/actuator/health/**").permitAll()
+                            .requestMatchers("/actuator/**").hasRole("ADMIN")
+                            .requestMatchers(HttpMethod.POST, "/api/v1/logout").authenticated()
+                            .requestMatchers("/api/auth/**").permitAll();
+
+                    if (!environment.acceptsProfiles(Profiles.of("prod"))) {
+                        auth
+                                .requestMatchers("/docs/**", "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
+                                .requestMatchers("/api/v1/test-data/**").permitAll();
+                    }
+
+                    auth
+                            .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
+                            .requestMatchers("/api/v1/filter/**").permitAll()
+                            .requestMatchers("/api/v1/delivery/**").permitAll()
+                            .requestMatchers("/api/v1/payments/webhooks/**").permitAll()
+                            .requestMatchers(HttpMethod.POST, "/api/v1/orders").permitAll()
+                            .requestMatchers("/api/v1/orders/**").authenticated()
+                            .requestMatchers("/api/v1/users/me").authenticated()
+                            .anyRequest().authenticated();
+                }
                 )
+                .addFilterBefore(authRateLimitFilter, UsernamePasswordAuthenticationFilter.class)
                 .addFilterBefore(jwtTokenFilter, UsernamePasswordAuthenticationFilter.class)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .exceptionHandling(ex -> ex
