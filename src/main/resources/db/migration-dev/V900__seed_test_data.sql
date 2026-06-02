@@ -1,21 +1,14 @@
--- roles
-INSERT INTO roles (id, name, created_at, updated_at)
-    OVERRIDING SYSTEM VALUE
-VALUES (1, 'ROLE_ADMIN', NOW(), NULL),
-       (2, 'ROLE_USER', NOW(), NULL)
-ON CONFLICT (id) DO NOTHING;
-
 -- users pass: asdASD1!
 INSERT INTO users (id, email, password, first_name, last_name, city, phone_number, fk_role_id, created_at, updated_at)
     OVERRIDING SYSTEM VALUE
 VALUES (1, 'admin@email.com', '$2a$10$uBadJkAdWOox4Dtdwv65XOpUFJdL0y6eiboIHaJ5do38RTMBfrLdW', 'Admin', 'Admin', NULL,
-        NULL, 1, NOW(), NULL),
+        NULL, 2, NOW(), NULL),
        (2, 'us1@email.com', '$2a$10$uBadJkAdWOox4Dtdwv65XOpUFJdL0y6eiboIHaJ5do38RTMBfrLdW', 'User1', 'User1', 'Kiev',
-        NULL, 2, NOW(), NULL),
+        NULL, 1, NOW(), NULL),
        (3, 'us2@email.com', '$2a$10$uBadJkAdWOox4Dtdwv65XOpUFJdL0y6eiboIHaJ5do38RTMBfrLdW', 'User2', 'User2', NULL,
-        NULL, 2, NOW(), NULL),
+        NULL, 1, NOW(), NULL),
        (4, 'us3@email.com', '$2a$10$uBadJkAdWOox4Dtdwv65XOpUFJdL0y6eiboIHaJ5do38RTMBfrLdW', 'User3', 'User3', 'Lviv',
-        NULL, 2, NOW(), NULL)
+        NULL, 1, NOW(), NULL)
 ON CONFLICT (id) DO NOTHING;
 
 -- phones
@@ -179,7 +172,6 @@ VALUES
  NULL)
 ON CONFLICT (id) DO NOTHING;
 -- set sequences
-SELECT setval(pg_get_serial_sequence('roles', 'id'), (SELECT MAX(id) FROM roles));
 SELECT setval(pg_get_serial_sequence('users', 'id'), (SELECT MAX(id) FROM users));
 SELECT setval(pg_get_serial_sequence('phones', 'id'), (SELECT MAX(id) FROM phones));
 SELECT setval(pg_get_serial_sequence('orders', 'id'), (SELECT MAX(id) FROM orders));
@@ -389,3 +381,45 @@ VALUES
 (25, 'CAPACITY_256GB'),
 (25, 'CAPACITY_512GB')
 ON CONFLICT DO NOTHING;
+
+-- carts
+INSERT INTO carts (id, fk_user_id, total_price, created_at, updated_at)
+    OVERRIDING SYSTEM VALUE
+VALUES
+-- us1 (id=2): cart with 2 items
+(1, 2, 1049.98, NOW(), NULL),
+-- us2 (id=3): cart with 1 item
+(2, 3, 1199.99, NOW(), NULL),
+-- us3 (id=4): empty cart
+(3, 4, 0.00, NOW(), NULL)
+ON CONFLICT (id) DO NOTHING;
+
+-- cart_items
+INSERT INTO carts_items (id, fk_cart_id, fk_phone_id, amount)
+    OVERRIDING SYSTEM VALUE
+VALUES
+-- us1: iPhone 15 (id=2) x1 + Xiaomi Redmi Note 13 (id=15) x1
+(1, 1, 2,  1),
+(2, 1, 15, 1),
+-- us2: Samsung Galaxy S24 Ultra (id=5) x1
+(3, 2, 5,  1)
+ON CONFLICT (id) DO NOTHING;
+
+-- favorites
+INSERT INTO favorites (id, fk_user_id, fk_phone_id, created_at, updated_at)
+    OVERRIDING SYSTEM VALUE
+VALUES
+-- us1 (id=2): 3 favorites
+(1,  2, 1,  NOW(), NULL),
+(2,  2, 5,  NOW(), NULL),
+(3,  2, 10, NOW(), NULL),
+-- us2 (id=3): empty
+-- us3 (id=4): 2 favorites
+(4,  4, 3,  NOW(), NULL),
+(5,  4, 16, NOW(), NULL)
+ON CONFLICT (id) DO NOTHING;
+
+--  sequences
+SELECT setval(pg_get_serial_sequence('carts', 'id'),       (SELECT MAX(id) FROM carts));
+SELECT setval(pg_get_serial_sequence('carts_items', 'id'), (SELECT MAX(id) FROM carts_items));
+SELECT setval(pg_get_serial_sequence('favorites', 'id'),   (SELECT MAX(id) FROM favorites));
