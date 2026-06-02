@@ -3,7 +3,7 @@ package com.challengeteam.shop.service.security.auth.authorization;
 import com.challengeteam.shop.dto.auth.UserLoginRequestDto;
 import com.challengeteam.shop.dto.auth.UserRegisterRequestDto;
 import com.challengeteam.shop.dto.security.jwt.JwtResponseDto;
-import com.challengeteam.shop.dto.user.CreateUserDto;
+import com.challengeteam.shop.dto.user.request.CreateUserDto;
 import com.challengeteam.shop.entity.user.User;
 import com.challengeteam.shop.exceptionHandling.exception.CriticalSystemException;
 import com.challengeteam.shop.exceptionHandling.exception.InvalidAPIRequestException;
