@@ -1,5 +1,6 @@
 package com.challengeteam.shop.service.impl;
 
+import com.challengeteam.shop.constraints.filter.FilterRequestConstraints;
 import com.challengeteam.shop.dto.pagination.paginationRequest.PhoneFilterDto;
 import com.challengeteam.shop.dto.phone.request.PhoneCreateRequestDto;
 import com.challengeteam.shop.dto.phone.request.PhoneUpdateRequestDto;
@@ -51,9 +52,15 @@ public class PhoneServiceImpl implements PhoneService {
     public Page<Phone> getPhones(int page, int size, PhoneFilterDto filterDto) {
         log.debug("Get phones page={}, size={}, filters={}", page, size, filterDto);
 
-        Pageable pageable = PageRequest.of(page, size, buildSort(filterDto.sort()));
+        boolean popularitySort = FilterRequestConstraints.isPopularitySort(filterDto.sort());
+        Pageable pageable = popularitySort
+                ? PageRequest.of(page, size)
+                : PageRequest.of(page, size, buildSort(filterDto.sort()));
         Specification<Phone> spec = PhoneSpecification.build(filterDto);
-        Page<Phone> phonesPage = phoneRepository.findAll(spec, pageable);
+        Page<Phone> phonesPage = popularitySort
+                ? phoneRepository.findAllByCatalogPopularity(
+                        filterDto.brand(), filterDto.minPrice(), filterDto.maxPrice(), pageable)
+                : phoneRepository.findAll(spec, pageable);
 
         if (phonesPage.isEmpty()) {
             return phonesPage;
