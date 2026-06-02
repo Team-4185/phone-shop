@@ -6,6 +6,7 @@ import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CookieValue;
@@ -18,6 +19,9 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class LogoutController {
     private final LogoutService logoutService;
+
+    @Value("${security.cookies.secure:false}")
+    private boolean secureRefreshTokenCookie;
 
     @PostMapping()
     public ResponseEntity<Void> logout(HttpServletRequest request,
@@ -35,7 +39,7 @@ public class LogoutController {
     private void clearRefreshTokenCookie(HttpServletResponse response) {
         Cookie cookie = new Cookie("refreshToken", "");
         cookie.setHttpOnly(true);
-        cookie.setSecure(false);
+        cookie.setSecure(secureRefreshTokenCookie);
         cookie.setPath("/api");
         cookie.setMaxAge(0);
         response.addCookie(cookie);

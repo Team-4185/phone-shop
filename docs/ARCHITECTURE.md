@@ -56,7 +56,7 @@ flowchart TB
 ```mermaid
 flowchart LR
     Controllers[REST Controllers]
-    Security[Security Filter Chain<br/>JWT Token Filter]
+    Security[Security Filter Chain<br/>JWT + Rate Limit Filters]
     DTOs[DTO Contracts]
     Validators[Custom Validators]
     Services[Application Services]
@@ -148,19 +148,30 @@ sequenceDiagram
 
 ## Security Model
 
-- Public endpoints: authentication, API documentation, selected catalog and test-data endpoints.
+- Public endpoints: authentication, selected catalog endpoints, delivery lookup, payment webhooks, order creation and health checks.
+- Local/dev-only endpoints: API documentation and `/api/v1/test-data/**`.
+- Production profile: disables public API documentation and does not register test-data endpoints.
 - Authenticated endpoints: user profile, cart and customer order history.
 - Admin endpoints: `/api/v1/admin/**`.
+- Actuator: health endpoints are public; non-health actuator endpoints require the admin role and are exposed only when explicitly configured.
+- Rate limiting: login, refresh token, forgot password and reset password are limited per client IP and endpoint.
 - Token model: access token, refresh token, remember-me refresh token and reset token.
 - Password storage: BCrypt.
 - Session model: stateless.
 
+## Observability
+
+- Spring Boot Actuator exposes health probes at `/actuator/health`, `/actuator/health/liveness` and `/actuator/health/readiness`.
+- Readiness includes PostgreSQL, Redis and MinIO health contributors.
+- Health details are hidden from unauthenticated callers and available to authorized actuator access.
+
 ## Quality Gates
 
 - Pull requests to `develop` and `main` run the CI pipeline.
-- CI executes Maven verification.
+- CI executes `mvn -B clean verify -Dspring.profiles.active=dev`.
 - JaCoCo enforces 70% minimum line coverage.
 - Integration tests use Testcontainers for PostgreSQL, Redis and MinIO.
+- Test datasource pools are capped to avoid exhausting PostgreSQL connections when Spring creates multiple integration-test contexts.
 
 ## Design Decisions
 
