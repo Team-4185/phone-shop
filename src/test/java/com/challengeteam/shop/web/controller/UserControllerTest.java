@@ -1,7 +1,20 @@
 package com.challengeteam.shop.web.controller;
 
-import com.challengeteam.shop.dto.user.CreateUserDto;
-import com.challengeteam.shop.dto.user.UpdateProfileDto;
+import com.challengeteam.shop.dto.user.request.CreateUserDto;
+import com.challengeteam.shop.dto.user.request.UpdateProfileDto;
+import com.challengeteam.shop.entity.favorite.Favorite;
+import com.challengeteam.shop.entity.order.DeliveryMethod;
+import com.challengeteam.shop.entity.order.Order;
+import com.challengeteam.shop.entity.order.OrderItem;
+import com.challengeteam.shop.entity.order.OrderStatus;
+import com.challengeteam.shop.entity.order.payment.PaymentDetails;
+import com.challengeteam.shop.entity.order.payment.PaymentMethod;
+import com.challengeteam.shop.entity.order.payment.PaymentStatus;
+import com.challengeteam.shop.entity.phone.*;
+import com.challengeteam.shop.entity.user.User;
+import com.challengeteam.shop.persistence.repository.FavoriteRepository;
+import com.challengeteam.shop.persistence.repository.OrderRepository;
+import com.challengeteam.shop.persistence.repository.PhoneRepository;
 import com.challengeteam.shop.persistence.repository.UserRepository;
 import com.challengeteam.shop.service.UserService;
 import com.challengeteam.shop.testContainer.ContainerExtension;
@@ -22,8 +35,12 @@ import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.math.BigDecimal;
+import java.util.Set;
+
 import static com.challengeteam.shop.web.controller.PhoneControllerTest.TestResources.auth;
 import static com.challengeteam.shop.web.controller.UserControllerTest.TestResources.*;
+import static org.hamcrest.Matchers.hasSize;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -31,11 +48,22 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @ExtendWith(ContainerExtension.class)
 class UserControllerTest {
-    @Autowired private TestAuthHelper testAuthHelper;
-    @Autowired private UserRepository userRepository;
-    @Autowired private UserService userService;
-    @Autowired private MockMvc mockMvc;
-    @Autowired private ObjectMapper objectMapper;
+    @Autowired
+    private TestAuthHelper testAuthHelper;
+    @Autowired
+    private UserRepository userRepository;
+    @Autowired
+    private UserService userService;
+    @Autowired
+    private MockMvc mockMvc;
+    @Autowired
+    private ObjectMapper objectMapper;
+    @Autowired
+    private OrderRepository orderRepository;
+    @Autowired
+    private FavoriteRepository favoriteRepository;
+    @Autowired
+    private PhoneRepository phoneRepository;
 
     private String token;
     private Long user1;
@@ -49,6 +77,9 @@ class UserControllerTest {
 
     @BeforeEach
     public void setup() {
+        orderRepository.deleteAll();
+        favoriteRepository.deleteAll();
+        phoneRepository.deleteAll();
         userRepository.deleteAll();
 
         user1 = userService.createDefaultUser(buildCreateUserDto(TestUserCredentials.USER_1));
@@ -637,6 +668,152 @@ class UserControllerTest {
                     .andExpect(status().isNotFound());
         }
     }
+
+    @Nested
+    @DisplayName("GET /api/v1/users/me")
+    class GetCurrentUserTest {
+        private static final String URL = "/api/v1/users/me";
+
+        private User currentUser;
+        private Phone phone;
+
+        @BeforeEach
+        void setup() {
+            currentUser = userRepository
+                    .findByEmail(TestAuthHelper.TEST_COMPONENT_EMAIL)
+                    .orElseThrow();
+
+            phone = phoneRepository.save(Phone.builder()
+                    .name("iPhone 15")
+                    .description("Test phone")
+                    .price(BigDecimal.valueOf(999.99))
+                    .brand("Apple")
+                    .releaseYear(2023)
+                    .sku("TEST-SKU-001")
+                    .stock(10)
+                    .status(ProductStatus.IN_STOCK)
+                    .phoneCharacteristics(PhoneCharacteristics.builder()
+                            .cpu("A17 Pro")
+                            .coresNumber(6)
+                            .screenSize("6.1\"")
+                            .frontCamera("12MP")
+                            .mainCamera("48MP")
+                            .batteryCapacity("3274mAh")
+                            .phoneColors(Set.of(PhoneColor.BLACK))
+                            .storageCapacities(Set.of(StorageCapacity.CAPACITY_128GB))
+                            .build())
+                    .build());
+        }
+
+        @Test
+        void whenNoToken_thenStatus401() throws Exception {
+            mockMvc.perform(get(URL))
+                    .andExpect(status().isUnauthorized());
+        }
+
+        @Test
+        void whenInvalidToken_thenStatus401() throws Exception {
+            mockMvc.perform(get(URL)
+                            .header(HttpHeaders.AUTHORIZATION, auth("invalid_token")))
+                    .andExpect(status().isUnauthorized());
+        }
+
+        @Test
+        void whenValidToken_thenStatus200() throws Exception {
+            mockMvc.perform(get(URL)
+                            .header(HttpHeaders.AUTHORIZATION, auth(token)))
+                    .andExpect(status().isOk());
+        }
+
+        @Test
+        void whenValidToken_thenReturnsCorrectUserFields() throws Exception {
+            mockMvc.perform(get(URL)
+                            .header(HttpHeaders.AUTHORIZATION, auth(token)))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.id").value(currentUser.getId()))
+                    .andExpect(jsonPath("$.email").value(currentUser.getEmail()))
+                    .andExpect(jsonPath("$.role.name").isNotEmpty());
+        }
+
+        @Test
+        void whenValidToken_thenCartIsPresent() throws Exception {
+            mockMvc.perform(get(URL)
+                            .header(HttpHeaders.AUTHORIZATION, auth(token)))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.cart").isNotEmpty())
+                    .andExpect(jsonPath("$.cart.totalPrice").value(0));
+        }
+
+        @Test
+        void whenUserHasNoOrders_thenOrdersIsEmpty() throws Exception {
+            mockMvc.perform(get(URL)
+                            .header(HttpHeaders.AUTHORIZATION, auth(token)))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.orders").isArray())
+                    .andExpect(jsonPath("$.orders", hasSize(0)));
+        }
+
+        @Test
+        void whenUserHasOrders_thenOrdersReturned() throws Exception {
+            orderRepository.save(buildOrder(currentUser, phone));
+
+            mockMvc.perform(get(URL)
+                            .header(HttpHeaders.AUTHORIZATION, auth(token)))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.orders").isArray())
+                    .andExpect(jsonPath("$.orders", hasSize(1)));
+        }
+
+        @Test
+        void whenUserHasNoFavorites_thenFavoritesIsEmpty() throws Exception {
+            mockMvc.perform(get(URL)
+                            .header(HttpHeaders.AUTHORIZATION, auth(token)))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.favorites").isArray())
+                    .andExpect(jsonPath("$.favorites", hasSize(0)));
+        }
+
+        @Test
+        void whenUserHasFavorites_thenFavoritesReturned() throws Exception {
+            favoriteRepository.save(new Favorite(currentUser, phone));
+
+            mockMvc.perform(get(URL)
+                            .header(HttpHeaders.AUTHORIZATION, auth(token)))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.favorites").isArray())
+                    .andExpect(jsonPath("$.favorites", hasSize(1)));
+        }
+
+        private Order buildOrder(User user, Phone phone) {
+            Order order = Order.builder()
+                    .user(user)
+                    .customerEmail(user.getEmail())
+                    .customerFirstName("John")
+                    .customerLastName("Doe")
+                    .customerPhoneNumber("+380991234567")
+                    .status(OrderStatus.NEW)
+                    .paymentMethod(PaymentMethod.CARD)
+                    .deliveryMethod(DeliveryMethod.PICKUP)
+                    .paymentDetails(new PaymentDetails(PaymentStatus.PENDING, null))
+                    .total(BigDecimal.valueOf(999.99))
+                    .build();
+
+            OrderItem item = OrderItem.builder()
+                    .productName(phone.getName())
+                    .sku(phone.getSku())
+                    .unitPrice(phone.getPrice())
+                    .selectedColor(PhoneColor.BLACK)
+                    .selectedStorage(StorageCapacity.CAPACITY_128GB)
+                    .quantity(1)
+                    .totalPrice(phone.getPrice())
+                    .build();
+
+            order.addItem(item);
+            return order;
+        }
+    }
+
+
 
     static class TestResources {
         static final long NON_EXISTING_ID = 99_999L;
