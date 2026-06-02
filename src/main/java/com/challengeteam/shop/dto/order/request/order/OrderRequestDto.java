@@ -3,6 +3,7 @@ package com.challengeteam.shop.dto.order.request.order;
 import com.challengeteam.shop.constraints.order.validation.annotation.ValidateCorrectPaymentDetails;
 import com.challengeteam.shop.constraints.order.validation.annotation.delivery.ValidateCorrectDeliveryDetails;
 import com.challengeteam.shop.constraints.userData.InputUserValidationRules;
+import com.challengeteam.shop.dto.order.request.OrderDetailsRequest;
 import com.challengeteam.shop.dto.order.request.item.OrderItemRequestDto;
 import com.challengeteam.shop.dto.order.request.payment.PaymentDetailsRequestDto;
 import com.challengeteam.shop.dto.order.request.shippingAddress.ShippingAddressRequestDto;
@@ -51,5 +52,5 @@ public record OrderRequestDto(
         @NotNull
         @Size(min = 1)
         @Valid
-        List<OrderItemRequestDto> items) implements Serializable {
+        List<OrderItemRequestDto> items) implements OrderDetailsRequest, Serializable {
 }

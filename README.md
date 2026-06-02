@@ -20,6 +20,7 @@
 - [x] **Database Versioning:** Flyway migrations keep schema changes explicit and reproducible.
 - [x] **Security:** stateless JWT authentication, BCrypt password hashing, role-based authorization and configurable CORS.
 - [x] **Object Storage:** MinIO integration isolates image files from relational data.
+- [x] **Token Revocation Store:** Redis keeps revoked access and refresh tokens available across app restarts.
 - [x] **Validation:** custom validators cover order delivery, payment details, cart rules and filter constraints.
 - [x] **Testing:** unit and integration tests cover controllers, services, storage and validation logic.
 - [x] **Quality Gate:** JaCoCo enforces a 70% minimum line coverage threshold in CI.
@@ -27,7 +28,7 @@
 
 ## Tech Stack
 
-`Java 21` | `Spring Boot 3.5` | `Spring Security` | `Spring Data JPA` | `PostgreSQL` | `Flyway` | `MinIO` | `JWT` |
+`Java 21` | `Spring Boot 3.5` | `Spring Security` | `Spring Data JPA` | `PostgreSQL` | `Flyway` | `Redis` | `MinIO` | `JWT` |
 `MapStruct` | `Lombok` | `Docker` | `JUnit 5` | `Mockito` | `Testcontainers` | `JaCoCo` | `OpenAPI`
 
 ## Architecture
@@ -46,6 +47,7 @@ flowchart LR
     Mail[Notification Adapter<br/>SMTP / Thymeleaf]
 
     DB[(PostgreSQL<br/>Flyway-managed schema)]
+    Redis[(Redis<br/>Revoked JWT tokens)]
     MinIO[(MinIO<br/>Product images)]
     SMTP[(SMTP Provider<br/>Order emails)]
     Docs[OpenAPI / Swagger UI]
@@ -59,6 +61,7 @@ flowchart LR
     Domain --> Persistence
     Domain --> Storage
     Domain --> Mail
+    Auth --> Redis
     Persistence --> DB
     Storage --> MinIO
     Mail --> SMTP
@@ -81,14 +84,38 @@ Detailed architecture notes: [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)
 
 ## API Documentation
 
-- Production Swagger UI: `https://gadget-room.up.railway.app/docs`
-- Production OpenAPI JSON: `https://gadget-room.up.railway.app/docs/api-docs`
-- Local Swagger UI: `http://localhost:8080/docs`
+- Production Swagger UI: `https://gadget-room.up.railway.app/swagger-ui.html`
+- Production OpenAPI JSON: `https://gadget-room.up.railway.app/v3/api-docs`
+- Local Swagger UI: `http://localhost:8080/swagger-ui.html`
+- Local OpenAPI JSON: `http://localhost:8080/v3/api-docs`
+
+## QA Guides
+
+- Ukrainian: [`qa/guide_ua.md`](qa/guide_ua.md)
+- English: [`qa/guide_en.md`](qa/guide_en.md)
 
 ## Run
 
 ```bash
 docker compose --env-file test.env up --build
+```
+
+Reset local Docker volumes when Flyway migrations changed or the database state is stale:
+
+```bash
+docker compose --env-file test.env down -v --remove-orphans
+```
+
+Run the containerized app with the production Spring profile:
+
+```bash
+SPRING_PROFILES_ACTIVE=prod docker compose --env-file test.env up --build
+```
+
+Run only the shared infrastructure from the main compose file:
+
+```bash
+docker compose --env-file test.env up -d db redis image-storage
 ```
 
 ```bash
@@ -97,9 +124,22 @@ docker compose down
 
 ## Local Development
 
+Create `.env` from `test.env` so Spring Boot and Docker Compose use the same local ports and credentials:
+
 ```bash
-docker compose -f docker-compose-dev.yml up -d
+cp test.env .env
+```
+
+Spring Boot starts `docker-compose-dev.yml` automatically for the `dev` profile:
+
+```bash
 mvn spring-boot:run -Dspring-boot.run.profiles=dev
+```
+
+Or start local dependencies manually:
+
+```bash
+docker compose --env-file test.env -f docker-compose-dev.yml up -d
 ```
 
 ## Tests

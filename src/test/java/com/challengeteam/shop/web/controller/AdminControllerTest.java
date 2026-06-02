@@ -1,5 +1,6 @@
 package com.challengeteam.shop.web.controller;
 
+import com.challengeteam.shop.constants.notification.type.Notification_type;
 import com.challengeteam.shop.dto.admin.product.AdminProductCreateRequestDto;
 import com.challengeteam.shop.dto.admin.product.AdminProductUpdateRequestDto;
 import com.challengeteam.shop.dto.phone.request.PhoneCreateRequestDto;
@@ -21,6 +22,7 @@ import com.challengeteam.shop.entity.user.Role;
 import com.challengeteam.shop.entity.user.User;
 import com.challengeteam.shop.persistence.repository.*;
 import com.challengeteam.shop.service.PhoneService;
+import com.challengeteam.shop.service.notification.EmailNotificationSenderService;
 import com.challengeteam.shop.service.security.auth.jwt.JwtService;
 import com.challengeteam.shop.testContainer.ContainerExtension;
 import com.challengeteam.shop.testContainer.TestContextConfigurator;
@@ -41,6 +43,7 @@ import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.math.BigDecimal;
@@ -51,6 +54,9 @@ import java.util.UUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.hasSize;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -97,6 +103,9 @@ class AdminControllerTest {
 
     @Autowired
     private PasswordEncoder passwordEncoder;
+
+    @MockitoBean
+    private EmailNotificationSenderService emailNotificationSenderService;
 
     private String userToken;
     private String adminToken;
@@ -768,6 +777,9 @@ class AdminControllerTest {
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.status").value("CONFIRMED"))
                     .andExpect(jsonPath("$.availableActions", hasSize(2)));
+
+            verify(emailNotificationSenderService)
+                    .sendNotification(any(), eq(Notification_type.EMAIL));
         }
 
         @Test

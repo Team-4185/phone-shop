@@ -1,6 +1,7 @@
 package com.challengeteam.shop.service.order;
 
 import com.challengeteam.shop.constants.notification.type.Notification_type;
+import com.challengeteam.shop.dto.delivery.DeliveryQuote;
 import com.challengeteam.shop.dto.email.Notification;
 import com.challengeteam.shop.dto.order.OrderResponseDto;
 import com.challengeteam.shop.dto.order.request.item.OrderItemRequestDto;
@@ -24,10 +25,13 @@ import com.challengeteam.shop.mapper.order.OrderMapper;
 import com.challengeteam.shop.mapper.order.ShippingAddressOrderMapper;
 import com.challengeteam.shop.persistence.repository.OrderRepository;
 import com.challengeteam.shop.persistence.repository.PhoneRepository;
-import com.challengeteam.shop.service.mock.PaymentMockService;
+import com.challengeteam.shop.service.delivery.DeliveryProvider;
+import com.challengeteam.shop.service.delivery.DeliveryProviderResolver;
 import com.challengeteam.shop.service.notification.NotificationSenderService;
 import com.challengeteam.shop.service.order.create.OrderCreatorService;
 import com.challengeteam.shop.service.order.create.OrderCreatorServiceImpl;
+import com.challengeteam.shop.service.payment.PaymentProvider;
+import com.challengeteam.shop.service.payment.PaymentProviderResolver;
 import com.challengeteam.shop.utility.AuthenticationUserExtractorHelper;
 import com.challengeteam.shop.utility.notification.email.OrderConfirmationEmailBuilder;
 import org.junit.jupiter.api.BeforeEach;
@@ -42,6 +46,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.core.Authentication;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -62,7 +67,13 @@ class OrderCreatorServiceTest {
     @Mock
     private OrderRepository orderRepository;
     @Mock
-    private PaymentMockService paymentMockService;
+    private PaymentProviderResolver paymentProviderResolver;
+    @Mock
+    private PaymentProvider paymentProvider;
+    @Mock
+    private DeliveryProviderResolver deliveryProviderResolver;
+    @Mock
+    private DeliveryProvider deliveryProvider;
     @Mock
     private OrderMapper orderMapper;
     @Mock
@@ -96,6 +107,12 @@ class OrderCreatorServiceTest {
         // default: save returns the same order passed in
         lenient().when(orderRepository.save(any(Order.class)))
                 .thenAnswer(inv -> inv.getArgument(0));
+
+        lenient().when(paymentProviderResolver.getDefaultProvider()).thenReturn(paymentProvider);
+        lenient().when(paymentProvider.providerCode()).thenReturn("mock");
+        lenient().when(deliveryProviderResolver.getDefaultProvider()).thenReturn(deliveryProvider);
+        lenient().when(deliveryProvider.quote(any(), any(), any()))
+                .thenReturn(new DeliveryQuote("mock", BigDecimal.ZERO, LocalDate.of(2026, 1, 1)));
 
         // default: mapper returns a stub response
         lenient().when(orderMapper.toDto(any(Order.class)))
@@ -196,6 +213,7 @@ class OrderCreatorServiceTest {
                 1L, null, null, null,
                 "customer@example.com", "John", "Doe", "+380991234567",
                 OrderStatus.NEW, PaymentMethod.CARD, DeliveryMethod.COURIER,
+                "mock", "mock", null, LocalDate.of(2026, 1, 1), BigDecimal.ZERO,
                 null, null, BigDecimal.valueOf(999), List.of()
         );
     }
@@ -223,7 +241,7 @@ class OrderCreatorServiceTest {
                     .isInstanceOf(PhoneNotFoundException.class)
                     .hasMessageContaining("999");
 
-            verifyNoInteractions(paymentMockService, orderRepository);
+            verifyNoInteractions(paymentProvider, orderRepository);
         }
 
         @Test
@@ -238,7 +256,7 @@ class OrderCreatorServiceTest {
                     orderCreatorService.create(cardCourierRequest(items), null))
                     .isInstanceOf(PhoneNotFoundException.class);
 
-            verifyNoInteractions(paymentMockService, orderRepository);
+            verifyNoInteractions(paymentProvider, orderRepository);
         }
 
         @Test
@@ -251,7 +269,7 @@ class OrderCreatorServiceTest {
                     orderCreatorService.create(cardCourierRequest(List.of(item(1L, 1))), null))
                     .isInstanceOf(OrderCreationException.class);
 
-            verifyNoInteractions(paymentMockService, orderRepository);
+            verifyNoInteractions(paymentProvider, orderRepository);
         }
 
         @Test
@@ -264,7 +282,7 @@ class OrderCreatorServiceTest {
                     orderCreatorService.create(cardCourierRequest(List.of(item(1L, 5))), null))
                     .isInstanceOf(OrderCreationException.class);
 
-            verifyNoInteractions(paymentMockService, orderRepository);
+            verifyNoInteractions(paymentProvider, orderRepository);
         }
     }
 
@@ -282,7 +300,7 @@ class OrderCreatorServiceTest {
         void shouldCreateGuestOrder_whenAuthenticationIsNull() {
             Phone phone = buildPhoneInStock(1L, BigDecimal.valueOf(999), 10);
             when(phoneRepository.findAllById(any())).thenReturn(List.of(phone));
-            when(paymentMockService.pay(any(), any())).thenReturn(successfulPayment());
+            when(paymentProvider.pay(any(), any())).thenReturn(successfulPayment());
 
             orderCreatorService.create(cardCourierRequest(List.of(item(1L, 1))), null);
 
@@ -303,7 +321,7 @@ class OrderCreatorServiceTest {
 
             Phone phone = buildPhoneInStock(1L, BigDecimal.valueOf(999), 10);
             when(phoneRepository.findAllById(any())).thenReturn(List.of(phone));
-            when(paymentMockService.pay(any(), any())).thenReturn(successfulPayment());
+            when(paymentProvider.pay(any(), any())).thenReturn(successfulPayment());
 
             orderCreatorService.create(cardCourierRequest(List.of(item(1L, 1))), authentication);
 
@@ -328,7 +346,7 @@ class OrderCreatorServiceTest {
         void shouldSaveOrder_withPaidStatusAndTransactionId_whenPaymentSucceeds() {
             Phone phone = buildPhoneInStock(1L, BigDecimal.valueOf(999), 10);
             when(phoneRepository.findAllById(any())).thenReturn(List.of(phone));
-            when(paymentMockService.pay(any(), any())).thenReturn(successfulPayment());
+            when(paymentProvider.pay(any(), any())).thenReturn(successfulPayment());
 
             orderCreatorService.create(cardCourierRequest(List.of(item(1L, 1))), null);
 
@@ -345,7 +363,7 @@ class OrderCreatorServiceTest {
         void shouldThrowPaymentFailedException_andNotSaveOrder_whenPaymentFails() {
             Phone phone = buildPhoneInStock(1L, BigDecimal.valueOf(999), 10);
             when(phoneRepository.findAllById(any())).thenReturn(List.of(phone));
-            when(paymentMockService.pay(any(), any())).thenReturn(failedPayment());
+            when(paymentProvider.pay(any(), any())).thenReturn(failedPayment());
 
             assertThatThrownBy(() ->
                     orderCreatorService.create(cardCourierRequest(List.of(item(1L, 1))), null))
@@ -360,11 +378,11 @@ class OrderCreatorServiceTest {
         void shouldCallPaymentService_withCorrectTotalAmount() {
             Phone phone = buildPhoneInStock(1L, BigDecimal.valueOf(500), 10);
             when(phoneRepository.findAllById(any())).thenReturn(List.of(phone));
-            when(paymentMockService.pay(any(), any())).thenReturn(successfulPayment());
+            when(paymentProvider.pay(any(), any())).thenReturn(successfulPayment());
 
             orderCreatorService.create(cardCourierRequest(List.of(item(1L, 3))), null);
 
-            verify(paymentMockService).pay(any(), eq(new BigDecimal("1500")));
+            verify(paymentProvider).pay(any(), eq(new BigDecimal("1500")));
         }
     }
 
@@ -385,7 +403,7 @@ class OrderCreatorServiceTest {
 
             orderCreatorService.create(cashPickupRequest(List.of(item(1L, 1))), null);
 
-            verifyNoInteractions(paymentMockService);
+            verify(paymentProvider, never()).pay(any(), any());
         }
 
         @Test
@@ -417,7 +435,7 @@ class OrderCreatorServiceTest {
         void shouldCalculateCorrectTotal_forSingleItem() {
             Phone phone = buildPhoneInStock(1L, BigDecimal.valueOf(999), 10);
             when(phoneRepository.findAllById(any())).thenReturn(List.of(phone));
-            when(paymentMockService.pay(any(), any())).thenReturn(successfulPayment());
+            when(paymentProvider.pay(any(), any())).thenReturn(successfulPayment());
 
             orderCreatorService.create(cardCourierRequest(List.of(item(1L, 2))), null);
 
@@ -433,7 +451,7 @@ class OrderCreatorServiceTest {
             Phone phone1 = buildPhoneInStock(1L, BigDecimal.valueOf(999), 10);
             Phone phone2 = buildPhoneInStock(2L, BigDecimal.valueOf(500), 10);
             when(phoneRepository.findAllById(any())).thenReturn(List.of(phone1, phone2));
-            when(paymentMockService.pay(any(), any())).thenReturn(successfulPayment());
+            when(paymentProvider.pay(any(), any())).thenReturn(successfulPayment());
 
             orderCreatorService.create(
                     cardCourierRequest(List.of(item(1L, 1), item(2L, 3))), null);
@@ -462,7 +480,7 @@ class OrderCreatorServiceTest {
         void shouldSaveOrder_withCorrectCustomerDetails() {
             Phone phone = buildPhoneInStock(1L, BigDecimal.valueOf(999), 10);
             when(phoneRepository.findAllById(any())).thenReturn(List.of(phone));
-            when(paymentMockService.pay(any(), any())).thenReturn(successfulPayment());
+            when(paymentProvider.pay(any(), any())).thenReturn(successfulPayment());
 
             orderCreatorService.create(cardCourierRequest(List.of(item(1L, 1))), null);
 
@@ -481,7 +499,7 @@ class OrderCreatorServiceTest {
         void shouldSaveOrder_withNewStatus() {
             Phone phone = buildPhoneInStock(1L, BigDecimal.valueOf(999), 10);
             when(phoneRepository.findAllById(any())).thenReturn(List.of(phone));
-            when(paymentMockService.pay(any(), any())).thenReturn(successfulPayment());
+            when(paymentProvider.pay(any(), any())).thenReturn(successfulPayment());
 
             orderCreatorService.create(cardCourierRequest(List.of(item(1L, 1))), null);
 
@@ -496,7 +514,7 @@ class OrderCreatorServiceTest {
             Phone phone1 = buildPhoneInStock(1L, BigDecimal.valueOf(999), 10);
             Phone phone2 = buildPhoneInStock(2L, BigDecimal.valueOf(500), 10);
             when(phoneRepository.findAllById(any())).thenReturn(List.of(phone1, phone2));
-            when(paymentMockService.pay(any(), any())).thenReturn(successfulPayment());
+            when(paymentProvider.pay(any(), any())).thenReturn(successfulPayment());
 
             orderCreatorService.create(
                     cardCourierRequest(List.of(item(1L, 1), item(2L, 2))), null);
@@ -511,7 +529,7 @@ class OrderCreatorServiceTest {
         void shouldSetUnitPrice_fromDatabase() {
             Phone phone = buildPhoneInStock(1L, BigDecimal.valueOf(999), 10);
             when(phoneRepository.findAllById(any())).thenReturn(List.of(phone));
-            when(paymentMockService.pay(any(), any())).thenReturn(successfulPayment());
+            when(paymentProvider.pay(any(), any())).thenReturn(successfulPayment());
 
             orderCreatorService.create(cardCourierRequest(List.of(item(1L, 1))), null);
 
@@ -526,7 +544,7 @@ class OrderCreatorServiceTest {
         void shouldSetTotal_onSavedOrderEntity() {
             Phone phone = buildPhoneInStock(1L, BigDecimal.valueOf(500), 10);
             when(phoneRepository.findAllById(any())).thenReturn(List.of(phone));
-            when(paymentMockService.pay(any(), any())).thenReturn(successfulPayment());
+            when(paymentProvider.pay(any(), any())).thenReturn(successfulPayment());
 
             orderCreatorService.create(cardCourierRequest(List.of(item(1L, 2))), null);
 
@@ -534,6 +552,26 @@ class OrderCreatorServiceTest {
             verify(orderRepository).save(captor.capture());
             assertThat(captor.getValue().getTotal())
                     .isEqualByComparingTo(BigDecimal.valueOf(1000));
+        }
+
+        @Test
+        @DisplayName("Should include delivery price in saved order total")
+        void shouldIncludeDeliveryPrice_inSavedOrderTotal() {
+            Phone phone = buildPhoneInStock(1L, BigDecimal.valueOf(500), 10);
+            when(phoneRepository.findAllById(any())).thenReturn(List.of(phone));
+            when(deliveryProvider.quote(any(), any(), any()))
+                    .thenReturn(new DeliveryQuote("mock", new BigDecimal("9.99"), LocalDate.of(2026, 1, 3)));
+            when(paymentProvider.pay(any(), any())).thenReturn(successfulPayment());
+
+            orderCreatorService.create(cardCourierRequest(List.of(item(1L, 2))), null);
+
+            ArgumentCaptor<Order> captor = ArgumentCaptor.forClass(Order.class);
+            verify(orderRepository).save(captor.capture());
+            assertThat(captor.getValue().getDeliveryProvider()).isEqualTo("mock");
+            assertThat(captor.getValue().getDeliveryPrice()).isEqualByComparingTo("9.99");
+            assertThat(captor.getValue().getEstimatedDeliveryDate()).isEqualTo(LocalDate.of(2026, 1, 3));
+            assertThat(captor.getValue().getTotal()).isEqualByComparingTo("1009.99");
+            verify(paymentProvider).pay(any(), eq(new BigDecimal("1009.99")));
         }
     }
 
@@ -553,7 +591,7 @@ class OrderCreatorServiceTest {
         void shouldSendEmailNotification_afterSuccessfulOrderCreation() {
             Phone phone = buildPhoneInStock(1L, BigDecimal.valueOf(999), 10);
             when(phoneRepository.findAllById(any())).thenReturn(List.of(phone));
-            when(paymentMockService.pay(any(), any())).thenReturn(successfulPayment());
+            when(paymentProvider.pay(any(), any())).thenReturn(successfulPayment());
 
             orderCreatorService.create(cardCourierRequest(List.of(item(1L, 1))), null);
 
@@ -565,7 +603,7 @@ class OrderCreatorServiceTest {
         void shouldNotSendNotification_whenPaymentFails() {
             Phone phone = buildPhoneInStock(1L, BigDecimal.valueOf(999), 10);
             when(phoneRepository.findAllById(any())).thenReturn(List.of(phone));
-            when(paymentMockService.pay(any(), any())).thenReturn(failedPayment());
+            when(paymentProvider.pay(any(), any())).thenReturn(failedPayment());
 
             assertThatThrownBy(() ->
                     orderCreatorService.create(cardCourierRequest(List.of(item(1L, 1))), null))
@@ -579,7 +617,7 @@ class OrderCreatorServiceTest {
         void shouldCallMapper_exactlyOnce() {
             Phone phone = buildPhoneInStock(1L, BigDecimal.valueOf(999), 10);
             when(phoneRepository.findAllById(any())).thenReturn(List.of(phone));
-            when(paymentMockService.pay(any(), any())).thenReturn(successfulPayment());
+            when(paymentProvider.pay(any(), any())).thenReturn(successfulPayment());
 
             orderCreatorService.create(cardCourierRequest(List.of(item(1L, 1))), null);
 
@@ -593,7 +631,7 @@ class OrderCreatorServiceTest {
             OrderResponseDto expectedResponse = buildStubOrderResponse();
 
             when(phoneRepository.findAllById(any())).thenReturn(List.of(phone));
-            when(paymentMockService.pay(any(), any())).thenReturn(successfulPayment());
+            when(paymentProvider.pay(any(), any())).thenReturn(successfulPayment());
             when(orderMapper.toDto(any(Order.class))).thenReturn(expectedResponse);
 
             OrderResponseDto result = orderCreatorService.create(

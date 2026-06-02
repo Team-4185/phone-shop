@@ -2,6 +2,9 @@ server:
   port: ${PORT}
 
 spring:
+  config:
+    import:
+      optional:file:.env[.properties]
   application:
     name: gadgetroom
   docker:
@@ -40,8 +43,8 @@ spring:
     locations: classpath:db/migration, classpath:db/migration-dev
   data:
     redis:
-      host: localhost
-      port: 6379
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
 springdoc:
   api-docs:
     path: /v3/api-docs
@@ -71,6 +74,12 @@ minio:
   url: ${MINIO_URL}
   username: ${MINIO_USERNAME}
   password: ${MINIO_PASSWORD}
+
+payment:
+  provider: ${PAYMENT_PROVIDER:mock}
+
+delivery:
+  provider: ${DELIVERY_PROVIDER:mock}
 
 logging:
   level:

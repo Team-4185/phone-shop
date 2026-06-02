@@ -4,6 +4,7 @@ import com.challengeteam.shop.dto.admin.order.AdminOrderDetailsResponseDto;
 import com.challengeteam.shop.dto.admin.order.AdminOrderFilterDto;
 import com.challengeteam.shop.dto.admin.order.AdminOrderKpiResponseDto;
 import com.challengeteam.shop.dto.admin.order.AdminOrderListItemResponseDto;
+import com.challengeteam.shop.dto.admin.order.AdminShipOrderRequestDto;
 import com.challengeteam.shop.dto.pagination.paginationRequest.PageRequestDto;
 import com.challengeteam.shop.dto.pagination.paginationResponse.PageResponseDto;
 import com.challengeteam.shop.service.admin.AdminOrderService;
@@ -18,6 +19,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -81,8 +83,10 @@ public class AdminOrderController {
 
   @Operation(summary = "Ship admin order", description = "Moves an order from PROCESSING to SHIPPED.")
   @PostMapping("/{id:\\d+}/ship")
-  public ResponseEntity<AdminOrderDetailsResponseDto> shipOrder(@PathVariable Long id) {
-    return applyAction(id, "ship");
+  public ResponseEntity<AdminOrderDetailsResponseDto> shipOrder(
+      @PathVariable Long id, @Valid @RequestBody(required = false) AdminShipOrderRequestDto request) {
+    String trackingNumber = request == null ? null : request.trackingNumber();
+    return ResponseEntity.ok(adminOrderService.shipOrder(id, trackingNumber));
   }
 
   @Operation(summary = "Deliver admin order", description = "Moves an order from SHIPPED to DELIVERED.")

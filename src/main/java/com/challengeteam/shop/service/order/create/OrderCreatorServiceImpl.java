@@ -1,6 +1,7 @@
 package com.challengeteam.shop.service.order.create;
 
 import com.challengeteam.shop.constants.notification.type.Notification_type;
+import com.challengeteam.shop.dto.delivery.DeliveryQuote;
 import com.challengeteam.shop.dto.email.Notification;
 import com.challengeteam.shop.dto.order.OrderResponseDto;
 import com.challengeteam.shop.dto.order.request.item.OrderItemRequestDto;
@@ -21,8 +22,11 @@ import com.challengeteam.shop.mapper.order.OrderMapper;
 import com.challengeteam.shop.mapper.order.ShippingAddressOrderMapper;
 import com.challengeteam.shop.persistence.repository.OrderRepository;
 import com.challengeteam.shop.persistence.repository.PhoneRepository;
-import com.challengeteam.shop.service.mock.PaymentMockService;
+import com.challengeteam.shop.service.delivery.DeliveryProvider;
+import com.challengeteam.shop.service.delivery.DeliveryProviderResolver;
 import com.challengeteam.shop.service.notification.NotificationSenderService;
+import com.challengeteam.shop.service.payment.PaymentProvider;
+import com.challengeteam.shop.service.payment.PaymentProviderResolver;
 import com.challengeteam.shop.utility.AuthenticationUserExtractorHelper;
 import com.challengeteam.shop.utility.notification.email.OrderConfirmationEmailBuilder;
 import com.challengeteam.shop.utility.order.InputNormalizer;
@@ -51,7 +55,8 @@ public class OrderCreatorServiceImpl implements OrderCreatorService {
     private final AuthenticationUserExtractorHelper authenticationUserExtractorHelper;
     private final NotificationSenderService notificationSenderService;
     private final OrderMapper orderMapper;
-    private final PaymentMockService paymentMockService;
+    private final PaymentProviderResolver paymentProviderResolver;
+    private final DeliveryProviderResolver deliveryProviderResolver;
     private final ShippingAddressOrderMapper shippingAddressOrderMapper;
     private final OrderConfirmationEmailBuilder orderConfirmationEmailBuilder;
 
@@ -71,7 +76,12 @@ public class OrderCreatorServiceImpl implements OrderCreatorService {
         OrderUtils.checkIfStockAvailable(phoneMap, request.items());
         OrderUtils.checkIfColorAndStorageAvailable(phoneMap, request.items());
 
-        Order order = buildOrder(request, authentication, phoneMap);
+        BigDecimal itemsTotal = calculateItemsTotal(request, phoneMap);
+        DeliveryProvider deliveryProvider = deliveryProviderResolver.getDefaultProvider();
+        DeliveryQuote deliveryQuote = deliveryProvider.quote(
+                request.deliveryMethod(), request.shippingAddress(), itemsTotal);
+
+        Order order = buildOrder(request, authentication, phoneMap, itemsTotal, deliveryQuote);
         PaymentDetails paymentDetails = processPayment(request, order.getTotal());
 
         order.setPaymentDetails(paymentDetails);
@@ -113,12 +123,13 @@ public class OrderCreatorServiceImpl implements OrderCreatorService {
 
     private Order buildOrder(OrderRequestDto request,
                              Authentication authentication,
-                             Map<Long, Phone> phoneMap) {
+                             Map<Long, Phone> phoneMap,
+                             BigDecimal itemsTotal,
+                             DeliveryQuote deliveryQuote) {
         Optional<User> extractedUser = authenticationUserExtractorHelper
                 .extractUserFromSecurityContextHolder(authentication);
 
         List<OrderItem> orderItems = new ArrayList<>(request.items().size());
-        BigDecimal totalPrice = BigDecimal.ZERO;
 
         for (OrderItemRequestDto item : request.items()) {
             Phone phone = phoneMap.get(item.phoneId());
@@ -134,9 +145,9 @@ public class OrderCreatorServiceImpl implements OrderCreatorService {
                     .quantity(item.quantity())
                     .totalPrice(itemTotal)
                     .build());
-            totalPrice = totalPrice.add(itemTotal);
         }
 
+        PaymentProvider paymentProvider = paymentProviderResolver.getDefaultProvider();
         Order order = Order.builder()
                 .user(extractedUser.orElse(null))
                 .customerEmail(InputNormalizer.toEmail(request.customerEmail()))
@@ -146,10 +157,15 @@ public class OrderCreatorServiceImpl implements OrderCreatorService {
                 .status(OrderStatus.NEW)
                 .paymentMethod(request.paymentMethod())
                 .deliveryMethod(request.deliveryMethod())
+                .paymentProvider(paymentProvider.providerCode())
+                .deliveryProvider(deliveryQuote.provider())
+                .pickupPointId(resolvePickupPointId(request))
+                .estimatedDeliveryDate(deliveryQuote.estimatedDeliveryDate())
+                .deliveryPrice(deliveryQuote.price())
                 .shippingAddress(request.shippingAddress() != null
                         ? normalizeShippingAddress(request.shippingAddress())
                         : null)
-                .total(totalPrice)
+                .total(itemsTotal.add(deliveryQuote.price()))
                 .build();
 
         orderItems.forEach(item -> item.setOrder(order));
@@ -162,7 +178,7 @@ public class OrderCreatorServiceImpl implements OrderCreatorService {
         return switch (request.paymentMethod()) {
             case CARD -> {
                 log.debug("Processing CARD payment, amount: {}", total);
-                TransactionResult result = paymentMockService.pay(
+                TransactionResult result = paymentProviderResolver.getDefaultProvider().pay(
                         request.paymentDetails(), total);
                 if (result.paymentStatus() == PaymentStatus.FAILED) {
                     log.error("Payment failed: {}", result.errorMessage());
@@ -197,5 +213,20 @@ public class OrderCreatorServiceImpl implements OrderCreatorService {
         address.setRegion(InputNormalizer.toTitleCase(dto.region()));
         address.setCountry(InputNormalizer.toTitleCase(dto.country()));
         return address;
+    }
+
+    private BigDecimal calculateItemsTotal(OrderRequestDto request, Map<Long, Phone> phoneMap) {
+        return request.items().stream()
+                .map(item -> phoneMap.get(item.phoneId()).getPrice()
+                        .multiply(BigDecimal.valueOf(item.quantity())))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+
+    private String resolvePickupPointId(OrderRequestDto request) {
+        if (request.deliveryMethod() == com.challengeteam.shop.entity.order.DeliveryMethod.POST_OFFICE
+                && request.shippingAddress() != null) {
+            return request.shippingAddress().logisticPostOffice();
+        }
+        return null;
     }
 }
