@@ -1,17 +1,20 @@
 package com.challengeteam.shop.web.controller;
 
-import com.challengeteam.shop.dto.user.CreateUserDto;
-import com.challengeteam.shop.dto.user.UpdateProfileDto;
-import com.challengeteam.shop.dto.user.UserResponseDto;
+import com.challengeteam.shop.dto.user.request.CreateUserDto;
+import com.challengeteam.shop.dto.user.request.UpdateProfileDto;
+import com.challengeteam.shop.dto.user.response.UserPersonalInfoResponseDto;
+import com.challengeteam.shop.dto.user.response.UserResponseDto;
 import com.challengeteam.shop.entity.user.User;
 import com.challengeteam.shop.exceptionHandling.exception.ResourceNotFoundException;
 import com.challengeteam.shop.mapper.user.UserMapper;
 import com.challengeteam.shop.service.UserService;
+import com.challengeteam.shop.service.user.personalInfo.UserPersonalInfoService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
@@ -25,12 +28,13 @@ import java.util.List;
 public class UserController {
     private final UserService userService;
     private final UserMapper userMapper;
+    private final UserPersonalInfoService userPersonalInfoService;
 
     @Operation(
             deprecated = true,
             summary = "temporary: Get all users",
             description = "Returns a list of all users. Later there will be a lot of users, " +
-                          "so for efficient work user retrieving should be pageable."
+                    "so for efficient work user retrieving should be pageable."
     )
     @GetMapping
     public ResponseEntity<List<UserResponseDto>> getAllUsers() {
@@ -57,7 +61,7 @@ public class UserController {
     @Operation(
             summary = "Create new user",
             description = "Creates new user based on input data. Email must be unique. " +
-                          "Password and password confirmation must be equal. The user will have role: USER."
+                    "Password and password confirmation must be equal. The user will have role: USER."
     )
     @PostMapping
     public ResponseEntity<Void> createDefaultUser(@Valid @RequestBody CreateUserDto createUserDto) {
@@ -74,7 +78,7 @@ public class UserController {
     @Operation(
             summary = "Update user by id",
             description = "Updates user by id based on input data. " +
-                          "If field empty in request, the field won't be changed."
+                    "If field empty in request, the field won't be changed."
     )
     @PatchMapping("/{id:\\d+}/update-profile")
     public ResponseEntity<Void> updateProfile(@PathVariable Long id,
@@ -95,4 +99,10 @@ public class UserController {
         return ResponseEntity.noContent().build();
     }
 
+    @GetMapping("/me")
+    public ResponseEntity<UserPersonalInfoResponseDto> getCurrentUser(Authentication authentication) {
+        String username = authentication.getName();
+        UserPersonalInfoResponseDto userPersonalInfo = userPersonalInfoService.getUserPersonalInfo(username);
+        return ResponseEntity.ok(userPersonalInfo);
+    }
 }

@@ -1,4 +1,4 @@
-package com.challengeteam.shop.dto.user;
+package com.challengeteam.shop.dto.user.response;
 
 import com.challengeteam.shop.dto.role.RoleResponseDto;
 

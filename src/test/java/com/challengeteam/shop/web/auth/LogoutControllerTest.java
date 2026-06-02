@@ -1,7 +1,7 @@
 package com.challengeteam.shop.web.auth;
 
 import com.challengeteam.shop.dto.security.jwt.JwtResponseDto;
-import com.challengeteam.shop.dto.user.CreateUserDto;
+import com.challengeteam.shop.dto.user.request.CreateUserDto;
 import com.challengeteam.shop.persistence.repository.UserRepository;
 import com.challengeteam.shop.service.UserService;
 import com.challengeteam.shop.testContainer.ContainerExtension;

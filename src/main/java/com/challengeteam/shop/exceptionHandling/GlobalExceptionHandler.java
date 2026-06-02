@@ -9,6 +9,8 @@ import com.challengeteam.shop.exceptionHandling.exception.order.PaymentFailedExc
 import com.challengeteam.shop.exceptionHandling.exception.phone.PhoneAlreadyInCartException;
 import com.challengeteam.shop.exceptionHandling.exception.phone.PhoneNotFoundException;
 import com.challengeteam.shop.exceptionHandling.exception.security.*;
+import com.challengeteam.shop.exceptionHandling.exception.user.InvalidUserCredentialsException;
+import com.challengeteam.shop.exceptionHandling.exception.user.UsernameMissingException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
@@ -471,6 +473,7 @@ public class GlobalExceptionHandler {
         problem.setInstance(URI.create(request.getRequestURI()));
         return ResponseEntity.status(HttpStatus.PAYMENT_REQUIRED).body(problem);
     }
+
     @ExceptionHandler(OrderNotFoundException.class)
     public ResponseEntity<ProblemDetail> handleOrderNotFoundException(
             OrderNotFoundException ex, HttpServletRequest request) {
@@ -489,6 +492,28 @@ public class GlobalExceptionHandler {
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(
                 HttpStatus.UNAUTHORIZED, ex.getMessage());
         problem.setTitle("Unauthorized");
+        problem.setInstance(URI.create(request.getRequestURI()));
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(problem);
+    }
+
+    @ExceptionHandler(UsernameMissingException.class)
+    public ResponseEntity<ProblemDetail> handleUnauthorizedException(
+            UsernameMissingException ex, HttpServletRequest request) {
+        log.warn("401 {}", ex.getMessage());
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(
+                HttpStatus.UNAUTHORIZED, ex.getMessage());
+        problem.setTitle("Unauthorized");
+        problem.setInstance(URI.create(request.getRequestURI()));
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(problem);
+    }
+
+    @ExceptionHandler(InvalidUserCredentialsException.class)
+    public ResponseEntity<ProblemDetail> handleUnauthorizedException(
+            InvalidUserCredentialsException ex, HttpServletRequest request) {
+        log.warn("401 {}", ex.getMessage());
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(
+                HttpStatus.BAD_REQUEST, ex.getMessage());
+        problem.setTitle("Bad request");
         problem.setInstance(URI.create(request.getRequestURI()));
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(problem);
     }

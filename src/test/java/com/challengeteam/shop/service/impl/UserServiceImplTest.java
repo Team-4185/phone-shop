@@ -1,7 +1,7 @@
 package com.challengeteam.shop.service.impl;
 
-import com.challengeteam.shop.dto.user.CreateUserDto;
-import com.challengeteam.shop.dto.user.UpdateProfileDto;
+import com.challengeteam.shop.dto.user.request.CreateUserDto;
+import com.challengeteam.shop.dto.user.request.UpdateProfileDto;
 import com.challengeteam.shop.entity.user.Role;
 import com.challengeteam.shop.entity.user.User;
 import com.challengeteam.shop.exceptionHandling.exception.EmailAlreadyExistsException;
@@ -26,8 +26,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.LongStream;
 
-import static com.challengeteam.shop.service.impl.PhoneServiceImplTest.TestResources.IMAGE_ID;
-import static com.challengeteam.shop.service.impl.PhoneServiceImplTest.TestResources.PHONE_ID;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
