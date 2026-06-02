@@ -208,6 +208,10 @@ class OrderCreatorServiceTest {
         return new TransactionResult(PaymentStatus.FAILED, null, "Insufficient funds");
     }
 
+    private TransactionResult pendingPayment() {
+        return new TransactionResult(PaymentStatus.PENDING, "tx-pending-123", "Payment requires additional action");
+    }
+
     private OrderResponseDto buildStubOrderResponse() {
         return new OrderResponseDto(
                 1L, null, null, null,
@@ -371,6 +375,22 @@ class OrderCreatorServiceTest {
                     .hasMessageContaining("Insufficient funds");
 
             verifyNoInteractions(orderRepository);
+        }
+
+        @Test
+        @DisplayName("Should throw PaymentFailedException and not save order when card payment is pending")
+        void shouldThrowPaymentFailedException_andNotSaveOrder_whenCardPaymentIsPending() {
+            Phone phone = buildPhoneInStock(1L, BigDecimal.valueOf(999), 10);
+            when(phoneRepository.findAllById(any())).thenReturn(List.of(phone));
+            when(paymentProvider.pay(any(), any())).thenReturn(pendingPayment());
+
+            assertThatThrownBy(() ->
+                    orderCreatorService.create(cardCourierRequest(List.of(item(1L, 1))), null))
+                    .isInstanceOf(PaymentFailedException.class)
+                    .hasMessageContaining("Payment requires additional action");
+
+            verifyNoInteractions(orderRepository);
+            verifyNoInteractions(notificationSenderService);
         }
 
         @Test
