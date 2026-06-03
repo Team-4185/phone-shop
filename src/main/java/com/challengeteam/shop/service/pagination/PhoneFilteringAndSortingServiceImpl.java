@@ -1,5 +1,6 @@
 package com.challengeteam.shop.service.pagination;
 
+import com.challengeteam.shop.constraints.filter.FilterRequestConstraints;
 import com.challengeteam.shop.dto.pagination.paginationRequest.PhoneMultipleFilterRequest;
 import com.challengeteam.shop.dto.pagination.paginationResponse.PageResponseDto;
 import com.challengeteam.shop.dto.phone.response.PhoneResponseDto;
@@ -38,6 +39,7 @@ import java.util.List;
 @RequiredArgsConstructor
 @Slf4j
 public class PhoneFilteringAndSortingServiceImpl implements PhoneFilteringAndSortingService {
+    private static final String NO_BRAND_FILTER_VALUE = "__no_brand_filter__";
 
     private final PhoneRepository phoneRepository;
     private final PhoneMapper phoneMapper;
@@ -63,10 +65,20 @@ public class PhoneFilteringAndSortingServiceImpl implements PhoneFilteringAndSor
                         -> builder.equal(root.get(Phone_.STOCK), 0))
                 .buildAnd();
         log.debug("Specification: {}", specification);
-        Sort sort = SortResolver.resolve(filterDto.sort());
-        log.debug("Sort: {}", sort);
-        Pageable pageableWithSort = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), sort);
-        Page<Phone> phonePage = phoneRepository.findAll(specification, pageableWithSort);
+        boolean popularitySort = FilterRequestConstraints.isPopularitySort(filterDto.sort());
+        Pageable pageableWithSort = popularitySort
+                ? PageRequest.of(pageable.getPageNumber(), pageable.getPageSize())
+                : PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), resolveSort(filterDto.sort()));
+        Page<Phone> phonePage = popularitySort
+                ? phoneRepository.findAllByCatalogPopularity(
+                        filterBrands(filterDto.brands()),
+                        filterDto.brands() == null || filterDto.brands().isEmpty(),
+                        filterDto.minPrice(),
+                        filterDto.maxPrice(),
+                        Boolean.TRUE.equals(filterDto.inStock()),
+                        Boolean.TRUE.equals(filterDto.preOrder()),
+                        pageableWithSort)
+                : phoneRepository.findAll(specification, pageableWithSort);
         log.info("Phones found: {}", phonePage.getTotalElements());
         List<PhoneResponseDto> filteredPhoneDtos = phoneMapper.toResponseList(phonePage.getContent());
         return new PageResponseDto<PhoneResponseDto>(
@@ -77,5 +89,15 @@ public class PhoneFilteringAndSortingServiceImpl implements PhoneFilteringAndSor
                 phonePage.getTotalPages(),
                 phonePage.isFirst(),
                 phonePage.isLast());
+    }
+
+    private Sort resolveSort(String sortParam) {
+        Sort sort = SortResolver.resolve(sortParam);
+        log.debug("Sort: {}", sort);
+        return sort;
+    }
+
+    private List<String> filterBrands(List<String> brands) {
+        return brands == null || brands.isEmpty() ? List.of(NO_BRAND_FILTER_VALUE) : brands;
     }
 }

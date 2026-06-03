@@ -31,7 +31,8 @@ import java.util.List;
  *                 if null, no stock filtering is applied
  * @param preOrder a flag indicating whether to filter for phones available for pre-order;
  *                 if null, no pre-order filtering is applied
- * @param sort     the sort order for the results; must be one of: name_asc, name_desc, price_asc, price_desc;
+ * @param sort     the sort order for the results; must be one of: name_asc, name_desc, price_asc, price_desc,
+ *                 popularity, popularity_desc;
  *                 defaults to name_asc if null or blank
  * @see com.challengeteam.shop.constraints.filter.FilterRequestConstraints
  * @see MinPriceNotExceedMaxPrice
@@ -52,7 +53,7 @@ public record PhoneMultipleFilterRequest(
 
         @Pattern(
                 regexp = FilterRequestConstraints.SORT_ORDER_REGEXP,
-                message = "Sort must be one of: name_asc, name_desc, price_asc, price_desc"
+                message = "Sort must be one of: name_asc, name_desc, price_asc, price_desc, popularity, popularity_desc"
         )
         String sort
 ) {

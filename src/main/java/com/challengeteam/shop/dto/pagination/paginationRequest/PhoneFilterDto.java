@@ -19,7 +19,7 @@ public record PhoneFilterDto(
 
         @Pattern(
                 regexp = FilterRequestConstraints.SORT_ORDER_REGEXP,
-                message = "Sort must be one of: name_asc, name_desc, price_asc, price_desc"
+                message = "Sort must be one of: name_asc, name_desc, price_asc, price_desc, popularity, popularity_desc"
         )
         String sort
 ) {
