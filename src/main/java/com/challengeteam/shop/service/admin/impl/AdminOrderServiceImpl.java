@@ -6,6 +6,7 @@ import com.challengeteam.shop.dto.admin.order.AdminOrderFilterDto;
 import com.challengeteam.shop.dto.admin.order.AdminOrderKpiResponseDto;
 import com.challengeteam.shop.dto.admin.order.AdminOrderListItemResponseDto;
 import com.challengeteam.shop.dto.email.Notification;
+import com.challengeteam.shop.dto.payment.TransactionResult;
 import com.challengeteam.shop.entity.order.Order;
 import com.challengeteam.shop.entity.order.OrderStatus;
 import com.challengeteam.shop.entity.order.payment.PaymentMethod;
@@ -13,6 +14,7 @@ import com.challengeteam.shop.entity.order.payment.PaymentStatus;
 import com.challengeteam.shop.exceptionHandling.exception.InvalidPriceRangeException;
 import com.challengeteam.shop.exceptionHandling.exception.ResourceNotFoundException;
 import com.challengeteam.shop.exceptionHandling.exception.order.InvalidOrderStatusTransitionException;
+import com.challengeteam.shop.exceptionHandling.exception.order.PaymentFailedException;
 import com.challengeteam.shop.mapper.admin.AdminOrderMapper;
 import com.challengeteam.shop.persistence.repository.OrderRepository;
 import com.challengeteam.shop.persistence.specification.AdminOrderSpecification;
@@ -163,9 +165,31 @@ public class AdminOrderServiceImpl implements AdminOrderService {
       return;
     }
 
-    paymentProviderResolver
+    String transactionId = order.getPaymentDetails().getTransactionId();
+    if (transactionId == null || transactionId.isBlank()) {
+      throw new PaymentFailedException("Cannot refund paid order without payment transaction id");
+    }
+
+    TransactionResult refundResult =
+        paymentProviderResolver
         .getProvider(order.getPaymentProvider())
         .refund(order.getPaymentDetails().getTransactionId(), order.getTotal());
+
+    if (refundResult.paymentStatus() != PaymentStatus.REFUNDED) {
+      String message =
+          refundResult.errorMessage() == null || refundResult.errorMessage().isBlank()
+              ? "Refund was not completed"
+              : refundResult.errorMessage();
+      log.error(
+          "Refund failed for orderId={} provider={} transactionId={} status={} error={}",
+          order.getId(),
+          order.getPaymentProvider(),
+          transactionId,
+          refundResult.paymentStatus(),
+          message);
+      throw new PaymentFailedException(message);
+    }
+
     order.getPaymentDetails().setPaymentStatus(PaymentStatus.REFUNDED);
   }
 

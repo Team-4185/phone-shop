@@ -180,9 +180,12 @@ public class OrderCreatorServiceImpl implements OrderCreatorService {
                 log.debug("Processing CARD payment, amount: {}", total);
                 TransactionResult result = paymentProviderResolver.getDefaultProvider().pay(
                         request.paymentDetails(), total);
-                if (result.paymentStatus() == PaymentStatus.FAILED) {
-                    log.error("Payment failed: {}", result.errorMessage());
-                    throw new PaymentFailedException(result.errorMessage());
+                if (result.paymentStatus() != PaymentStatus.PAID) {
+                    String message = result.errorMessage() == null || result.errorMessage().isBlank()
+                            ? "Payment was not completed"
+                            : result.errorMessage();
+                    log.error("Payment was not completed, status={}, error={}", result.paymentStatus(), message);
+                    throw new PaymentFailedException(message);
                 }
                 yield new PaymentDetails(result.paymentStatus(), result.transactionId());
             }
