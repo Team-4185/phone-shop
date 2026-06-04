@@ -14,11 +14,13 @@ import com.challengeteam.shop.exceptionHandling.exception.ResourceNotFoundExcept
 import com.challengeteam.shop.mapper.image.ImageMapper;
 import com.challengeteam.shop.mapper.phone.PhoneMapper;
 import com.challengeteam.shop.service.PhoneService;
+import com.challengeteam.shop.service.ProductBadgeService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -40,6 +42,7 @@ public class PhoneController {
     private final PhoneService phoneService;
     private final PhoneMapper phoneMapper;
     private final ImageMapper imageMapper;
+    private final ProductBadgeService productBadgeService;
 
     @Operation(
             summary = "Get paginated list of phones",
@@ -57,7 +60,14 @@ public class PhoneController {
             throw new InvalidPriceRangeException("minPrice cannot be greater than maxPrice");
 
         Page<Phone> phones = phoneService.getPhones(page, size, filterDto);
-        Page<PhoneResponseDto> response = phones.map(phoneMapper::toResponse);
+        List<Phone> phoneContent = phones.getContent();
+        List<PhoneResponseDto> responseContent = productBadgeService.applyBadges(
+                phoneMapper.toResponseList(phoneContent),
+                phoneContent);
+        Page<PhoneResponseDto> response = new PageImpl<>(
+                responseContent,
+                phones.getPageable(),
+                phones.getTotalElements());
 
         return ResponseEntity.ok(PageResponseDto.of(response));
     }
@@ -72,7 +82,9 @@ public class PhoneController {
         Phone phone = phoneService
                 .getById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Not found phone with id: " + id));
-        PhoneResponseDto response = phoneMapper.toResponse(phone);
+        PhoneResponseDto response = productBadgeService.applyBadges(
+                phoneMapper.toResponse(phone),
+                productBadgeService.getBadges(List.of(phone)).get(phone.getId()));
 
         return ResponseEntity.ok(response);
     }

@@ -8,6 +8,7 @@ import com.challengeteam.shop.entity.phone.Phone;
 import com.challengeteam.shop.entity.phone.Phone_;
 import com.challengeteam.shop.mapper.phone.PhoneMapper;
 import com.challengeteam.shop.persistence.repository.PhoneRepository;
+import com.challengeteam.shop.service.ProductBadgeService;
 import com.challengeteam.shop.utility.pagination.filter.sort.SortResolver;
 import com.challengeteam.shop.utility.pagination.filter.specefication.PhoneFilterSpecificationBuilder;
 import lombok.RequiredArgsConstructor;
@@ -43,6 +44,7 @@ public class PhoneFilteringAndSortingServiceImpl implements PhoneFilteringAndSor
 
     private final PhoneRepository phoneRepository;
     private final PhoneMapper phoneMapper;
+    private final ProductBadgeService productBadgeService;
 
 
     /**
@@ -81,6 +83,7 @@ public class PhoneFilteringAndSortingServiceImpl implements PhoneFilteringAndSor
                 : phoneRepository.findAll(specification, pageableWithSort);
         log.info("Phones found: {}", phonePage.getTotalElements());
         List<PhoneResponseDto> filteredPhoneDtos = phoneMapper.toResponseList(phonePage.getContent());
+        filteredPhoneDtos = productBadgeService.applyBadges(filteredPhoneDtos, phonePage.getContent());
         return new PageResponseDto<PhoneResponseDto>(
                 filteredPhoneDtos,
                 phonePage.getNumber() + 1,

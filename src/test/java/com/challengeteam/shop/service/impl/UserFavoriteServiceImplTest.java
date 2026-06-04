@@ -11,6 +11,8 @@ import com.challengeteam.shop.mapper.phone.PhoneMapper;
 import com.challengeteam.shop.persistence.repository.FavoriteRepository;
 import com.challengeteam.shop.persistence.repository.PhoneRepository;
 import com.challengeteam.shop.persistence.repository.UserRepository;
+import com.challengeteam.shop.service.ProductBadgeService;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -42,9 +44,17 @@ class UserFavoriteServiceImplTest {
     private PhoneRepository phoneRepository;
     @Mock
     private PhoneMapper phoneMapper;
+    @Mock
+    private ProductBadgeService productBadgeService;
 
     @InjectMocks
     private UserFavoriteServiceImpl userFavoriteService;
+
+    @BeforeEach
+    void configureBadgeService() {
+        Mockito.lenient().when(productBadgeService.applyBadges(Mockito.anyList(), Mockito.anyList()))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+    }
 
     @Nested
     class GetUserFavoritesTest {
