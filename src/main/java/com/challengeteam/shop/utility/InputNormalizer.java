@@ -1,4 +1,4 @@
-package com.challengeteam.shop.utility.order;
+package com.challengeteam.shop.utility;
 
 import lombok.experimental.UtilityClass;
 
