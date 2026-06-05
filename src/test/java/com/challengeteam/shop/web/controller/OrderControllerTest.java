@@ -224,6 +224,24 @@ class OrderControllerTest {
         ));
     }
 
+    private String cardCourierCheckoutBody(Long phoneId) throws Exception {
+        return objectMapper.writeValueAsString(Map.of(
+                "customerEmail", "customer@example.com",
+                "customerFirstName", "John",
+                "customerLastName", "Doe",
+                "customerPhoneNumber", "+380991234567",
+                "paymentMethod", "CARD",
+                "paymentDetails", cardDetails(),
+                "deliveryMethod", "COURIER",
+                "shippingAddress", courierAddress(),
+                "itemSelections", List.of(Map.of(
+                        "phoneId", phoneId,
+                        "color", "BLACK",
+                        "storage", "CAPACITY_128GB"
+                ))
+        ));
+    }
+
     private Map<String, Object> item(Long phoneId, int quantity) {
         return Map.of(
                 "phoneId", phoneId,
@@ -720,6 +738,28 @@ class OrderControllerTest {
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(checkoutBody(iphone.getId())))
                     .andExpect(status().isUnauthorized());
+        }
+
+        @Test
+        @DisplayName("Failed card checkout -> 402, order not created, cart and stock unchanged")
+        void failedCardCheckout_returns402AndKeepsCartAndStock() throws Exception {
+            when(paymentMockService.pay(any(), any())).thenReturn(failed());
+            Long userId = testAuthHelper.authorizeAndReturnTokens().userId();
+            userCartService.putItemToUserCart(userId, new com.challengeteam.shop.dto.cart.CartItemAddRequestDto(
+                    iphone.getId(), 2));
+            long ordersBefore = orderRepository.count();
+
+            mockMvc.perform(post(ORDER_URL + "/checkout")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .header("Authorization", "Bearer " + userToken)
+                            .content(cardCourierCheckoutBody(iphone.getId())))
+                    .andExpect(status().isPaymentRequired());
+
+            assertThat(orderRepository.count()).isEqualTo(ordersBefore);
+            assertThat(cartRepository.findByUserId(userId).orElseThrow().getCartItems().size()).isEqualTo(1);
+            assertThat(cartRepository.findByUserId(userId).orElseThrow().getCartItems().getFirst().getAmount())
+                    .isEqualTo(2);
+            assertThat(phoneRepository.findById(iphone.getId()).orElseThrow().getStock()).isEqualTo(10);
         }
     }
 
