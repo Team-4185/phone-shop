@@ -145,6 +145,18 @@ class OrderControllerTest {
         );
     }
 
+    private Map<String, Object> ukrainianCourierAddress() {
+        return Map.of(
+                "houseNumber", "10Ґ",
+                "street", "вулиця Європейська",
+                "city", "Київ",
+                "region", "Київська область",
+                "country", "Україна",
+                "zipCode", "01001",
+                "logisticsCompany", "NOVA_POSHTA"
+        );
+    }
+
     private Map<String, Object> postOfficeAddress() {
         return Map.of(
                 "logisticsCompany", "NOVA_POSHTA",
@@ -390,6 +402,28 @@ class OrderControllerTest {
                     .andExpect(status().isCreated())
                     .andExpect(jsonPath("$.deliveryMethod").value("POST_OFFICE"))
                     .andExpect(jsonPath("$.shippingAddress.logisticsCompany").value("NOVA_POSHTA"));
+        }
+
+        @Test
+        @DisplayName("COURIER with Ukrainian customer and address data -> 201")
+        void ukrainianCustomerAndAddressData_returns201() throws Exception {
+            mockMvc.perform(post(ORDER_URL)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(Map.of(
+                                    "customerEmail", "customer@example.com",
+                                    "customerFirstName", "Іван",
+                                    "customerLastName", "Ґнатюк",
+                                    "customerPhoneNumber", "+380991234567",
+                                    "paymentMethod", "CASH_ON_DELIVERY",
+                                    "deliveryMethod", "COURIER",
+                                    "shippingAddress", ukrainianCourierAddress(),
+                                    "items", List.of(item(iphone.getId(), 1))
+                            ))))
+                    .andExpect(status().isCreated())
+                    .andExpect(jsonPath("$.customerFirstName").value("Іван"))
+                    .andExpect(jsonPath("$.customerLastName").value("Ґнатюк"))
+                    .andExpect(jsonPath("$.shippingAddress.city").value("Київ"))
+                    .andExpect(jsonPath("$.shippingAddress.country").value("Україна"));
         }
     }
 
