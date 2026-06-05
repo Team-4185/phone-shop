@@ -1,7 +1,10 @@
 package com.challengeteam.shop.web.controller;
 
+import com.challengeteam.shop.constants.security.jwt.JwtTokenNameConstants;
+import com.challengeteam.shop.dto.security.jwt.JwtPublicResponseDto;
 import com.challengeteam.shop.dto.user.request.CreateUserDto;
 import com.challengeteam.shop.dto.user.request.UpdateProfileDto;
+import com.challengeteam.shop.dto.user.request.sensetiveData.UpdateUserSensitiveDataDto;
 import com.challengeteam.shop.entity.favorite.Favorite;
 import com.challengeteam.shop.entity.order.DeliveryMethod;
 import com.challengeteam.shop.entity.order.Order;
@@ -21,6 +24,7 @@ import com.challengeteam.shop.testContainer.ContainerExtension;
 import com.challengeteam.shop.testContainer.TestContextConfigurator;
 import com.challengeteam.shop.web.TestAuthHelper;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -34,12 +38,14 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 
 import java.math.BigDecimal;
 import java.util.Set;
 
-import static com.challengeteam.shop.web.controller.PhoneControllerTest.TestResources.auth;
 import static com.challengeteam.shop.web.controller.UserControllerTest.TestResources.*;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.hasSize;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -70,6 +76,9 @@ class UserControllerTest {
     private Long user2;
     private Long user3;
 
+    private String accessToken;
+    private String refreshToken;
+
     @DynamicPropertySource
     static void loadPropertiesForTest(DynamicPropertyRegistry propertyRegistry) {
         TestContextConfigurator.initRequiredProperties(propertyRegistry);
@@ -87,6 +96,8 @@ class UserControllerTest {
         user3 = userService.createDefaultUser(buildCreateUserDto(TestUserCredentials.USER_3));
 
         token = testAuthHelper.authorizeLikeTestUser();
+        accessToken = testAuthHelper.authorizeAndReturnTokens().accessToken();
+        refreshToken = testAuthHelper.authorizeAndReturnTokens().refreshToken();
     }
 
     @Nested
@@ -297,14 +308,14 @@ class UserControllerTest {
         }
 
         @Test
-        void whenEmailAlreadyExists_thenReturn400() throws Exception {
+        void whenEmailAlreadyExists_thenReturn409() throws Exception {
             CreateUserDto request = buildCreateUserDto(TestUserCredentials.USER_1);
 
             mockMvc.perform(post(URL)
                             .header(HttpHeaders.AUTHORIZATION, auth(token))
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
-                    .andExpect(status().isBadRequest());
+                    .andExpect(status().isConflict());
         }
 
         private void expect400WithInvalidBody(TestUserCredentials credentials) throws Exception {
@@ -813,6 +824,245 @@ class UserControllerTest {
         }
     }
 
+    @Nested
+    @DisplayName("PATCH /sensitive — change password")
+    class ChangePasswordTests {
+        private static final String URL = "/api/v1/users/sensitive";
+
+        @Test
+        @DisplayName("valid request — 200, returns new access token and Set-Cookie with new refresh")
+        void changePassword_validRequest_returns200WithNewTokens() throws Exception {
+            var dto = new UpdateUserSensitiveDataDto(
+                    "NewPass9@", "NewPass9@",
+                    TestAuthHelper.TEST_COMPONENT_PASSWORD, null);
+
+            MvcResult result = mockMvc.perform(patchSensitive(dto, URL)
+                            .header(HttpHeaders.AUTHORIZATION, auth(accessToken)))
+                    .andExpect(status().isOk())
+                    .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                    .andExpect(jsonPath("$.accessToken").isNotEmpty())
+                    .andExpect(jsonPath("$.email").value(TestAuthHelper.TEST_COMPONENT_EMAIL))
+                    .andExpect(jsonPath("$.userId").isNumber())
+                    .andReturn();
+
+            String setCookie = result.getResponse().getHeader(HttpHeaders.SET_COOKIE);
+            assertThat(setCookie)
+                    .startsWith(JwtTokenNameConstants.REFRESH_TOKEN_HEADER + "=");
+            JwtPublicResponseDto response = objectMapper.readValue(
+                    result.getResponse().getContentAsString(), JwtPublicResponseDto.class);
+            assertThat(response.accessToken()).isNotBlank();
+        }
+
+        @Test
+        @DisplayName("old token is revoked after password change")
+        void changePassword_oldAccessTokenRevoked() throws Exception {
+            var dto = new UpdateUserSensitiveDataDto(
+                    "NewPass9@", "NewPass9@",
+                    TestAuthHelper.TEST_COMPONENT_PASSWORD, null);
+
+            mockMvc.perform(patchSensitive(dto, URL)
+                    .header(HttpHeaders.AUTHORIZATION, auth(accessToken)) //new
+            ).andExpect(status().isOk());
+
+            mockMvc.perform(patch(URL)
+                            .header(HttpHeaders.AUTHORIZATION, auth(accessToken))
+                            .cookie(new jakarta.servlet.http.Cookie(JwtTokenNameConstants.REFRESH_TOKEN_TYPE, refreshToken))
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(dto)))
+                    .andExpect(status().isUnauthorized());
+        }
+
+        @Test
+        @DisplayName("wrong old password — 400")
+        void changePassword_wrongOldPassword_returns400() throws Exception {
+            var dto = new UpdateUserSensitiveDataDto(
+                    "NewPass9@", "NewPass9@",
+                    "WrongOldPass1!", null);
+
+            mockMvc.perform(patchSensitive(dto, URL))
+                    .andExpect(status().isBadRequest());
+        }
+
+        @Test
+        @DisplayName("newPassword and confirmPassword mismatch — 400")
+        void changePassword_confirmMismatch_returns400() throws Exception {
+            var dto = new UpdateUserSensitiveDataDto(
+                    "NewPass9@", "DifferentPass9@",
+                    TestAuthHelper.TEST_COMPONENT_PASSWORD, null);
+
+            mockMvc.perform(patchSensitive(dto, URL))
+//                            .header(HttpHeaders.AUTHORIZATION, auth(accessToken)))
+                    .andExpect(status().isBadRequest());
+        }
+
+        @Test
+        @DisplayName("new password same as old — 400")
+        void changePassword_sameAsOld_returns400() throws Exception {
+            var dto = new UpdateUserSensitiveDataDto(
+                    TestAuthHelper.TEST_COMPONENT_PASSWORD,
+                    TestAuthHelper.TEST_COMPONENT_PASSWORD,
+                    TestAuthHelper.TEST_COMPONENT_PASSWORD, null);
+
+            mockMvc.perform(patchSensitive(dto, URL))
+                    .andExpect(status().isBadRequest());
+        }
+
+        @Test
+        @DisplayName("new password fails pattern validation — 400")
+        void changePassword_invalidPattern_returns400() throws Exception {
+            var dto = new UpdateUserSensitiveDataDto(
+                    "weakpassword", "weakpassword",
+                    TestAuthHelper.TEST_COMPONENT_PASSWORD, null);
+
+            mockMvc.perform(patchSensitive(dto, URL))
+                    .andExpect(status().isBadRequest());
+        }
+    }
+
+    // ─── change email ─────────────────────────────────────────────────────────
+
+    @Nested
+    @DisplayName("PATCH /sensitive — change email")
+    class ChangeEmailTests {
+        private static final String URL = "/api/v1/users/sensitive";
+
+        @Test
+        @DisplayName("valid request — 200, email updated in response and DB")
+        void changeEmail_validRequest_returns200WithUpdatedEmail() throws Exception {
+            var dto = new UpdateUserSensitiveDataDto(null, null, null, "changed@example.com");
+
+            mockMvc.perform(patchSensitive(dto, URL))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.email").value("changed@example.com"))
+                    .andExpect(jsonPath("$.accessToken").isNotEmpty());
+
+            assertThat(userRepository.existsByEmail("changed@example.com")).isTrue();
+            assertThat(userRepository.existsByEmail(TestAuthHelper.TEST_COMPONENT_EMAIL)).isFalse();
+        }
+
+        @Test
+        @DisplayName("same email as current — 400")
+        void changeEmail_sameAsCurrent_returns400() throws Exception {
+            var dto = new UpdateUserSensitiveDataDto(
+                    null, null, null, TestAuthHelper.TEST_COMPONENT_EMAIL);
+
+            mockMvc.perform(patchSensitive(dto, URL))
+                    .andExpect(status().isBadRequest());
+        }
+
+        @Test
+        @DisplayName("invalid email format — 400")
+        void changeEmail_invalidFormat_returns400() throws Exception {
+            var dto = new UpdateUserSensitiveDataDto(null, null, null, "not-an-email");
+
+            mockMvc.perform(patchSensitive(dto, URL))
+                    .andExpect(status().isBadRequest());
+        }
+
+        @Test
+        @DisplayName("email already taken by another user — 409")
+        void changeEmail_alreadyTaken_returns409() throws Exception {
+            CreateUserDto request = buildCreateUserDto(TestUserCredentials.USER_1);
+
+            var dto = new UpdateUserSensitiveDataDto(
+                    null, null, null, TestUserCredentials.USER_1.email);
+
+            mockMvc.perform(patchSensitive(dto, URL))
+                    .andExpect(status().isConflict());
+        }
+    }
+
+    // ─── change both ──────────────────────────────────────────────────────────
+
+    @Nested
+    @DisplayName("PATCH /me/sensitive — change both")
+    class ChangeBothTests {
+        private static final String URL = "/api/v1/users/sensitive";
+
+        @Test
+        @DisplayName("valid request with both fields — 200, both updated")
+        void changeBoth_validRequest_returns200() throws Exception {
+            var dto = new UpdateUserSensitiveDataDto(
+                    "NewPass9@", "NewPass9@",
+                    TestAuthHelper.TEST_COMPONENT_PASSWORD,
+                    "newboth@example.com");
+
+            mockMvc.perform(patchSensitive(dto, URL))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.email").value("newboth@example.com"))
+                    .andExpect(jsonPath("$.accessToken").isNotEmpty());
+
+            assertThat(userRepository.existsByEmail("newboth@example.com")).isTrue();
+        }
+    }
+
+    // ─── no data ──────────────────────────────────────────────────────────────
+
+    @Nested
+    @DisplayName("PATCH /me/sensitive — no new data")
+    class NoDataTests {
+        private static final String URL = "/api/v1/users/sensitive";
+
+        @Test
+        @DisplayName("all fields null — 400")
+        void noNewData_returns400() throws Exception {
+            var dto = new UpdateUserSensitiveDataDto(null, null, null, null);
+
+            mockMvc.perform(patchSensitive(dto, URL))
+                    .andExpect(status().isBadRequest());
+        }
+    }
+
+    // ─── auth guards ─────────────────────────────────────────────────────────
+
+    @Nested
+    @DisplayName("PATCH /me/sensitive — auth guards")
+    class AuthGuardTests {
+        private static final String URL = "/api/v1/users/sensitive";
+
+        @Test
+        @DisplayName("missing Authorization header — 401")
+        void noAuthHeader_returns401() throws Exception {
+            var dto = new UpdateUserSensitiveDataDto(
+                    "NewPass9@", "NewPass9@",
+                    TestAuthHelper.TEST_COMPONENT_PASSWORD, null);
+
+            mockMvc.perform(patch(URL)
+                            .cookie(new Cookie(JwtTokenNameConstants.REFRESH_TOKEN_HEADER, refreshToken))
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(dto)))
+                    .andExpect(status().isUnauthorized());
+        }
+
+        @Test
+        @DisplayName("missing refresh cookie — 400")
+        void noRefreshCookie_returns400() throws Exception {
+            var dto = new UpdateUserSensitiveDataDto(
+                    "NewPass9@", "NewPass9@",
+                    TestAuthHelper.TEST_COMPONENT_PASSWORD, null);
+
+            mockMvc.perform(patch(URL)
+                            .header(HttpHeaders.AUTHORIZATION, auth(token))
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(dto)))
+                    .andExpect(status().isBadRequest());
+        }
+
+        @Test
+        @DisplayName("invalid JWT — 401")
+        void invalidJwt_returns401() throws Exception {
+            var dto = new UpdateUserSensitiveDataDto(
+                    "NewPass9@", "NewPass9@",
+                    TestAuthHelper.TEST_COMPONENT_PASSWORD, null);
+
+            mockMvc.perform(patch(URL)
+                            .header(HttpHeaders.AUTHORIZATION, auth("invalid.jwt.token"))
+                            .cookie(new Cookie(JwtTokenNameConstants.REFRESH_TOKEN_HEADER, refreshToken))
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(dto)))
+                    .andExpect(status().isUnauthorized());
+        }
+    }
 
 
     static class TestResources {
@@ -941,5 +1191,13 @@ class UserControllerTest {
             this.city = city;
             this.phoneNumber = phoneNumber;
         }
+    }
+
+    private MockHttpServletRequestBuilder patchSensitive(Object dto, String URL) throws Exception {
+        return patch(URL)
+                .header(HttpHeaders.AUTHORIZATION, auth(token))
+                .cookie(new Cookie(JwtTokenNameConstants.REFRESH_TOKEN_HEADER, refreshToken))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(dto));
     }
 }
