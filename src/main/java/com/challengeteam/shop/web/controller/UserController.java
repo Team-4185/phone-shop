@@ -1,34 +1,50 @@
 package com.challengeteam.shop.web.controller;
 
+import com.challengeteam.shop.constants.security.jwt.JwtTokenNameConstants;
+import com.challengeteam.shop.dto.security.jwt.JwtPublicResponseDto;
+import com.challengeteam.shop.dto.security.jwt.JwtResponseDto;
 import com.challengeteam.shop.dto.user.request.CreateUserDto;
 import com.challengeteam.shop.dto.user.request.UpdateProfileDto;
+import com.challengeteam.shop.dto.user.request.sensetiveData.UpdateUserSensitiveDataDto;
 import com.challengeteam.shop.dto.user.response.UserPersonalInfoResponseDto;
 import com.challengeteam.shop.dto.user.response.UserResponseDto;
 import com.challengeteam.shop.entity.user.User;
 import com.challengeteam.shop.exceptionHandling.exception.ResourceNotFoundException;
 import com.challengeteam.shop.mapper.user.UserMapper;
+import com.challengeteam.shop.properties.JwtProperties;
 import com.challengeteam.shop.service.UserService;
 import com.challengeteam.shop.service.user.personalInfo.UserPersonalInfoService;
+import com.challengeteam.shop.service.user.sensetiveData.UserSensitiveDataUpdater;
+import com.challengeteam.shop.utility.web.headers.AccessTokenHeaderExtractor;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.net.URI;
 import java.util.List;
+import java.util.Map;
 
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("/api/v1/users")
 @SecurityRequirement(name = "bearer-jwt")
+@Validated
 public class UserController {
     private final UserService userService;
     private final UserMapper userMapper;
     private final UserPersonalInfoService userPersonalInfoService;
+    private final UserSensitiveDataUpdater userSensitiveDataUpdater;
+    private final JwtProperties jwtProperties;
 
     @Operation(
             deprecated = true,
@@ -104,5 +120,36 @@ public class UserController {
         String username = authentication.getName();
         UserPersonalInfoResponseDto userPersonalInfo = userPersonalInfoService.getUserPersonalInfo(username);
         return ResponseEntity.ok(userPersonalInfo);
+    }
+
+    @PatchMapping("/sensitive")
+    public ResponseEntity<JwtPublicResponseDto> updateSensitiveData(
+            @RequestBody @Valid UpdateUserSensitiveDataDto dto,
+            Authentication authentication,
+            @CookieValue(JwtTokenNameConstants.REFRESH_TOKEN_HEADER) String refreshToken,
+            HttpServletResponse response,
+            HttpServletRequest request) {
+
+        Map<String, String> tokens = Map.of(
+                JwtTokenNameConstants.ACCESS_TOKEN_TYPE, AccessTokenHeaderExtractor.extractAccessToken(request),
+                JwtTokenNameConstants.REFRESH_TOKEN_TYPE, refreshToken
+        );
+
+        JwtResponseDto result = userSensitiveDataUpdater.update(dto, authentication, tokens);
+
+        ResponseCookie cookie = ResponseCookie.from(JwtTokenNameConstants.REFRESH_TOKEN_HEADER, result.refreshToken())
+                .httpOnly(true)
+                .secure(true)
+                .path("/api")
+                .maxAge(jwtProperties.getRefreshTokenExpiration())
+                .sameSite("Strict")
+                .build();
+
+        response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
+
+        return ResponseEntity.ok(new JwtPublicResponseDto(
+                result.userId(),
+                result.email(),
+                result.accessToken()));
     }
 }
