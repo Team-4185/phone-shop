@@ -6,6 +6,7 @@ import com.challengeteam.shop.exceptionHandling.exception.order.InvalidOrderStat
 import com.challengeteam.shop.exceptionHandling.exception.order.OrderCreationException;
 import com.challengeteam.shop.exceptionHandling.exception.order.OrderNotFoundException;
 import com.challengeteam.shop.exceptionHandling.exception.order.PaymentFailedException;
+import com.challengeteam.shop.exceptionHandling.exception.payment.PaymentWebhookException;
 import com.challengeteam.shop.exceptionHandling.exception.phone.PhoneAlreadyInCartException;
 import com.challengeteam.shop.exceptionHandling.exception.phone.PhoneNotFoundException;
 import com.challengeteam.shop.exceptionHandling.exception.security.*;
@@ -473,6 +474,17 @@ public class GlobalExceptionHandler {
         problem.setTitle("Payment Failed");
         problem.setInstance(URI.create(request.getRequestURI()));
         return ResponseEntity.status(HttpStatus.PAYMENT_REQUIRED).body(problem);
+    }
+
+    @ExceptionHandler(PaymentWebhookException.class)
+    public ResponseEntity<ProblemDetail> handlePaymentWebhookException(
+            PaymentWebhookException ex, HttpServletRequest request) {
+        log.warn("400 Payment webhook error: {}", ex.getMessage());
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(
+                HttpStatus.BAD_REQUEST, ex.getMessage());
+        problem.setTitle("Payment Webhook Error");
+        problem.setInstance(URI.create(request.getRequestURI()));
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(problem);
     }
 
     @ExceptionHandler(OrderNotFoundException.class)

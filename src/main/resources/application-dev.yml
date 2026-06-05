@@ -79,6 +79,10 @@ minio:
 
 payment:
   provider: ${PAYMENT_PROVIDER:mock}
+  stripe:
+    secret-key: ${STRIPE_SECRET_KEY:}
+    webhook-secret: ${STRIPE_WEBHOOK_SECRET:}
+    currency: ${STRIPE_CURRENCY:usd}
 
 delivery:
   provider: ${DELIVERY_PROVIDER:mock}

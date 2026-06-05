@@ -2,11 +2,24 @@ package com.challengeteam.shop.web.controller;
 
 import com.challengeteam.shop.dto.phone.request.PhoneCreateRequestDto;
 import com.challengeteam.shop.dto.phone.request.PhoneUpdateRequestDto;
+import com.challengeteam.shop.entity.favorite.Favorite;
 import com.challengeteam.shop.entity.image.Image;
+import com.challengeteam.shop.entity.order.DeliveryMethod;
+import com.challengeteam.shop.entity.order.Order;
+import com.challengeteam.shop.entity.order.OrderItem;
+import com.challengeteam.shop.entity.order.OrderStatus;
+import com.challengeteam.shop.entity.order.payment.PaymentDetails;
+import com.challengeteam.shop.entity.order.payment.PaymentMethod;
+import com.challengeteam.shop.entity.order.payment.PaymentStatus;
+import com.challengeteam.shop.entity.phone.Phone;
 import com.challengeteam.shop.entity.phone.PhoneColor;
 import com.challengeteam.shop.entity.phone.ProductStatus;
 import com.challengeteam.shop.entity.phone.StorageCapacity;
+import com.challengeteam.shop.entity.user.User;
+import com.challengeteam.shop.persistence.repository.FavoriteRepository;
+import com.challengeteam.shop.persistence.repository.OrderRepository;
 import com.challengeteam.shop.persistence.repository.PhoneRepository;
+import com.challengeteam.shop.persistence.repository.UserRepository;
 import com.challengeteam.shop.service.PhoneService;
 import com.challengeteam.shop.testContainer.ContainerExtension;
 import com.challengeteam.shop.testContainer.TestContextConfigurator;
@@ -49,6 +62,12 @@ class PhoneControllerTest {
     @Autowired
     private PhoneRepository phoneRepository;
     @Autowired
+    private FavoriteRepository favoriteRepository;
+    @Autowired
+    private OrderRepository orderRepository;
+    @Autowired
+    private UserRepository userRepository;
+    @Autowired
     private PhoneService phoneService;
     @Autowired
     private MockMvc mockMvc;
@@ -67,6 +86,8 @@ class PhoneControllerTest {
     @BeforeEach
     public void setup() {
         // clear all
+        favoriteRepository.deleteAll();
+        orderRepository.deleteAll();
         phoneRepository.deleteAll();
 
         // add 3 phones
@@ -397,6 +418,29 @@ class PhoneControllerTest {
         }
 
         @Test
+        void whenSortByPopularity_thenReturnMostPurchasedAndFavoritedPhonesFirst() throws Exception {
+            User user = testUser();
+            Phone iphone = phone(phone1);
+            Phone samsung = phone(phone2);
+            Phone pixel = phone(phone3);
+            favoriteRepository.save(new Favorite(user, iphone));
+            favoriteRepository.save(new Favorite(user, pixel));
+            orderRepository.save(buildOrder(iphone, 2));
+            orderRepository.save(buildOrder(samsung, 1));
+
+            mockMvc.perform(get(URL)
+                            .param("sort", "popularity")
+                            .header(HttpHeaders.AUTHORIZATION, auth(token)))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.content").isArray())
+                    .andExpect(jsonPath("$.content", hasSize(3)))
+                    .andExpect(jsonPath("$.content[0].name").value("iPhone 15"))
+                    .andExpect(jsonPath("$.content[1].name").value("Google Pixel 8"))
+                    .andExpect(jsonPath("$.content[2].name").value("Samsung Galaxy S24"))
+                    .andExpect(jsonPath("$.content[*].images").exists());
+        }
+
+        @Test
         void whenNoSortProvided_thenDefaultToNameAsc() throws Exception {
             mockMvc.perform(get(URL)
                             .header(HttpHeaders.AUTHORIZATION, auth(token)))
@@ -513,6 +557,37 @@ class PhoneControllerTest {
                     .andExpect(jsonPath("$.content[1].price").value(899.99))
                     .andExpect(jsonPath("$.content[*].images").exists());
         }
+    }
+
+    private User testUser() {
+        return userRepository.findByEmail(TestAuthHelper.TEST_COMPONENT_EMAIL)
+                .orElseThrow();
+    }
+
+    private Phone phone(Long id) {
+        return phoneRepository.findById(id).orElseThrow();
+    }
+
+    private Order buildOrder(Phone phone, int quantity) {
+        Order order = Order.builder()
+                .customerEmail("customer@example.com")
+                .status(OrderStatus.CONFIRMED)
+                .paymentMethod(PaymentMethod.CARD)
+                .deliveryMethod(DeliveryMethod.PICKUP)
+                .paymentDetails(new PaymentDetails(PaymentStatus.PAID, "tx-" + phone.getSku()))
+                .total(phone.getPrice().multiply(BigDecimal.valueOf(quantity)))
+                .build();
+        order.addItem(OrderItem.builder()
+                .phone(phone)
+                .productName(phone.getName())
+                .sku(phone.getSku())
+                .unitPrice(phone.getPrice())
+                .selectedColor(PhoneColor.BLUE)
+                .selectedStorage(StorageCapacity.CAPACITY_64GB)
+                .quantity(quantity)
+                .totalPrice(phone.getPrice().multiply(BigDecimal.valueOf(quantity)))
+                .build());
+        return order;
     }
 
     @Nested
