@@ -2,6 +2,7 @@ package com.challengeteam.shop.web.controller;
 
 import com.challengeteam.shop.dto.phone.request.PhoneCreateRequestDto;
 import com.challengeteam.shop.dto.phone.request.PhoneUpdateRequestDto;
+import com.challengeteam.shop.dto.phone.response.ProductBadgeResponseDto;
 import com.challengeteam.shop.entity.favorite.Favorite;
 import com.challengeteam.shop.entity.image.Image;
 import com.challengeteam.shop.entity.order.DeliveryMethod;
@@ -123,6 +124,8 @@ class PhoneControllerTest {
                     .andExpect(jsonPath("$.content").isArray())
                     .andExpect(jsonPath("$.content", hasSize(3)))
                     .andExpect(jsonPath("$.content[*].images").exists())
+                    .andExpect(jsonPath("$.content[0].badges").isArray())
+                    .andExpect(jsonPath("$.content[0].discountPercent").value(0))
                     .andExpect(jsonPath("$.totalElements").value(3))
                     .andExpect(jsonPath("$.totalPages").value(1))
                     .andExpect(jsonPath("$.size").value(10))
@@ -614,6 +617,8 @@ class PhoneControllerTest {
                     .andExpect(jsonPath("$.mainCamera").value(TestPhone.PHONE_1.mainCamera))
                     .andExpect(jsonPath("$.batteryCapacity").value(TestPhone.PHONE_1.batteryCapacity))
                     .andExpect(jsonPath("$.images").isArray())
+                    .andExpect(jsonPath("$.badges", hasItem(ProductBadgeResponseDto.NEW.name())))
+                    .andExpect(jsonPath("$.discountPercent").value(0))
                     .andExpect(jsonPath("$.images", hasSize(0)));
         }
 

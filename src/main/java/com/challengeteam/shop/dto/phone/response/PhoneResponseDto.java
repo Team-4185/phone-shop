@@ -21,6 +21,27 @@ public record PhoneResponseDto(
         String batteryCapacity,
         Set<PhoneColorResponseDto> colors,
         Set<StorageCapacityResponseDto> storageCapacity,
-        List<ImageMetadataResponseDto> images
+        List<ImageMetadataResponseDto> images,
+        Set<ProductBadgeResponseDto> badges,
+        Integer discountPercent
 ) {
+    public PhoneResponseDto(
+            Long id,
+            String name,
+            String description,
+            BigDecimal price,
+            String brand,
+            Integer releaseYear,
+            String cpu,
+            Integer coresNumber,
+            String screenSize,
+            String frontCamera,
+            String mainCamera,
+            String batteryCapacity,
+            Set<PhoneColorResponseDto> colors,
+            Set<StorageCapacityResponseDto> storageCapacity,
+            List<ImageMetadataResponseDto> images) {
+        this(id, name, description, price, brand, releaseYear, cpu, coresNumber, screenSize, frontCamera, mainCamera,
+                batteryCapacity, colors, storageCapacity, images, Set.of(), 0);
+    }
 }

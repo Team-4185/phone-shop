@@ -49,6 +49,8 @@ public interface PhoneMapper {
     @Mapping(source = "images", target = "images")
     @Mapping(source = "phoneCharacteristics.phoneColors", target = "colors")
     @Mapping(source = "phoneCharacteristics.storageCapacities", target = "storageCapacity")
+    @Mapping(target = "badges", expression = "java(java.util.Set.of())")
+    @Mapping(target = "discountPercent", constant = "0")
     PhoneResponseDto toResponse(Phone phone);
 
     /**
