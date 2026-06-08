@@ -107,9 +107,21 @@ class AdminCustomerDashboardControllerTest {
     }
 
     @Test
+    void whenRequestCustomersWithoutToken_thenStatus401() throws Exception {
+        mockMvc.perform(get(ADMIN_CUSTOMERS_URL))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
     void whenUserRequestsCustomers_thenStatus403() throws Exception {
         mockMvc.perform(get(ADMIN_CUSTOMERS_URL).header(HttpHeaders.AUTHORIZATION, auth(userToken)))
                 .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void whenRequestCustomerKpiWithoutToken_thenStatus401() throws Exception {
+        mockMvc.perform(get(ADMIN_CUSTOMERS_URL + "/kpi"))
+                .andExpect(status().isUnauthorized());
     }
 
     @Test
@@ -169,6 +181,14 @@ class AdminCustomerDashboardControllerTest {
     }
 
     @Test
+    void whenAdminUsesUnsupportedCustomerSort_thenStatus400() throws Exception {
+        mockMvc.perform(get(ADMIN_CUSTOMERS_URL)
+                        .param("sort", "role_desc")
+                        .header(HttpHeaders.AUTHORIZATION, auth(adminToken)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
     void whenAdminRequestsCustomerDetails_thenReturnRecentOrders() throws Exception {
         Order order = createOrder(OrderStatus.DELIVERED, PaymentStatus.PAID, "799.99", 1);
 
@@ -180,6 +200,26 @@ class AdminCustomerDashboardControllerTest {
                 .andExpect(jsonPath("$.recentOrders", hasSize(1)))
                 .andExpect(jsonPath("$.recentOrders[0].id").value(order.getId()))
                 .andExpect(jsonPath("$.recentOrders[0].paymentStatus").value("PAID"));
+    }
+
+    @Test
+    void whenCustomerDoesNotExist_thenStatus404() throws Exception {
+        mockMvc.perform(get(ADMIN_CUSTOMERS_URL + "/{id}", 999999L)
+                        .header(HttpHeaders.AUTHORIZATION, auth(adminToken)))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void whenRequestDashboardWithoutToken_thenStatus401() throws Exception {
+        mockMvc.perform(get(ADMIN_DASHBOARD_URL + "/summary"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void whenUserRequestsDashboard_thenStatus403() throws Exception {
+        mockMvc.perform(get(ADMIN_DASHBOARD_URL + "/summary")
+                        .header(HttpHeaders.AUTHORIZATION, auth(userToken)))
+                .andExpect(status().isForbidden());
     }
 
     @Test

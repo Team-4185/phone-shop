@@ -133,6 +133,29 @@ class AdminControllerTest {
     class AdminProductMutationsTest {
 
         @Test
+        void whenCreateProductWithoutToken_thenStatus401() throws Exception {
+            AdminProductCreateRequestDto request =
+                    buildAdminProductCreateRequestDto("Created Admin Product", "CREATED-ADMIN-001");
+
+            mockMvc
+                    .perform(multipart(ADMIN_PRODUCTS_URL).file(jsonPart("product", request)))
+                    .andExpect(status().isUnauthorized());
+        }
+
+        @Test
+        void whenCreateProductAsUser_thenStatus403() throws Exception {
+            AdminProductCreateRequestDto request =
+                    buildAdminProductCreateRequestDto("Created Admin Product", "CREATED-ADMIN-001");
+
+            mockMvc
+                    .perform(
+                            multipart(ADMIN_PRODUCTS_URL)
+                                    .file(jsonPart("product", request))
+                                    .header(HttpHeaders.AUTHORIZATION, auth(userToken)))
+                    .andExpect(status().isForbidden());
+        }
+
+        @Test
         void whenAdminCreatesProductWithImage_thenStatus201AndProductCanBeFetched() throws Exception {
             AdminProductCreateRequestDto request =
                     buildAdminProductCreateRequestDto("Created Admin Product", "CREATED-ADMIN-001");
@@ -156,6 +179,46 @@ class AdminControllerTest {
                     .andExpect(jsonPath("$.name").value("Created Admin Product"))
                     .andExpect(jsonPath("$.sku").value("CREATED-ADMIN-001"))
                     .andExpect(jsonPath("$.images", hasSize(1)));
+        }
+
+        @Test
+        void whenAdminCreatesProductWithInvalidPayload_thenStatus400() throws Exception {
+            AdminProductCreateRequestDto request =
+                    new AdminProductCreateRequestDto(
+                            "ab",
+                            "Created through admin product management",
+                            new BigDecimal("699.99"),
+                            "CreatedBrand",
+                            2024,
+                            "INVALID-ADMIN-001",
+                            15,
+                            ProductStatus.IN_STOCK,
+                            "Created Chip",
+                            8,
+                            "6.4\"",
+                            "12 MP",
+                            "64 MP",
+                            "4300 mAh");
+
+            mockMvc
+                    .perform(
+                            multipart(ADMIN_PRODUCTS_URL)
+                                    .file(jsonPart("product", request))
+                                    .header(HttpHeaders.AUTHORIZATION, auth(adminToken)))
+                    .andExpect(status().isBadRequest());
+        }
+
+        @Test
+        void whenAdminCreatesProductWithExistingSku_thenStatus400() throws Exception {
+            AdminProductCreateRequestDto request =
+                    buildAdminProductCreateRequestDto("Duplicate Admin Product", "ADMIN-TEST-001");
+
+            mockMvc
+                    .perform(
+                            multipart(ADMIN_PRODUCTS_URL)
+                                    .file(jsonPart("product", request))
+                                    .header(HttpHeaders.AUTHORIZATION, auth(adminToken)))
+                    .andExpect(status().isBadRequest());
         }
 
         @Test
@@ -266,6 +329,35 @@ class AdminControllerTest {
         }
 
         @Test
+        void whenAdminUpdatesProductWithInvalidPayload_thenStatus400() throws Exception {
+            Phone phone = phoneRepository.findAll().getFirst();
+            AdminProductUpdateRequestDto request =
+                    new AdminProductUpdateRequestDto(
+                            null,
+                            null,
+                            new BigDecimal("-1.00"),
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null);
+
+            mockMvc
+                    .perform(
+                            put(ADMIN_PRODUCTS_URL + "/{id}", phone.getId())
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsBytes(request))
+                                    .header(HttpHeaders.AUTHORIZATION, auth(adminToken)))
+                    .andExpect(status().isBadRequest());
+        }
+
+        @Test
         void whenAdminDeletesProduct_thenStatus204AndProductIsGone() throws Exception {
             Phone phone = phoneRepository.findAll().getFirst();
 
@@ -325,6 +417,27 @@ class AdminControllerTest {
                                     .header(HttpHeaders.AUTHORIZATION, auth(adminToken)))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$", hasSize(0)));
+        }
+
+        @Test
+        void whenAdminDeletesImageNotBelongingToProduct_thenStatus404() throws Exception {
+            Phone firstPhone = phoneRepository.findAll().getFirst();
+            phoneService.create(buildOtherPhoneCreateRequestDto(), new ArrayList<>());
+            Phone otherPhone = findPhoneBySku("OTHER-DEVICE-001");
+
+            mockMvc
+                    .perform(
+                            multipart(ADMIN_PRODUCTS_URL + "/{id}/images", otherPhone.getId())
+                                    .file(imagePart("images", "image_1.jpg"))
+                                    .header(HttpHeaders.AUTHORIZATION, auth(adminToken)))
+                    .andExpect(status().isNoContent());
+            Image image = imageRepository.getImagesByPhone_Id(otherPhone.getId()).getFirst();
+
+            mockMvc
+                    .perform(
+                            delete(ADMIN_PRODUCTS_URL + "/{id}/images/{imageId}", firstPhone.getId(), image.getId())
+                                    .header(HttpHeaders.AUTHORIZATION, auth(adminToken)))
+                    .andExpect(status().isNotFound());
         }
     }
 
@@ -405,6 +518,11 @@ class AdminControllerTest {
     @Nested
     @DisplayName("GET /api/v1/admin/products")
     class GetAdminProductsTest {
+
+        @Test
+        void whenRequestMissingToken_thenStatus401() throws Exception {
+            mockMvc.perform(get(ADMIN_PRODUCTS_URL)).andExpect(status().isUnauthorized());
+        }
 
         @Test
         void whenAuthenticatedUserHasNoAdminRole_thenStatus403() throws Exception {
@@ -537,6 +655,11 @@ class AdminControllerTest {
     @Nested
     @DisplayName("GET /api/v1/admin/orders")
     class GetAdminOrdersTest {
+
+        @Test
+        void whenRequestMissingToken_thenStatus401() throws Exception {
+            mockMvc.perform(get(ADMIN_ORDERS_URL)).andExpect(status().isUnauthorized());
+        }
 
         @Test
         void whenAuthenticatedUserHasNoAdminRole_thenStatus403() throws Exception {
@@ -767,6 +890,26 @@ class AdminControllerTest {
     class AdminOrderActionsTest {
 
         @Test
+        void whenActionRequestedWithoutToken_thenStatus401() throws Exception {
+            Order order = createOrder(OrderStatus.NEW, "799.99", 1);
+
+            mockMvc
+                    .perform(post(ADMIN_ORDERS_URL + "/{id}/confirm", order.getId()))
+                    .andExpect(status().isUnauthorized());
+        }
+
+        @Test
+        void whenActionRequestedAsUser_thenStatus403() throws Exception {
+            Order order = createOrder(OrderStatus.NEW, "799.99", 1);
+
+            mockMvc
+                    .perform(
+                            post(ADMIN_ORDERS_URL + "/{id}/confirm", order.getId())
+                                    .header(HttpHeaders.AUTHORIZATION, auth(userToken)))
+                    .andExpect(status().isForbidden());
+        }
+
+        @Test
         void whenConfirmNewOrder_thenStatusChangesToConfirmed() throws Exception {
             Order order = createOrder(OrderStatus.NEW, "799.99", 1);
 
@@ -791,6 +934,73 @@ class AdminControllerTest {
                             post(ADMIN_ORDERS_URL + "/{id}/deliver", order.getId())
                                     .header(HttpHeaders.AUTHORIZATION, auth(adminToken)))
                     .andExpect(status().isBadRequest());
+        }
+
+        @Test
+        void whenShipPickupOrderWithTrackingNumber_thenStatus400() throws Exception {
+            Order order = createPickupOrderForAction(OrderStatus.PROCESSING, "799.99", 1);
+
+            mockMvc
+                    .perform(
+                            post(ADMIN_ORDERS_URL + "/{id}/ship", order.getId())
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content("{\"trackingNumber\":\"NP-123\"}")
+                                    .header(HttpHeaders.AUTHORIZATION, auth(adminToken)))
+                    .andExpect(status().isBadRequest());
+        }
+
+        @Test
+        void whenShipOrderWithTooLongTrackingNumber_thenStatus400() throws Exception {
+            Order order = createOrder(OrderStatus.PROCESSING, "799.99", 1);
+            String longTrackingNumber = "A".repeat(101);
+
+            mockMvc
+                    .perform(
+                            post(ADMIN_ORDERS_URL + "/{id}/ship", order.getId())
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content("{\"trackingNumber\":\"" + longTrackingNumber + "\"}")
+                                    .header(HttpHeaders.AUTHORIZATION, auth(adminToken)))
+                    .andExpect(status().isBadRequest());
+        }
+
+        private Order createPickupOrderForAction(OrderStatus status, String total, int quantity) {
+            Phone phone = findPhoneBySku("ADMIN-TEST-001");
+            User customer =
+                    userRepository.findAll().stream()
+                            .filter(user -> !ADMIN_EMAIL.equals(user.getEmail()))
+                            .findFirst()
+                            .orElseThrow();
+
+            Order order =
+                    Order.builder()
+                            .user(customer)
+                            .customerEmail(customer.getEmail())
+                            .customerFirstName(customer.getFirstName())
+                            .customerLastName(customer.getLastName())
+                            .customerPhoneNumber(customer.getPhoneNumber())
+                            .status(status)
+                            .paymentMethod(PaymentMethod.CARD)
+                            .paymentDetails(
+                                    new PaymentDetails(
+                                            PaymentStatus.PENDING,
+                                            UUID.randomUUID().toString()))
+                            .deliveryMethod(DeliveryMethod.PICKUP)
+                            .shippingAddress(null)
+                            .total(new BigDecimal(total))
+                            .build();
+            order.addItem(
+                    OrderItem.builder()
+                            .phone(phone)
+                            .productName(phone.getName())
+                            .sku(phone.getSku())
+                            .unitPrice(phone.getPrice())
+                            .quantity(quantity)
+                            .selectedColor(PhoneColor.GOLD)
+                            .selectedStorage(StorageCapacity.CAPACITY_128GB)
+                            .totalPrice(phone.getPrice().multiply(BigDecimal.valueOf(quantity)))
+                            .build());
+
+            return orderRepository.save(order);
         }
     }
 
