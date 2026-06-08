@@ -2,6 +2,7 @@ package com.challengeteam.shop.exceptionHandling.exception.security;
 
 public class InvalidTokenException extends RuntimeException {
     public InvalidTokenException() {
+        super("Invalid token");
     }
 
     public InvalidTokenException(String message) {

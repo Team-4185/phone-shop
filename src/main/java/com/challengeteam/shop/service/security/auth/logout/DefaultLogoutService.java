@@ -1,5 +1,6 @@
 package com.challengeteam.shop.service.security.auth.logout;
 
+import com.challengeteam.shop.exceptionHandling.exception.security.InvalidTokenException;
 import com.challengeteam.shop.utility.security.jwt.RevokeTokenHelper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -16,8 +17,15 @@ public class DefaultLogoutService implements LogoutService {
 
     @Override
     public void logout(String accessToken, String refreshToken) {
-        revokeTokenHelper.revokeToken(accessToken);
-        revokeTokenHelper.revokeToken(refreshToken);
+        try {
+            revokeTokenHelper.revokeToken(accessToken);
+            revokeTokenHelper.revokeToken(refreshToken);
+        } catch (InvalidTokenException e) {
+            if (e.getMessage() == null || e.getMessage().isBlank()) {
+                throw new InvalidTokenException("Invalid token", e);
+            }
+            throw e;
+        }
     }
 
 //    private void revokeTokenHelper(String token) {
