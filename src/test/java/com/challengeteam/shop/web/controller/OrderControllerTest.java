@@ -145,6 +145,18 @@ class OrderControllerTest {
         );
     }
 
+    private Map<String, Object> ukrainianCourierAddress() {
+        return Map.of(
+                "houseNumber", "10Ґ",
+                "street", "вулиця Європейська",
+                "city", "Київ",
+                "region", "Київська область",
+                "country", "Україна",
+                "zipCode", "01001",
+                "logisticsCompany", "NOVA_POSHTA"
+        );
+    }
+
     private Map<String, Object> postOfficeAddress() {
         return Map.of(
                 "logisticsCompany", "NOVA_POSHTA",
@@ -204,6 +216,24 @@ class OrderControllerTest {
                 "customerPhoneNumber", "+380991234567",
                 "paymentMethod", "CASH_ON_DELIVERY",
                 "deliveryMethod", "PICKUP",
+                "itemSelections", List.of(Map.of(
+                        "phoneId", phoneId,
+                        "color", "BLACK",
+                        "storage", "CAPACITY_128GB"
+                ))
+        ));
+    }
+
+    private String cardCourierCheckoutBody(Long phoneId) throws Exception {
+        return objectMapper.writeValueAsString(Map.of(
+                "customerEmail", "customer@example.com",
+                "customerFirstName", "John",
+                "customerLastName", "Doe",
+                "customerPhoneNumber", "+380991234567",
+                "paymentMethod", "CARD",
+                "paymentDetails", cardDetails(),
+                "deliveryMethod", "COURIER",
+                "shippingAddress", courierAddress(),
                 "itemSelections", List.of(Map.of(
                         "phoneId", phoneId,
                         "color", "BLACK",
@@ -390,6 +420,28 @@ class OrderControllerTest {
                     .andExpect(status().isCreated())
                     .andExpect(jsonPath("$.deliveryMethod").value("POST_OFFICE"))
                     .andExpect(jsonPath("$.shippingAddress.logisticsCompany").value("NOVA_POSHTA"));
+        }
+
+        @Test
+        @DisplayName("COURIER with Ukrainian customer and address data -> 201")
+        void ukrainianCustomerAndAddressData_returns201() throws Exception {
+            mockMvc.perform(post(ORDER_URL)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(Map.of(
+                                    "customerEmail", "customer@example.com",
+                                    "customerFirstName", "Іван",
+                                    "customerLastName", "Ґнатюк",
+                                    "customerPhoneNumber", "+380991234567",
+                                    "paymentMethod", "CASH_ON_DELIVERY",
+                                    "deliveryMethod", "COURIER",
+                                    "shippingAddress", ukrainianCourierAddress(),
+                                    "items", List.of(item(iphone.getId(), 1))
+                            ))))
+                    .andExpect(status().isCreated())
+                    .andExpect(jsonPath("$.customerFirstName").value("Іван"))
+                    .andExpect(jsonPath("$.customerLastName").value("Ґнатюк"))
+                    .andExpect(jsonPath("$.shippingAddress.city").value("Київ"))
+                    .andExpect(jsonPath("$.shippingAddress.country").value("Україна"));
         }
     }
 
@@ -686,6 +738,28 @@ class OrderControllerTest {
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(checkoutBody(iphone.getId())))
                     .andExpect(status().isUnauthorized());
+        }
+
+        @Test
+        @DisplayName("Failed card checkout -> 402, order not created, cart and stock unchanged")
+        void failedCardCheckout_returns402AndKeepsCartAndStock() throws Exception {
+            when(paymentMockService.pay(any(), any())).thenReturn(failed());
+            Long userId = testAuthHelper.authorizeAndReturnTokens().userId();
+            userCartService.putItemToUserCart(userId, new com.challengeteam.shop.dto.cart.CartItemAddRequestDto(
+                    iphone.getId(), 2));
+            long ordersBefore = orderRepository.count();
+
+            mockMvc.perform(post(ORDER_URL + "/checkout")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .header("Authorization", "Bearer " + userToken)
+                            .content(cardCourierCheckoutBody(iphone.getId())))
+                    .andExpect(status().isPaymentRequired());
+
+            assertThat(orderRepository.count()).isEqualTo(ordersBefore);
+            assertThat(cartRepository.findByUserId(userId).orElseThrow().getCartItems().size()).isEqualTo(1);
+            assertThat(cartRepository.findByUserId(userId).orElseThrow().getCartItems().getFirst().getAmount())
+                    .isEqualTo(2);
+            assertThat(phoneRepository.findById(iphone.getId()).orElseThrow().getStock()).isEqualTo(10);
         }
     }
 

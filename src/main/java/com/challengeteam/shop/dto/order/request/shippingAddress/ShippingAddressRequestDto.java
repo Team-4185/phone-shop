@@ -13,11 +13,11 @@ import java.io.Serializable;
  * DTO for {@link com.challengeteam.shop.entity.order.shipping.ShippingAddress}
  */
 public record ShippingAddressRequestDto(
-        @Pattern(regexp = "^[0-9]{1,5}[a-zA-Zа-яА-ЯёЁ]?$",
+        @Pattern(regexp = "^[0-9]{1,5}[a-zA-Zа-яА-ЯёЁіІїЇєЄґҐ]?$",
                 message = "Apartment number must be 1-5 digits, optionally followed by a letter",
                 groups = CourierGroupValidation.class)
         String apartmentNumber,
-        @Pattern(regexp = "^[0-9]{1,5}[a-zA-Zа-яА-ЯёЁ/\\-]?([0-9]{1,3})?$",
+        @Pattern(regexp = "^[0-9]{1,5}[a-zA-Zа-яА-ЯёЁіІїЇєЄґҐ/\\-]?([0-9]{1,3})?$",
                 message = "Invalid house number format. Examples: '10', '10A', '10/2', '12-B'",
                 groups = CourierGroupValidation.class)
         @NotNull(message = "House number is required", groups = CourierGroupValidation.class)
@@ -28,7 +28,7 @@ public record ShippingAddressRequestDto(
         @NotNull(message = "Logistic post office is required",
                 groups = {PostOfficeGroupValidation.class})
         String logisticPostOffice,
-        @Pattern(regexp = "^[a-zA-Zа-яА-ЯёЁ0-9.\\s\\-',/]{2,100}$",
+        @Pattern(regexp = "^[a-zA-Zа-яА-ЯёЁіІїЇєЄґҐ0-9.\\s\\-',/]{2,100}$",
                 message = "Street name contains invalid characters or is too short",
                 groups = CourierGroupValidation.class)
         @NotNull(message = "Street is required",

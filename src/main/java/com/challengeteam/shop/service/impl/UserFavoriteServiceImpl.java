@@ -9,6 +9,7 @@ import com.challengeteam.shop.mapper.phone.PhoneMapper;
 import com.challengeteam.shop.persistence.repository.FavoriteRepository;
 import com.challengeteam.shop.persistence.repository.PhoneRepository;
 import com.challengeteam.shop.persistence.repository.UserRepository;
+import com.challengeteam.shop.service.ProductBadgeService;
 import com.challengeteam.shop.service.UserFavoriteService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -25,17 +26,18 @@ public class UserFavoriteServiceImpl implements UserFavoriteService {
     private final UserRepository userRepository;
     private final PhoneRepository phoneRepository;
     private final PhoneMapper phoneMapper;
+    private final ProductBadgeService productBadgeService;
 
     @Transactional(readOnly = true)
     @Override
     public List<PhoneResponseDto> getUserFavorites(Long userId) {
         Objects.requireNonNull(userId, "userId");
 
-        return phoneMapper.toResponseList(
-                favoriteRepository.findAllByUserIdWithPhoneImages(userId).stream()
-                        .map(Favorite::getPhone)
-                        .toList()
-        );
+        List<Phone> phones = favoriteRepository.findAllByUserIdWithPhoneImages(userId).stream()
+                .map(Favorite::getPhone)
+                .toList();
+
+        return productBadgeService.applyBadges(phoneMapper.toResponseList(phones), phones);
     }
 
     @Transactional

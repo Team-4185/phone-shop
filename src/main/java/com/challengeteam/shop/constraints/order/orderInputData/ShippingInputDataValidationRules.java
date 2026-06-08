@@ -17,7 +17,7 @@ public class ShippingInputDataValidationRules {
      * The pattern allows:
      * <ul>
      *   <li>Latin letters (a-z, A-Z)</li>
-     *   <li>Cyrillic letters (а-я, А-Я, ё, Ё)</li>
+     *   <li>Cyrillic letters, including Ukrainian-specific letters (і, ї, є, ґ)</li>
      *   <li>Spaces</li>
      *   <li>Hyphens (-)</li>
      *   <li>Apostrophes (')</li>
@@ -25,5 +25,5 @@ public class ShippingInputDataValidationRules {
      * The length must be between 2 and 50 characters.
      * </p>
      */
-    public final String REGION_PATTER_CONSTRAINT = "^[a-zA-Zа-яА-ЯёЁ\\s\\-']{2,50}$";
+    public final String REGION_PATTER_CONSTRAINT = "^[a-zA-Zа-яА-ЯёЁіІїЇєЄґҐ\\s\\-']{2,50}$";
 }

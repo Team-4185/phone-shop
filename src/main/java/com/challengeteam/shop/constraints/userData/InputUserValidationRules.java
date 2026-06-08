@@ -31,13 +31,14 @@ public class InputUserValidationRules {
      * <p>The pattern accepts names containing:</p>
      * <ul>
      *   <li>Latin letters (a-z, A-Z)</li>
-     *   <li>Cyrillic letters (а-я, А-Я)</li>
+     *   <li>Cyrillic letters, including Ukrainian-specific letters (і, ї, є, ґ)</li>
      *   <li>Special characters: apostrophe ('), comma (,), period (.), space, and hyphen (-)</li>
      * </ul>
      *
      * <p>Example valid names: John Smith, Mary-Jane O'Connor, Иван Петров</p>
      */
-    public final String NAME_PATTERN_CONSTRAINT = "^[a-zA-Zа-яА-Я]+(([',. -][a-zA-Zа-яА-Я ])?[a-zA-Zа-яА-Я]*)*$";
+    public final String NAME_PATTERN_CONSTRAINT =
+            "^[a-zA-Zа-яА-ЯёЁіІїЇєЄґҐ]+(([',. -][a-zA-Zа-яА-ЯёЁіІїЇєЄґҐ ])?[a-zA-Zа-яА-ЯёЁіІїЇєЄґҐ]*)*$";
 
     /**
      * Regular expression pattern for validating international phone numbers in E.164 format.
@@ -53,8 +54,8 @@ public class InputUserValidationRules {
      */
     public final String PHONE_NUMBER_PATTERN_CONSTRAINT = "^\\+[1-9]\\d{1,14}$";
 
-
-    public final String PASSWORD_PATTERN_CONSTRAINT = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[!@#$%^&*])[a-zA-Z0-9!@#$%^&*]{8,50}$";
+    public final String PASSWORD_PATTERN_CONSTRAINT =
+            "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[!@#$%^&*])[a-zA-Z0-9!@#$%^&*]{8,50}$";
     public final String PASSWORD_PATTERN_MESSAGE = """
             Password must be 8 to 50 characters long and include
             an uppercase letter, a lowercase letter,
