@@ -3,6 +3,8 @@ package com.challengeteam.shop.web.controller;
 import com.challengeteam.shop.constants.security.jwt.JwtTokenNameConstants;
 import com.challengeteam.shop.dto.security.jwt.JwtPublicResponseDto;
 import com.challengeteam.shop.dto.security.jwt.JwtResponseDto;
+import com.challengeteam.shop.dto.user.request.ChangeEmailRequestDto;
+import com.challengeteam.shop.dto.user.request.ChangePasswordRequestDto;
 import com.challengeteam.shop.dto.user.request.CreateUserDto;
 import com.challengeteam.shop.dto.user.request.UpdateProfileDto;
 import com.challengeteam.shop.dto.user.request.sensetiveData.UpdateUserSensitiveDataDto;
@@ -13,6 +15,7 @@ import com.challengeteam.shop.exceptionHandling.exception.ResourceNotFoundExcept
 import com.challengeteam.shop.mapper.user.UserMapper;
 import com.challengeteam.shop.properties.JwtProperties;
 import com.challengeteam.shop.service.UserService;
+import com.challengeteam.shop.service.user.credentials.UserCredentialsService;
 import com.challengeteam.shop.service.user.personalInfo.UserPersonalInfoService;
 import com.challengeteam.shop.service.user.sensetiveData.UserSensitiveDataUpdater;
 import com.challengeteam.shop.utility.web.headers.AccessTokenHeaderExtractor;
@@ -44,6 +47,7 @@ public class UserController {
     private final UserMapper userMapper;
     private final UserPersonalInfoService userPersonalInfoService;
     private final UserSensitiveDataUpdater userSensitiveDataUpdater;
+    private final UserCredentialsService userCredentialsService;
     private final JwtProperties jwtProperties;
 
     @Operation(
@@ -120,6 +124,32 @@ public class UserController {
         String username = authentication.getName();
         UserPersonalInfoResponseDto userPersonalInfo = userPersonalInfoService.getUserPersonalInfo(username);
         return ResponseEntity.ok(userPersonalInfo);
+    }
+
+    @PatchMapping("/me/password")
+    public ResponseEntity<Void> changeCurrentUserPassword(
+            @RequestBody @Valid ChangePasswordRequestDto dto,
+            Authentication authentication,
+            HttpServletRequest request) {
+        userCredentialsService.changePassword(
+                dto,
+                authentication,
+                AccessTokenHeaderExtractor.extractAccessToken(request)
+        );
+        return ResponseEntity.ok().build();
+    }
+
+    @PatchMapping("/me/email")
+    public ResponseEntity<Void> changeCurrentUserEmail(
+            @RequestBody @Valid ChangeEmailRequestDto dto,
+            Authentication authentication,
+            HttpServletRequest request) {
+        userCredentialsService.changeEmail(
+                dto,
+                authentication,
+                AccessTokenHeaderExtractor.extractAccessToken(request)
+        );
+        return ResponseEntity.ok().build();
     }
 
     @PatchMapping("/sensitive")
