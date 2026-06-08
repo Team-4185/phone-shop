@@ -3,6 +3,8 @@ package com.challengeteam.shop.mapper.phone;
 import com.challengeteam.shop.dto.phone.response.PhoneColorResponseDto;
 import com.challengeteam.shop.dto.phone.response.PhoneResponseDto;
 import com.challengeteam.shop.dto.phone.response.StorageCapacityResponseDto;
+import com.challengeteam.shop.dto.image.ImageMetadataResponseDto;
+import com.challengeteam.shop.entity.image.Image;
 import com.challengeteam.shop.entity.phone.Phone;
 import com.challengeteam.shop.entity.phone.PhoneColor;
 import com.challengeteam.shop.entity.phone.StorageCapacity;
@@ -10,7 +12,9 @@ import com.challengeteam.shop.mapper.image.ImageMapper;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingConstants;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+import java.net.URI;
 import java.util.List;
 
 /**
@@ -49,8 +53,11 @@ public interface PhoneMapper {
     @Mapping(source = "images", target = "images")
     @Mapping(source = "phoneCharacteristics.phoneColors", target = "colors")
     @Mapping(source = "phoneCharacteristics.storageCapacities", target = "storageCapacity")
+    @Mapping(target = "previewImage", expression = "java(toPreviewImage(phone.getImages()))")
     @Mapping(target = "badges", expression = "java(java.util.Set.of())")
     @Mapping(target = "discountPercent", constant = "0")
+    @Mapping(target = "averageRating", expression = "java(java.math.BigDecimal.ZERO)")
+    @Mapping(target = "reviewsCount", constant = "0L")
     PhoneResponseDto toResponse(Phone phone);
 
     /**
@@ -70,5 +77,25 @@ public interface PhoneMapper {
 
     default StorageCapacityResponseDto toStorageCapacityDto(StorageCapacity capacity) {
         return new StorageCapacityResponseDto(capacity.name(), capacity.getValue(), capacity.getUnit());
+    }
+
+    default ImageMetadataResponseDto toPreviewImage(List<Image> images) {
+        if (images == null || images.isEmpty()) {
+            return null;
+        }
+
+        Image image = images.getFirst();
+        URI uri = ServletUriComponentsBuilder
+                .fromCurrentContextPath()
+                .path("/api/v1/images/{id}")
+                .buildAndExpand(image.getId())
+                .toUri();
+
+        return new ImageMetadataResponseDto(
+                image.getId(),
+                image.getName(),
+                uri.toString(),
+                image.getSize(),
+                image.getMimeType().getType());
     }
 }

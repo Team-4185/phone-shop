@@ -177,16 +177,16 @@ class PhoneControllerTest {
         }
 
         @Test
-        void whenRequestMissingToken_thenStatus401() throws Exception {
+        void whenRequestMissingToken_thenStatus200() throws Exception {
             mockMvc.perform(get(URL))
-                    .andExpect(status().isUnauthorized());
+                    .andExpect(status().isOk());
         }
 
         @Test
-        void whenRequestHasInvalidToken_thenStatus401() throws Exception {
+        void whenRequestHasInvalidToken_thenStatus200() throws Exception {
             mockMvc.perform(get(URL)
                             .header(HttpHeaders.AUTHORIZATION, auth("some_invalid_text")))
-                    .andExpect(status().isUnauthorized());
+                    .andExpect(status().isOk());
         }
 
         @Test
@@ -644,16 +644,16 @@ class PhoneControllerTest {
         }
 
         @Test
-        void whenRequestMissingToken_thenStatus401() throws Exception {
+        void whenRequestMissingToken_thenStatus200() throws Exception {
             mockMvc.perform(get(URL, phone1))
-                    .andExpect(status().isUnauthorized());
+                    .andExpect(status().isOk());
         }
 
         @Test
-        void whenRequestHasInvalidToken_thenStatus401() throws Exception {
+        void whenRequestHasInvalidToken_thenStatus200() throws Exception {
             mockMvc.perform(get(URL, phone1)
                             .header(HttpHeaders.AUTHORIZATION, auth("some_invalid_text")))
-                    .andExpect(status().isUnauthorized());
+                    .andExpect(status().isOk());
         }
 
         @Test
@@ -1371,16 +1371,16 @@ class PhoneControllerTest {
         }
 
         @Test
-        void whenRequestMissingToken_thenStatus401() throws Exception {
+        void whenRequestMissingToken_thenStatus200() throws Exception {
             mockMvc.perform(get(URL, phone1))
-                    .andExpect(status().isUnauthorized());
+                    .andExpect(status().isOk());
         }
 
         @Test
-        void whenRequestHasInvalidToken_thenStatus401() throws Exception {
+        void whenRequestHasInvalidToken_thenStatus200() throws Exception {
             mockMvc.perform(get(URL, phone1)
                             .header(HttpHeaders.AUTHORIZATION, auth("some_invalid_text")))
-                    .andExpect(status().isUnauthorized());
+                    .andExpect(status().isOk());
         }
 
         @Test

@@ -12,9 +12,8 @@ import com.challengeteam.shop.entity.phone.Phone;
 import com.challengeteam.shop.exceptionHandling.exception.InvalidPriceRangeException;
 import com.challengeteam.shop.exceptionHandling.exception.ResourceNotFoundException;
 import com.challengeteam.shop.mapper.image.ImageMapper;
-import com.challengeteam.shop.mapper.phone.PhoneMapper;
+import com.challengeteam.shop.service.CatalogProductResponseAssembler;
 import com.challengeteam.shop.service.PhoneService;
-import com.challengeteam.shop.service.ProductBadgeService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
@@ -40,9 +39,8 @@ import java.util.Set;
 @Validated
 public class PhoneController {
     private final PhoneService phoneService;
-    private final PhoneMapper phoneMapper;
+    private final CatalogProductResponseAssembler catalogProductResponseAssembler;
     private final ImageMapper imageMapper;
-    private final ProductBadgeService productBadgeService;
 
     @Operation(
             summary = "Get paginated list of phones",
@@ -61,9 +59,7 @@ public class PhoneController {
 
         Page<Phone> phones = phoneService.getPhones(page, size, filterDto);
         List<Phone> phoneContent = phones.getContent();
-        List<PhoneResponseDto> responseContent = productBadgeService.applyBadges(
-                phoneMapper.toResponseList(phoneContent),
-                phoneContent);
+        List<PhoneResponseDto> responseContent = catalogProductResponseAssembler.toResponses(phoneContent);
         Page<PhoneResponseDto> response = new PageImpl<>(
                 responseContent,
                 phones.getPageable(),
@@ -82,11 +78,8 @@ public class PhoneController {
         Phone phone = phoneService
                 .getById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Not found phone with id: " + id));
-        PhoneResponseDto response = productBadgeService.applyBadges(
-                phoneMapper.toResponse(phone),
-                productBadgeService.getBadges(List.of(phone)).get(phone.getId()));
 
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(catalogProductResponseAssembler.toResponse(phone));
     }
 
     @Operation(

@@ -87,6 +87,9 @@ public class ProductBadgeServiceImpl implements ProductBadgeService {
                 phoneResponseDto.description(),
                 phoneResponseDto.price(),
                 phoneResponseDto.brand(),
+                phoneResponseDto.stock(),
+                phoneResponseDto.status(),
+                phoneResponseDto.previewImage(),
                 phoneResponseDto.releaseYear(),
                 phoneResponseDto.cpu(),
                 phoneResponseDto.coresNumber(),
@@ -98,7 +101,9 @@ public class ProductBadgeServiceImpl implements ProductBadgeService {
                 phoneResponseDto.storageCapacity(),
                 phoneResponseDto.images(),
                 badgeInfo.badges(),
-                badgeInfo.discountPercent());
+                badgeInfo.discountPercent(),
+                phoneResponseDto.averageRating(),
+                phoneResponseDto.reviewsCount());
     }
 
     @Override
