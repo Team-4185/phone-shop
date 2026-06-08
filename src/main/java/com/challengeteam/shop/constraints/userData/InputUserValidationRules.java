@@ -53,4 +53,11 @@ public class InputUserValidationRules {
      * <p>Example valid phone numbers: +1234567890, +442071234567, +79161234567</p>
      */
     public final String PHONE_NUMBER_PATTERN_CONSTRAINT = "^\\+[1-9]\\d{1,14}$";
+
+    public final String PASSWORD_PATTERN_CONSTRAINT =
+            "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[!@#$%^&*])[a-zA-Z0-9!@#$%^&*]{8,50}$";
+    public final String PASSWORD_PATTERN_MESSAGE = """
+            Password must be 8 to 50 characters long and include
+            an uppercase letter, a lowercase letter,
+            a number, and a special character (e.g., !@#$%^&*).""";
 }

@@ -89,6 +89,7 @@ public class SecurityConfig {
                             .requestMatchers(HttpMethod.POST, "/api/v1/orders").permitAll()
                             .requestMatchers("/api/v1/orders/**").authenticated()
                             .requestMatchers("/api/v1/users/me").authenticated()
+                            .requestMatchers("/api/v1/users/me/**").authenticated()
                             .anyRequest().authenticated();
                 }
                 )

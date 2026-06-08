@@ -7,7 +7,6 @@ import com.challengeteam.shop.dto.user.request.CreateUserDto;
 import com.challengeteam.shop.entity.user.User;
 import com.challengeteam.shop.exceptionHandling.exception.CriticalSystemException;
 import com.challengeteam.shop.exceptionHandling.exception.InvalidAPIRequestException;
-import com.challengeteam.shop.exceptionHandling.exception.ResourceNotFoundException;
 import com.challengeteam.shop.exceptionHandling.exception.security.*;
 import com.challengeteam.shop.service.UserService;
 import com.challengeteam.shop.service.security.auth.jwt.JwtService;
@@ -82,7 +81,11 @@ public class JwtAuthorizationServiceImpl implements JwtAuthorizationService {
             String email = jwtService.getEmailFromToken(refreshToken);
             User user = userService
                     .getByEmail(email)
-                    .orElseThrow(() -> new ResourceNotFoundException("Not found user with email: " + email));
+                    .orElseThrow(() -> new InvalidTokenException("Refresh token is outdated"));
+
+            if (!normalizeTokenVersion(user.getTokenVersion()).equals(jwtService.getTokenVersion(refreshToken))) {
+                throw new InvalidTokenException("Refresh token is outdated");
+            }
 
             log.debug("Called refreshing token for user with email: {}", email);
             return jwtService.refreshTokens(refreshToken, user);
@@ -116,6 +119,10 @@ public class JwtAuthorizationServiceImpl implements JwtAuthorizationService {
         } catch (AuthenticationException e) {
             throw new AuthenticationFailedException(e.getMessage(), e);
         }
+    }
+
+    private Long normalizeTokenVersion(Long tokenVersion) {
+        return tokenVersion == null ? 0L : tokenVersion;
     }
 
 }

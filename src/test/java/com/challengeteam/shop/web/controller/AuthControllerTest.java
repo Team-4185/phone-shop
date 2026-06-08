@@ -137,7 +137,7 @@ public class AuthControllerTest {
                     .accept(MediaType.APPLICATION_JSON);
 
             mockMvc.perform(request)
-                    .andExpect(status().isBadRequest());
+                    .andExpect(status().isConflict());
         }
 
         @Test

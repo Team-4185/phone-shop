@@ -6,7 +6,6 @@ import com.challengeteam.shop.dto.security.jwt.JwtResponseDto;
 import com.challengeteam.shop.dto.user.request.CreateUserDto;
 import com.challengeteam.shop.entity.user.User;
 import com.challengeteam.shop.exceptionHandling.exception.InvalidAPIRequestException;
-import com.challengeteam.shop.exceptionHandling.exception.ResourceNotFoundException;
 import com.challengeteam.shop.exceptionHandling.exception.security.EmailOrPasswordWrongException;
 import com.challengeteam.shop.exceptionHandling.exception.security.InvalidTokenException;
 import com.challengeteam.shop.service.UserService;
@@ -201,6 +200,8 @@ public class JwtAuthorizationServiceImplTest {
                     .thenReturn(true);
             Mockito.when(jwtService.getEmailFromToken(TestResources.REFRESH_TOKEN))
                     .thenReturn(jeremy.getEmail());
+            Mockito.when(jwtService.getTokenVersion(TestResources.REFRESH_TOKEN))
+                    .thenReturn(0L);
             Mockito.when(userService.getByEmail(jeremy.getEmail()))
                     .thenReturn(Optional.of(jeremy));
             Mockito.when(jwtService.refreshTokens(TestResources.REFRESH_TOKEN, jeremy))
@@ -259,7 +260,28 @@ public class JwtAuthorizationServiceImplTest {
                     .thenReturn(false);
 
             // when + then
-            assertThrows(ResourceNotFoundException.class, () -> jwtAuthorizationService.refresh(TestResources.REFRESH_TOKEN));
+            assertThrows(InvalidTokenException.class, () -> jwtAuthorizationService.refresh(TestResources.REFRESH_TOKEN));
+        }
+
+        @Test
+        void whenRefreshTokenVersionIsOutdated_thenThrowException() throws Exception {
+            User jeremy = TestResources.buildUser();
+
+            Mockito.when(jwtService.isRefreshToken(TestResources.REFRESH_TOKEN))
+                    .thenReturn(true);
+            Mockito.when(jwtService.isValid(TestResources.REFRESH_TOKEN))
+                    .thenReturn(true);
+            Mockito.when(jwtService.getEmailFromToken(TestResources.REFRESH_TOKEN))
+                    .thenReturn(jeremy.getEmail());
+            Mockito.when(userService.getByEmail(jeremy.getEmail()))
+                    .thenReturn(Optional.of(jeremy));
+            Mockito.when(tokenRevocationService.isRevoked(TestResources.REFRESH_TOKEN))
+                    .thenReturn(false);
+            jeremy.setTokenVersion(1L);
+            Mockito.when(jwtService.getTokenVersion(TestResources.REFRESH_TOKEN))
+                    .thenReturn(0L);
+
+            assertThrows(InvalidTokenException.class, () -> jwtAuthorizationService.refresh(TestResources.REFRESH_TOKEN));
         }
 
         @Test

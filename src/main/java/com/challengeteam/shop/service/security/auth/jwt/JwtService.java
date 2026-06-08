@@ -21,6 +21,8 @@ public interface JwtService {
 
     String getEmailFromToken(String token);
 
+    Long getTokenVersion(String token);
+
     String createResetToken(User user);
 
     String getEmailFromResetToken(String token);

@@ -61,6 +61,10 @@ public class SimpleUserDetailsService implements UserDetailsService {
             return user.getId();
         }
 
+        public Long getTokenVersion() {
+            return user.getTokenVersion() == null ? 0L : user.getTokenVersion();
+        }
+
         public User getUser() {
             return user;
         }

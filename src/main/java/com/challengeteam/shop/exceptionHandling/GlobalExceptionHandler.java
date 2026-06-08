@@ -12,6 +12,7 @@ import com.challengeteam.shop.exceptionHandling.exception.phone.PhoneNotFoundExc
 import com.challengeteam.shop.exceptionHandling.exception.security.*;
 import com.challengeteam.shop.exceptionHandling.exception.user.InvalidUserCredentialsException;
 import com.challengeteam.shop.exceptionHandling.exception.user.UsernameMissingException;
+import com.challengeteam.shop.exceptionHandling.exception.user.inputData.InvalidInputUserDataException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
@@ -156,14 +157,14 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(EmailAlreadyExistsException.class)
     public ResponseEntity<ProblemDetail> handleEmailAlreadyExistsException(EmailAlreadyExistsException e) {
-        log.warn("400  {}", e.getMessage());
+        log.warn("409  {}", e.getMessage());
 
-        var problem = ProblemDetail.forStatus(HttpStatus.BAD_REQUEST.value());
+        var problem = ProblemDetail.forStatus(HttpStatus.CONFLICT.value());
         problem.setTitle("Email Already Taken");
         problem.setDetail(e.getMessage());
 
         return ResponseEntity
-                .status(HttpStatus.BAD_REQUEST)
+                .status(HttpStatus.CONFLICT)
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(problem);
     }
@@ -528,5 +529,16 @@ public class GlobalExceptionHandler {
         problem.setTitle("Bad request");
         problem.setInstance(URI.create(request.getRequestURI()));
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(problem);
+    }
+
+    @ExceptionHandler(InvalidInputUserDataException.class)
+    public ResponseEntity<ProblemDetail> handleInvalidInputUserDataException(
+            InvalidInputUserDataException ex, HttpServletRequest request) {
+        log.warn("400 {}", ex.getMessage());
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(
+                HttpStatus.BAD_REQUEST, ex.getMessage());
+        problem.setTitle("Bad request");
+        problem.setInstance(URI.create(request.getRequestURI()));
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(problem);
     }
 }
