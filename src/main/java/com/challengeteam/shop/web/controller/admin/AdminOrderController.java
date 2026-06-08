@@ -86,6 +86,10 @@ public class AdminOrderController {
   public ResponseEntity<AdminOrderDetailsResponseDto> shipOrder(
       @PathVariable Long id, @Valid @RequestBody(required = false) AdminShipOrderRequestDto request) {
     String trackingNumber = request == null ? null : request.trackingNumber();
+    log.debug(
+        "Admin order action request id={} action=ship trackingNumberPresent={}",
+        id,
+        trackingNumber != null && !trackingNumber.isBlank());
     return ResponseEntity.ok(adminOrderService.shipOrder(id, trackingNumber));
   }
 
