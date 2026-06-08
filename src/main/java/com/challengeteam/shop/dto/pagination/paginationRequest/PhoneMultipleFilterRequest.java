@@ -2,6 +2,8 @@ package com.challengeteam.shop.dto.pagination.paginationRequest;
 
 import com.challengeteam.shop.constraints.filter.FilterRequestConstraints;
 import com.challengeteam.shop.constraints.filter.validation.annotation.MinPriceNotExceedMaxPrice;
+import com.challengeteam.shop.entity.phone.PhoneColor;
+import com.challengeteam.shop.entity.phone.StorageCapacity;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Pattern;
 
@@ -31,6 +33,8 @@ import java.util.List;
  *                 if null, no stock filtering is applied
  * @param preOrder a flag indicating whether to filter for phones available for pre-order;
  *                 if null, no pre-order filtering is applied
+ * @param colors   a list of available phone colors to filter by; if null or empty, no color filtering is applied
+ * @param storageCapacities a list of storage capacities to filter by; if null or empty, no storage filtering is applied
  * @param sort     the sort order for the results; must be one of: name_asc, name_desc, price_asc, price_desc,
  *                 popularity, popularity_desc;
  *                 defaults to name_asc if null or blank
@@ -51,12 +55,26 @@ public record PhoneMultipleFilterRequest(
 
         Boolean preOrder,
 
+        List<PhoneColor> colors,
+
+        List<StorageCapacity> storageCapacities,
+
         @Pattern(
                 regexp = FilterRequestConstraints.SORT_ORDER_REGEXP,
                 message = "Sort must be one of: name_asc, name_desc, price_asc, price_desc, popularity, popularity_desc"
         )
         String sort
 ) {
+    public PhoneMultipleFilterRequest(
+            List<String> brands,
+            BigDecimal minPrice,
+            BigDecimal maxPrice,
+            Boolean inStock,
+            Boolean preOrder,
+            String sort) {
+        this(brands, minPrice, maxPrice, inStock, preOrder, null, null, sort);
+    }
+
     /**
      * Compact constructor that provides default values for fields.
      * <p>
