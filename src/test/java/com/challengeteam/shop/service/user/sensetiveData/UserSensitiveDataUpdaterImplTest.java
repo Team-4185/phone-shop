@@ -79,7 +79,8 @@ class UserSensitiveDataUpdaterImplTest {
         when(authenticationUserExtractorHelper.extractUserFromSecurityContextHolder(authentication))
                 .thenReturn(Optional.of(user));
         lenient().when(userRepository.save(any(User.class))).thenAnswer(inv -> inv.getArgument(0));
-        lenient().when(jwtService.refreshTokens(eq(REFRESH_TOKEN), any(User.class))).thenReturn(jwtResponse);
+        lenient().when(jwtService.createAccessToken(any(User.class))).thenReturn(jwtResponse.accessToken());
+        lenient().when(jwtService.createRefreshToken(any(User.class), eq(false))).thenReturn(jwtResponse.refreshToken());
     }
 
     @Nested
@@ -97,9 +98,11 @@ class UserSensitiveDataUpdaterImplTest {
 
             assertThat(result).isEqualTo(jwtResponse);
             assertThat(user.getPassword()).isEqualTo(NEW_PASSWORD_HASH);
+            assertThat(user.getTokenVersion()).isEqualTo(1L);
             verify(revokeTokenHelper).revokeToken(ACCESS_TOKEN);
             verify(revokeTokenHelper).revokeToken(REFRESH_TOKEN);
-            verify(jwtService).refreshTokens(eq(REFRESH_TOKEN), eq(user));
+            verify(jwtService).createAccessToken(user);
+            verify(jwtService).createRefreshToken(user, false);
         }
 
         @Test
@@ -151,14 +154,13 @@ class UserSensitiveDataUpdaterImplTest {
         void changeEmail_success() {
             var dto = new UpdateUserSensitiveDataDto(null, null, null, NEW_EMAIL);
 
-            JwtResponseDto emailJwtResponse = new JwtResponseDto(1L, NEW_EMAIL, "new.access",
-                    "new.refresh", false);
-            when(jwtService.refreshTokens(eq(REFRESH_TOKEN), any(User.class))).thenReturn(emailJwtResponse);
-
             JwtResponseDto result = updater.update(dto, authentication, tokens);
 
-            assertThat(result).isEqualTo(emailJwtResponse);
+            assertThat(result.email()).isEqualTo(NEW_EMAIL);
+            assertThat(result.accessToken()).isEqualTo(jwtResponse.accessToken());
+            assertThat(result.refreshToken()).isEqualTo(jwtResponse.refreshToken());
             assertThat(user.getEmail()).isEqualTo(NEW_EMAIL);
+            assertThat(user.getTokenVersion()).isEqualTo(1L);
             verify(revokeTokenHelper).revokeToken(ACCESS_TOKEN);
             verify(revokeTokenHelper).revokeToken(REFRESH_TOKEN);
         }
@@ -193,6 +195,7 @@ class UserSensitiveDataUpdaterImplTest {
 
             assertThat(user.getPassword()).isEqualTo(NEW_PASSWORD_HASH);
             assertThat(user.getEmail()).isEqualTo(NEW_EMAIL);
+            assertThat(user.getTokenVersion()).isEqualTo(1L);
             verify(revokeTokenHelper, times(2)).revokeToken(any());
         }
 

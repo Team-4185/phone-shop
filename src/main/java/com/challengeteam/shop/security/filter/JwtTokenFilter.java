@@ -1,6 +1,7 @@
 package com.challengeteam.shop.security.filter;
 
 import com.challengeteam.shop.exceptionHandling.exception.security.InvalidTokenException;
+import com.challengeteam.shop.security.SimpleUserDetailsService.SimpleUserDetails;
 import com.challengeteam.shop.service.security.auth.jwt.JwtService;
 import com.challengeteam.shop.service.security.auth.logout.blackListTokenCache.TokenRevocationService;
 import com.challengeteam.shop.utility.web.headers.AccessTokenHeaderExtractor;
@@ -14,6 +15,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -42,15 +44,33 @@ public class JwtTokenFilter extends OncePerRequestFilter {
                 response.getWriter().write("User was logged out");
                 return;
             }
-            authenticateByToken(bearerToken);
+            if (!authenticateByToken(bearerToken, response)) {
+                return;
+            }
         }
 
         filterChain.doFilter(request, response);
     }
 
-    private void authenticateByToken(String bearerToken) {
+    private boolean authenticateByToken(String bearerToken, HttpServletResponse response) throws IOException {
         String username = jwtService.getEmailFromToken(bearerToken);
-        UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+        UserDetails userDetails;
+        try {
+            userDetails = userDetailsService.loadUserByUsername(username);
+        } catch (UsernameNotFoundException e) {
+            logger.warn("Token subject does not match an existing user");
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.getWriter().write("Token subject is outdated");
+            return false;
+        }
+
+        if (userDetails instanceof SimpleUserDetails simpleUserDetails
+                && !simpleUserDetails.getTokenVersion().equals(jwtService.getTokenVersion(bearerToken))) {
+            logger.warn("Token version is outdated");
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.getWriter().write("Token is outdated");
+            return false;
+        }
 
         Authentication authentication = new UsernamePasswordAuthenticationToken(
                 userDetails,
@@ -58,5 +78,6 @@ public class JwtTokenFilter extends OncePerRequestFilter {
                 userDetails.getAuthorities()
         );
         SecurityContextHolder.getContext().setAuthentication(authentication);
+        return true;
     }
 }

@@ -55,6 +55,7 @@ public class UserSensitiveDataUpdaterImpl implements UserSensitiveDataUpdater {
                 checkEmailChangeValidity(user, newEmail);
                 user.setEmail(newEmail);
             }
+            user.incrementTokenVersion();
             User saved = userRepository.save(user);
             return updateTokensAndRevokeOld(tokens, saved);
         } else {

@@ -32,6 +32,7 @@ import java.util.Date;
 public class JwtServiceImpl implements JwtService {
 
     private static final String TOKEN_TYPE_CLAIM = "tokenType";
+    private static final String TOKEN_VERSION_CLAIM = "tokenVersion";
     private static final String ACCESS_TOKEN_TYPE = "ACCESS";
     private static final String REFRESH_TOKEN_TYPE = "REFRESH";
     private static final String RESET_TOKEN_TYPE = "RESET";
@@ -73,6 +74,7 @@ public class JwtServiceImpl implements JwtService {
                 .subject(user.getEmail())
                 .add("userId", user.getId())
                 .add("role", user.getRole().getName())
+                .add(TOKEN_VERSION_CLAIM, normalizeTokenVersion(user.getTokenVersion()))
                 .add(TOKEN_TYPE_CLAIM, ACCESS_TOKEN_TYPE)
                 .build();
 
@@ -87,6 +89,7 @@ public class JwtServiceImpl implements JwtService {
                 .add("userId", user.getId())
                 .add("role", user.getRole().getName())
                 .add("rememberMe", rememberMe)
+                .add(TOKEN_VERSION_CLAIM, normalizeTokenVersion(user.getTokenVersion()))
                 .add(TOKEN_TYPE_CLAIM, REFRESH_TOKEN_TYPE)
                 .build();
 
@@ -145,6 +148,12 @@ public class JwtServiceImpl implements JwtService {
     }
 
     @Override
+    public Long getTokenVersion(String token) {
+        Long tokenVersion = getClaims(token).get(TOKEN_VERSION_CLAIM, Long.class);
+        return normalizeTokenVersion(tokenVersion);
+    }
+
+    @Override
     public String createResetToken(User user) {
         Claims claims = Jwts.claims()
                 .subject(user.getEmail())
@@ -199,6 +208,10 @@ public class JwtServiceImpl implements JwtService {
                 .expiration(Date.from(expirationInstant))
                 .signWith(privateKey)
                 .compact();
+    }
+
+    private Long normalizeTokenVersion(Long tokenVersion) {
+        return tokenVersion == null ? 0L : tokenVersion;
     }
 
 }
