@@ -84,6 +84,7 @@ public class SecurityConfig {
                     auth
                             .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
                             .requestMatchers("/api/v1/filter/**").permitAll()
+                            .requestMatchers(HttpMethod.GET, "/api/v1/phones/**").permitAll()
                             .requestMatchers("/api/v1/delivery/**").permitAll()
                             .requestMatchers("/api/v1/payments/webhooks/**").permitAll()
                             .requestMatchers(HttpMethod.POST, "/api/v1/orders").permitAll()

@@ -1,6 +1,7 @@
 package com.challengeteam.shop.dto.phone.response;
 
 import com.challengeteam.shop.dto.image.ImageMetadataResponseDto;
+import com.challengeteam.shop.entity.phone.ProductStatus;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -12,6 +13,9 @@ public record PhoneResponseDto(
         String description,
         BigDecimal price,
         String brand,
+        Integer stock,
+        ProductStatus status,
+        ImageMetadataResponseDto previewImage,
         Integer releaseYear,
         String cpu,
         Integer coresNumber,
@@ -23,7 +27,9 @@ public record PhoneResponseDto(
         Set<StorageCapacityResponseDto> storageCapacity,
         List<ImageMetadataResponseDto> images,
         Set<ProductBadgeResponseDto> badges,
-        Integer discountPercent
+        Integer discountPercent,
+        BigDecimal averageRating,
+        Long reviewsCount
 ) {
     public PhoneResponseDto(
             Long id,
@@ -41,7 +47,8 @@ public record PhoneResponseDto(
             Set<PhoneColorResponseDto> colors,
             Set<StorageCapacityResponseDto> storageCapacity,
             List<ImageMetadataResponseDto> images) {
-        this(id, name, description, price, brand, releaseYear, cpu, coresNumber, screenSize, frontCamera, mainCamera,
-                batteryCapacity, colors, storageCapacity, images, Set.of(), 0);
+        this(id, name, description, price, brand, null, null, null, releaseYear, cpu, coresNumber, screenSize,
+                frontCamera, mainCamera, batteryCapacity, colors, storageCapacity, images, Set.of(), 0,
+                BigDecimal.ZERO, 0L);
     }
 }

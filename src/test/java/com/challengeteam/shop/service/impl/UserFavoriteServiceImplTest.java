@@ -11,6 +11,7 @@ import com.challengeteam.shop.mapper.phone.PhoneMapper;
 import com.challengeteam.shop.persistence.repository.FavoriteRepository;
 import com.challengeteam.shop.persistence.repository.PhoneRepository;
 import com.challengeteam.shop.persistence.repository.UserRepository;
+import com.challengeteam.shop.service.CatalogProductResponseAssembler;
 import com.challengeteam.shop.service.ProductBadgeService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
@@ -46,6 +47,8 @@ class UserFavoriteServiceImplTest {
     private PhoneMapper phoneMapper;
     @Mock
     private ProductBadgeService productBadgeService;
+    @Mock
+    private CatalogProductResponseAssembler catalogProductResponseAssembler;
 
     @InjectMocks
     private UserFavoriteServiceImpl userFavoriteService;
@@ -54,6 +57,11 @@ class UserFavoriteServiceImplTest {
     void configureBadgeService() {
         Mockito.lenient().when(productBadgeService.applyBadges(Mockito.anyList(), Mockito.anyList()))
                 .thenAnswer(invocation -> invocation.getArgument(0));
+        Mockito.lenient().when(catalogProductResponseAssembler.toResponses(Mockito.anyList()))
+                .thenAnswer(invocation -> {
+                    List<Phone> phones = invocation.getArgument(0);
+                    return phones.isEmpty() ? List.of() : List.of(buildPhoneResponseDto());
+                });
     }
 
     @Nested
@@ -66,14 +74,14 @@ class UserFavoriteServiceImplTest {
 
             Mockito.when(favoriteRepository.findAllByUserIdWithPhoneImages(USER_ID))
                     .thenReturn(List.of(favorite));
-            Mockito.when(phoneMapper.toResponseList(List.of(favorite.getPhone())))
+            Mockito.when(catalogProductResponseAssembler.toResponses(List.of(favorite.getPhone())))
                     .thenReturn(expected);
 
             List<PhoneResponseDto> result = userFavoriteService.getUserFavorites(USER_ID);
 
             assertThat(result).isEqualTo(expected);
             Mockito.verify(favoriteRepository).findAllByUserIdWithPhoneImages(USER_ID);
-            Mockito.verify(phoneMapper).toResponseList(List.of(favorite.getPhone()));
+            Mockito.verify(catalogProductResponseAssembler).toResponses(List.of(favorite.getPhone()));
         }
 
         @Test
@@ -100,7 +108,7 @@ class UserFavoriteServiceImplTest {
                     .thenReturn(Optional.of(user));
             Mockito.when(favoriteRepository.findAllByUserIdWithPhoneImages(USER_ID))
                     .thenReturn(List.of(buildFavorite(user, phone)));
-            Mockito.when(phoneMapper.toResponseList(anyList()))
+            Mockito.when(catalogProductResponseAssembler.toResponses(anyList()))
                     .thenReturn(expected);
 
             List<PhoneResponseDto> result = userFavoriteService.addProductToFavorites(USER_ID, PHONE_ID);
@@ -122,7 +130,7 @@ class UserFavoriteServiceImplTest {
                     .thenReturn(true);
             Mockito.when(favoriteRepository.findAllByUserIdWithPhoneImages(USER_ID))
                     .thenReturn(List.of(buildFavorite()));
-            Mockito.when(phoneMapper.toResponseList(anyList()))
+            Mockito.when(catalogProductResponseAssembler.toResponses(anyList()))
                     .thenReturn(List.of(buildPhoneResponseDto()));
 
             userFavoriteService.addProductToFavorites(USER_ID, PHONE_ID);
@@ -156,7 +164,7 @@ class UserFavoriteServiceImplTest {
                     .thenReturn(Optional.of(favorite));
             Mockito.when(favoriteRepository.findAllByUserIdWithPhoneImages(USER_ID))
                     .thenReturn(List.of());
-            Mockito.when(phoneMapper.toResponseList(List.of()))
+            Mockito.when(catalogProductResponseAssembler.toResponses(List.of()))
                     .thenReturn(List.of());
 
             List<PhoneResponseDto> result = userFavoriteService.removeProductFromFavorites(USER_ID, PHONE_ID);
@@ -173,7 +181,7 @@ class UserFavoriteServiceImplTest {
                     .thenReturn(Optional.empty());
             Mockito.when(favoriteRepository.findAllByUserIdWithPhoneImages(USER_ID))
                     .thenReturn(List.of());
-            Mockito.when(phoneMapper.toResponseList(List.of()))
+            Mockito.when(catalogProductResponseAssembler.toResponses(List.of()))
                     .thenReturn(List.of());
 
             List<PhoneResponseDto> result = userFavoriteService.removeProductFromFavorites(USER_ID, PHONE_ID);

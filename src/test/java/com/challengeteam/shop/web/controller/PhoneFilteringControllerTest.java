@@ -36,9 +36,11 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 import static org.hamcrest.CoreMatchers.everyItem;
+import static org.hamcrest.Matchers.hasItems;
 import static org.hamcrest.Matchers.equalTo;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -84,13 +86,23 @@ class PhoneFilteringControllerTest {
 
         phoneRepository.saveAll(List.of(
                 // Apple
-                buildPhone("iPhone 15 Pro", "Apple", new BigDecimal("999"), 10, ProductStatus.IN_STOCK),
-                buildPhone("iPhone 14", "Apple", new BigDecimal("799"), 0, ProductStatus.OUT_OF_STOCK),
+                buildPhone("iPhone 15 Pro", "Apple", new BigDecimal("999"), 10, ProductStatus.IN_STOCK,
+                        Set.of(PhoneColor.BLUE, PhoneColor.BLACK),
+                        Set.of(StorageCapacity.CAPACITY_128GB, StorageCapacity.CAPACITY_256GB)),
+                buildPhone("iPhone 14", "Apple", new BigDecimal("799"), 0, ProductStatus.OUT_OF_STOCK,
+                        Set.of(PhoneColor.GOLD),
+                        Set.of(StorageCapacity.CAPACITY_64GB)),
                 // Samsung
-                buildPhone("Galaxy S24", "Samsung", new BigDecimal("899"), 5, ProductStatus.IN_STOCK),
-                buildPhone("Galaxy S23", "Samsung", new BigDecimal("699"), 0, ProductStatus.OUT_OF_STOCK),
+                buildPhone("Galaxy S24", "Samsung", new BigDecimal("899"), 5, ProductStatus.IN_STOCK,
+                        Set.of(PhoneColor.GREEN),
+                        Set.of(StorageCapacity.CAPACITY_256GB)),
+                buildPhone("Galaxy S23", "Samsung", new BigDecimal("699"), 0, ProductStatus.OUT_OF_STOCK,
+                        Set.of(PhoneColor.BLACK),
+                        Set.of(StorageCapacity.CAPACITY_128GB)),
                 // Google
-                buildPhone("Pixel 8", "Google", new BigDecimal("599"), 3, ProductStatus.LOW_STOCK)
+                buildPhone("Pixel 8", "Google", new BigDecimal("599"), 3, ProductStatus.LOW_STOCK,
+                        Set.of(PhoneColor.WHITE),
+                        Set.of(StorageCapacity.CAPACITY_512GB))
         ));
 
         token = testAuthHelper.authorizeLikeTestUser();
@@ -530,6 +542,71 @@ class PhoneFilteringControllerTest {
         }
     }
 
+    @Nested
+    @DisplayName("Color and storage filters")
+    class ColorAndStorageFilterTest {
+
+        @Test
+        @DisplayName("Color BLUE -> only phones with selected color")
+        void shouldFilterByColor() throws Exception {
+            mockMvc.perform(get("/api/v1/filter/by")
+                            .param("colors", "BLUE")
+                            .param("page", "1").param("size", "10"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.totalElements").value(1))
+                    .andExpect(jsonPath("$.content[0].name").value("iPhone 15 Pro"))
+                    .andExpect(jsonPath("$.content[0].stock").value(10))
+                    .andExpect(jsonPath("$.content[0].status").value("IN_STOCK"))
+                    .andExpect(jsonPath("$.content[0].badges").isArray())
+                    .andExpect(jsonPath("$.content[0].discountPercent").value(0))
+                    .andExpect(jsonPath("$.content[0].averageRating").value(0))
+                    .andExpect(jsonPath("$.content[0].reviewsCount").value(0));
+        }
+
+        @Test
+        @DisplayName("Storage CAPACITY_512GB -> only matching phones")
+        void shouldFilterByStorageCapacity() throws Exception {
+            mockMvc.perform(get("/api/v1/filter/by")
+                            .param("storageCapacities", "CAPACITY_512GB")
+                            .param("page", "1").param("size", "10"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.totalElements").value(1))
+                    .andExpect(jsonPath("$.content[0].name").value("Pixel 8"));
+        }
+
+        @Test
+        @DisplayName("Brand + color + storage -> combined filters stay compatible")
+        void shouldFilterByBrandColorAndStorage() throws Exception {
+            mockMvc.perform(get("/api/v1/filter/by")
+                            .param("brands", "Apple")
+                            .param("colors", "BLACK")
+                            .param("storageCapacities", "CAPACITY_128GB")
+                            .param("page", "1").param("size", "10"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.totalElements").value(1))
+                    .andExpect(jsonPath("$.content[?(@.name == 'iPhone 15 Pro')]").exists())
+                    .andExpect(jsonPath("$.content[?(@.name == 'Galaxy S23')]").doesNotExist());
+        }
+    }
+
+    @Nested
+    @DisplayName("Filter metadata")
+    class FilterMetadataTest {
+
+        @Test
+        void shouldReturnAvailableFilterMetadata() throws Exception {
+            mockMvc.perform(get("/api/v1/filter/metadata"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.brands", hasItems("Apple", "Google", "Samsung")))
+                    .andExpect(jsonPath("$.colors[?(@.name == 'BLUE')]").exists())
+                    .andExpect(jsonPath("$.storageCapacities[?(@.name == 'CAPACITY_512GB')]").exists())
+                    .andExpect(jsonPath("$.priceRange.minPrice").value(599))
+                    .andExpect(jsonPath("$.priceRange.maxPrice").value(999))
+                    .andExpect(jsonPath("$.stockOptions", hasItems("IN_STOCK", "PREORDER")))
+                    .andExpect(jsonPath("$.badges", hasItems("NEW", "HIT", "SALE")));
+        }
+    }
+
     // ─────────────────────────────────────────────────────────────────────────
 
     /**
@@ -594,6 +671,13 @@ class PhoneFilteringControllerTest {
 
     private Phone buildPhone(String name, String brand, BigDecimal price,
                              int stock, ProductStatus status) {
+        return buildPhone(name, brand, price, stock, status, Set.of(PhoneColor.BLUE), Set.of(StorageCapacity.CAPACITY_64GB));
+    }
+
+    private Phone buildPhone(String name, String brand, BigDecimal price,
+                             int stock, ProductStatus status,
+                             Set<PhoneColor> colors,
+                             Set<StorageCapacity> storageCapacities) {
         return Phone.builder()
                 .name(name)
                 .brand(brand)
@@ -609,6 +693,8 @@ class PhoneFilteringControllerTest {
                         .screenSize("6.7")
                         .mainCamera("50MP")
                         .frontCamera("12MP")
+                        .phoneColors(colors)
+                        .storageCapacities(storageCapacities)
                         .build())
                 .build();
     }
