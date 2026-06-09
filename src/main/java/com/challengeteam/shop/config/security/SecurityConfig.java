@@ -15,6 +15,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -29,6 +30,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
 
@@ -78,19 +80,29 @@ public class SecurityConfig {
                     if (!environment.acceptsProfiles(Profiles.of("prod"))) {
                         auth
                                 .requestMatchers("/docs/**", "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
-                                .requestMatchers("/api/v1/test-data/**").permitAll();
+                                .requestMatchers("/api/v1/test-data/**").hasRole("ADMIN");
                     }
 
                     auth
                             .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
                             .requestMatchers("/api/v1/filter/**").permitAll()
+                            .requestMatchers("/api/v1/images/**").permitAll()
                             .requestMatchers(HttpMethod.GET, "/api/v1/phones/**").permitAll()
+                            .requestMatchers(HttpMethod.POST, "/api/v1/phones").hasRole("ADMIN")
+                            .requestMatchers(HttpMethod.PUT, "/api/v1/phones/*").hasRole("ADMIN")
+                            .requestMatchers(HttpMethod.DELETE, "/api/v1/phones/*").hasRole("ADMIN")
+                            .requestMatchers(HttpMethod.POST, "/api/v1/phones/*/add-image").hasRole("ADMIN")
+                            .requestMatchers(HttpMethod.DELETE, "/api/v1/phones/*/images/*").hasRole("ADMIN")
                             .requestMatchers("/api/v1/delivery/**").permitAll()
                             .requestMatchers("/api/v1/payments/webhooks/**").permitAll()
-                            .requestMatchers(HttpMethod.POST, "/api/v1/orders").permitAll()
+                            .requestMatchers(HttpMethod.POST, "/api/v1/orders").hasRole("ADMIN")
                             .requestMatchers("/api/v1/orders/**").authenticated()
                             .requestMatchers("/api/v1/users/me").authenticated()
                             .requestMatchers("/api/v1/users/me/**").authenticated()
+                            .requestMatchers("/api/v1/users/sensitive").authenticated()
+                            .requestMatchers("/api/v1/me/**").authenticated()
+                            .requestMatchers("/api/v1/users/**").hasRole("ADMIN")
+                            .requestMatchers("/api/v1/users").hasRole("ADMIN")
                             .anyRequest().authenticated();
                 }
                 )
