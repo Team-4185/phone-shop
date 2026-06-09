@@ -74,6 +74,7 @@ class OrderControllerTest {
     private Phone iphone;
     private Phone samsung;
     private String userToken;
+    private String adminToken;
 
     @DynamicPropertySource
     static void loadProperties(DynamicPropertyRegistry registry) {
@@ -90,6 +91,7 @@ class OrderControllerTest {
         samsung = phoneRepository.save(phone("Samsung Galaxy S24", "Samsung", new BigDecimal("799.00"), 5, ProductStatus.IN_STOCK));
 
         userToken = testAuthHelper.authorizeLikeTestUser();
+        adminToken = testAuthHelper.authorizeAsAdmin("admin.orders@valid.com");
     }
 
     @AfterEach
@@ -242,6 +244,19 @@ class OrderControllerTest {
         ));
     }
 
+    private String checkoutCurrentUserCart(Long phoneId) throws Exception {
+        Long userId = testAuthHelper.authorizeAndReturnTokens().userId();
+        userCartService.putItemToUserCart(userId, new com.challengeteam.shop.dto.cart.CartItemAddRequestDto(
+                phoneId, 1));
+
+        return mockMvc.perform(post(ORDER_URL + "/checkout")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .header("Authorization", "Bearer " + userToken)
+                        .content(checkoutBody(phoneId)))
+                .andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString();
+    }
+
     private Map<String, Object> item(Long phoneId, int quantity) {
         return Map.of(
                 "phoneId", phoneId,
@@ -263,9 +278,9 @@ class OrderControllerTest {
     @Nested
     @DisplayName("Successful order creation")
             // Cases:
-            //   - guest CARD + COURIER → 201, status NEW, payment PAID, transactionId stored
-            //   - guest CASH_ON_DELIVERY + PICKUP → 201, payment PENDING
-            //   - registered user → 201, user linked in response
+            //   - admin legacy CARD + COURIER → 201, status NEW, payment PAID, transactionId stored
+            //   - admin legacy CASH_ON_DELIVERY + PICKUP → 201, payment PENDING
+            //   - legacy direct creation links authenticated admin in response
             //   - multiple items → total = sum of (price * quantity)
             //   - stock decreases by ordered quantity
             //   - stock = 0 → phone status OUT_OF_STOCK
@@ -275,26 +290,38 @@ class OrderControllerTest {
     class SuccessfulOrderCreationTests {
 
         @Test
-        @DisplayName("Guest CARD + COURIER → 201, status NEW, payment PAID")
-        void guestCardCourier_returns201_withNewStatusAndPaidPayment() throws Exception {
+        @DisplayName("Customer direct legacy order creation -> 403")
+        void customerDirectOrderCreation_returns403() throws Exception {
+            mockMvc.perform(post(ORDER_URL)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .header("Authorization", "Bearer " + userToken)
+                            .content(cashPickupBody(iphone.getId(), 1)))
+                    .andExpect(status().isForbidden());
+        }
+
+        @Test
+        @DisplayName("Admin legacy CARD + COURIER -> 201, status NEW, payment PAID")
+        void adminCardCourier_returns201_withNewStatusAndPaidPayment() throws Exception {
             when(paymentMockService.pay(any(), any())).thenReturn(paid());
 
             mockMvc.perform(post(ORDER_URL)
                             .contentType(MediaType.APPLICATION_JSON)
+                            .header("Authorization", "Bearer " + adminToken)
                             .content(cardCourierBody(iphone.getId(), 1)))
                     .andExpect(status().isCreated())
                     .andExpect(jsonPath("$.status").value("NEW"))
                     .andExpect(jsonPath("$.paymentDetails.paymentStatus").value("PAID"))
                     .andExpect(jsonPath("$.paymentDetails.transactionId").value("tx-123"))
                     .andExpect(jsonPath("$.customerEmail").value("customer@example.com"))
-                    .andExpect(jsonPath("$.user").doesNotExist());
+                    .andExpect(jsonPath("$.user.email").value("admin.orders@valid.com"));
         }
 
         @Test
-        @DisplayName("Guest CASH_ON_DELIVERY + PICKUP → 201, payment PENDING")
-        void guestCashPickup_returns201_withPendingPaymentStatus() throws Exception {
+        @DisplayName("Admin legacy CASH_ON_DELIVERY + PICKUP -> 201, payment PENDING")
+        void adminCashPickup_returns201_withPendingPaymentStatus() throws Exception {
             mockMvc.perform(post(ORDER_URL)
                             .contentType(MediaType.APPLICATION_JSON)
+                            .header("Authorization", "Bearer " + adminToken)
                             .content(cashPickupBody(iphone.getId(), 1)))
                     .andExpect(status().isCreated())
                     .andExpect(jsonPath("$.paymentDetails.paymentStatus").value("PENDING"))
@@ -308,11 +335,12 @@ class OrderControllerTest {
 
             mockMvc.perform(post(ORDER_URL)
                             .contentType(MediaType.APPLICATION_JSON)
-                            .header("Authorization", "Bearer " + userToken)
+                            .header("Authorization", "Bearer " + adminToken)
+
                             .content(cardCourierBody(iphone.getId(), 1)))
                     .andExpect(status().isCreated())
                     .andExpect(jsonPath("$.user").exists())
-                    .andExpect(jsonPath("$.user.email").value(TestAuthHelper.TEST_COMPONENT_EMAIL));
+                    .andExpect(jsonPath("$.user.email").value("admin.orders@valid.com"));
         }
 
         @Test
@@ -322,6 +350,7 @@ class OrderControllerTest {
 
             mockMvc.perform(post(ORDER_URL)
                             .contentType(MediaType.APPLICATION_JSON)
+                            .header("Authorization", "Bearer " + adminToken)
                             .content(objectMapper.writeValueAsString(Map.of(
                                     "customerEmail", "customer@example.com",
                                     "customerFirstName", "John",
@@ -358,6 +387,7 @@ class OrderControllerTest {
 
             mockMvc.perform(post(ORDER_URL)
                             .contentType(MediaType.APPLICATION_JSON)
+                            .header("Authorization", "Bearer " + adminToken)
                             .content(cardCourierBody(iphone.getId(), 3)))
                     .andExpect(status().isCreated());
 
@@ -372,6 +402,7 @@ class OrderControllerTest {
 
             mockMvc.perform(post(ORDER_URL)
                             .contentType(MediaType.APPLICATION_JSON)
+                            .header("Authorization", "Bearer " + adminToken)
                             .content(cardCourierBody(iphone.getId(), 10))) // buy all 10
                     .andExpect(status().isCreated());
 
@@ -387,6 +418,7 @@ class OrderControllerTest {
 
             mockMvc.perform(post(ORDER_URL)
                             .contentType(MediaType.APPLICATION_JSON)
+                            .header("Authorization", "Bearer " + adminToken)
                             .content(cardCourierBody(iphone.getId(), 6))) // 10 - 6 = 4
                     .andExpect(status().isCreated());
 
@@ -404,6 +436,7 @@ class OrderControllerTest {
 
             mockMvc.perform(post(ORDER_URL)
                             .contentType(MediaType.APPLICATION_JSON)
+                            .header("Authorization", "Bearer " + adminToken)
                             .content(cardCourierBody(highStockPhone.getId(), 2))) // 12 - 2 = 10
                     .andExpect(status().isCreated());
 
@@ -416,6 +449,7 @@ class OrderControllerTest {
         void postOfficeDelivery_returns201_withLogisticsCompany() throws Exception {
             mockMvc.perform(post(ORDER_URL)
                             .contentType(MediaType.APPLICATION_JSON)
+                            .header("Authorization", "Bearer " + adminToken)
                             .content(postOfficeBody(iphone.getId(), 1)))
                     .andExpect(status().isCreated())
                     .andExpect(jsonPath("$.deliveryMethod").value("POST_OFFICE"))
@@ -427,6 +461,7 @@ class OrderControllerTest {
         void ukrainianCustomerAndAddressData_returns201() throws Exception {
             mockMvc.perform(post(ORDER_URL)
                             .contentType(MediaType.APPLICATION_JSON)
+                            .header("Authorization", "Bearer " + adminToken)
                             .content(objectMapper.writeValueAsString(Map.of(
                                     "customerEmail", "customer@example.com",
                                     "customerFirstName", "Іван",
@@ -461,6 +496,7 @@ class OrderControllerTest {
 
             mockMvc.perform(post(ORDER_URL)
                             .contentType(MediaType.APPLICATION_JSON)
+                            .header("Authorization", "Bearer " + adminToken)
                             .content(cardCourierBody(iphone.getId(), 1)))
                     .andExpect(status().isPaymentRequired());
 
@@ -474,6 +510,7 @@ class OrderControllerTest {
 
             mockMvc.perform(post(ORDER_URL)
                             .contentType(MediaType.APPLICATION_JSON)
+                            .header("Authorization", "Bearer " + adminToken)
                             .content(cardCourierBody(iphone.getId(), 1)))
                     .andExpect(status().isPaymentRequired());
 
@@ -497,6 +534,7 @@ class OrderControllerTest {
         void phoneNotFound_returns404() throws Exception {
             mockMvc.perform(post(ORDER_URL)
                             .contentType(MediaType.APPLICATION_JSON)
+                            .header("Authorization", "Bearer " + adminToken)
                             .content(cardCourierBody(99999L, 1)))
                     .andExpect(status().isNotFound());
         }
@@ -509,6 +547,7 @@ class OrderControllerTest {
 
             mockMvc.perform(post(ORDER_URL)
                             .contentType(MediaType.APPLICATION_JSON)
+                            .header("Authorization", "Bearer " + adminToken)
                             .content(cardCourierBody(outOfStock.getId(), 1)))
                     .andExpect(status().isUnprocessableEntity());
         }
@@ -518,6 +557,7 @@ class OrderControllerTest {
         void quantityExceedsStock_returns422() throws Exception {
             mockMvc.perform(post(ORDER_URL)
                             .contentType(MediaType.APPLICATION_JSON)
+                            .header("Authorization", "Bearer " + adminToken)
                             .content(cardCourierBody(iphone.getId(), 999))) // stock is 10
                     .andExpect(status().isUnprocessableEntity());
         }
@@ -542,6 +582,7 @@ class OrderControllerTest {
         void emptyItems_returns400() throws Exception {
             mockMvc.perform(post(ORDER_URL)
                             .contentType(MediaType.APPLICATION_JSON)
+                            .header("Authorization", "Bearer " + adminToken)
                             .content(objectMapper.writeValueAsString(Map.of(
                                     "customerEmail", "customer@example.com",
                                     "customerFirstName", "John",
@@ -559,6 +600,7 @@ class OrderControllerTest {
         void invalidEmail_returns400() throws Exception {
             mockMvc.perform(post(ORDER_URL)
                             .contentType(MediaType.APPLICATION_JSON)
+                            .header("Authorization", "Bearer " + adminToken)
                             .content(objectMapper.writeValueAsString(Map.of(
                                     "customerEmail", "not-an-email",
                                     "customerFirstName", "John",
@@ -576,6 +618,7 @@ class OrderControllerTest {
         void missingPhone_returns400() throws Exception {
             mockMvc.perform(post(ORDER_URL)
                             .contentType(MediaType.APPLICATION_JSON)
+                            .header("Authorization", "Bearer " + adminToken)
                             .content(objectMapper.writeValueAsString(Map.of(
                                     "customerEmail", "customer@example.com",
                                     "customerFirstName", "John",
@@ -592,6 +635,7 @@ class OrderControllerTest {
         void cardWithoutPaymentDetails_returns400() throws Exception {
             mockMvc.perform(post(ORDER_URL)
                             .contentType(MediaType.APPLICATION_JSON)
+                            .header("Authorization", "Bearer " + adminToken)
                             .content(objectMapper.writeValueAsString(Map.of(
                                     "customerEmail", "customer@example.com",
                                     "customerFirstName", "John",
@@ -610,6 +654,7 @@ class OrderControllerTest {
         void cashOnDeliveryWithPaymentDetails_returns400() throws Exception {
             mockMvc.perform(post(ORDER_URL)
                             .contentType(MediaType.APPLICATION_JSON)
+                            .header("Authorization", "Bearer " + adminToken)
                             .content(objectMapper.writeValueAsString(Map.of(
                                     "customerEmail", "customer@example.com",
                                     "customerFirstName", "John",
@@ -628,6 +673,7 @@ class OrderControllerTest {
         void courierWithoutAddress_returns400() throws Exception {
             mockMvc.perform(post(ORDER_URL)
                             .contentType(MediaType.APPLICATION_JSON)
+                            .header("Authorization", "Bearer " + adminToken)
                             .content(objectMapper.writeValueAsString(Map.of(
                                     "customerEmail", "customer@example.com",
                                     "customerFirstName", "John",
@@ -645,6 +691,7 @@ class OrderControllerTest {
         void pickupWithShippingAddress_returns400() throws Exception {
             mockMvc.perform(post(ORDER_URL)
                             .contentType(MediaType.APPLICATION_JSON)
+                            .header("Authorization", "Bearer " + adminToken)
                             .content(objectMapper.writeValueAsString(Map.of(
                                     "customerEmail", "customer@example.com",
                                     "customerFirstName", "John",
@@ -663,6 +710,7 @@ class OrderControllerTest {
         void missingDeliveryMethodWithShippingAddress_returns400() throws Exception {
             mockMvc.perform(post(ORDER_URL)
                             .contentType(MediaType.APPLICATION_JSON)
+                            .header("Authorization", "Bearer " + adminToken)
                             .content(objectMapper.writeValueAsString(Map.of(
                                     "customerEmail", "customer@example.com",
                                     "customerFirstName", "John",
@@ -779,12 +827,7 @@ class OrderControllerTest {
         void authenticatedUser_returns200_withTheirOrders() throws Exception {
             when(paymentMockService.pay(any(), any())).thenReturn(paid());
 
-            // create order for the test user
-            mockMvc.perform(post(ORDER_URL)
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .header("Authorization", "Bearer " + userToken)
-                            .content(cardCourierBody(iphone.getId(), 1)))
-                    .andExpect(status().isCreated());
+            checkoutCurrentUserCart(iphone.getId());
 
             mockMvc.perform(get(ORDER_URL + "/my")
                             .header("Authorization", "Bearer " + userToken))
@@ -819,18 +862,8 @@ class OrderControllerTest {
         void pagination_pageSizeRespected() throws Exception {
             when(paymentMockService.pay(any(), any())).thenReturn(paid());
 
-            // create 2 orders
-            mockMvc.perform(post(ORDER_URL)
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .header("Authorization", "Bearer " + userToken)
-                            .content(cardCourierBody(iphone.getId(), 1)))
-                    .andExpect(status().isCreated());
-
-            mockMvc.perform(post(ORDER_URL)
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .header("Authorization", "Bearer " + userToken)
-                            .content(cardCourierBody(samsung.getId(), 1)))
-                    .andExpect(status().isCreated());
+            checkoutCurrentUserCart(iphone.getId());
+            checkoutCurrentUserCart(samsung.getId());
 
             mockMvc.perform(get(ORDER_URL + "/my")
                             .header("Authorization", "Bearer " + userToken)
@@ -853,12 +886,7 @@ class OrderControllerTest {
         void ownerFetchesOrder_returns200_withOrderDetails() throws Exception {
             when(paymentMockService.pay(any(), any())).thenReturn(paid());
 
-            String responseBody = mockMvc.perform(post(ORDER_URL)
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .header("Authorization", "Bearer " + userToken)
-                            .content(cardCourierBody(iphone.getId(), 1)))
-                    .andExpect(status().isCreated())
-                    .andReturn().getResponse().getContentAsString();
+            String responseBody = checkoutCurrentUserCart(iphone.getId());
 
             Long orderId = objectMapper.readTree(responseBody).get("id").asLong();
 
@@ -891,12 +919,7 @@ class OrderControllerTest {
         void anotherUser_cannotFetchOtherUsersOrder() throws Exception {
             when(paymentMockService.pay(any(), any())).thenReturn(paid());
 
-            String responseBody = mockMvc.perform(post(ORDER_URL)
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .header("Authorization", "Bearer " + userToken)
-                            .content(cardCourierBody(iphone.getId(), 1)))
-                    .andExpect(status().isCreated())
-                    .andReturn().getResponse().getContentAsString();
+            String responseBody = checkoutCurrentUserCart(iphone.getId());
 
             Long orderId = objectMapper.readTree(responseBody).get("id").asLong();
 
@@ -915,12 +938,7 @@ class OrderControllerTest {
         @Test
         @DisplayName("Owner cancels NEW order -> 200, status CANCELLED, notification sent")
         void ownerCancelsNewOrder_returns200AndSendsNotification() throws Exception {
-            String responseBody = mockMvc.perform(post(ORDER_URL)
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .header("Authorization", "Bearer " + userToken)
-                            .content(cashPickupBody(iphone.getId(), 1)))
-                    .andExpect(status().isCreated())
-                    .andReturn().getResponse().getContentAsString();
+            String responseBody = checkoutCurrentUserCart(iphone.getId());
 
             Long orderId = objectMapper.readTree(responseBody).get("id").asLong();
 
@@ -936,12 +954,7 @@ class OrderControllerTest {
         @Test
         @DisplayName("Owner cannot cancel SHIPPED order -> 400")
         void ownerCannotCancelShippedOrder_returns400() throws Exception {
-            String responseBody = mockMvc.perform(post(ORDER_URL)
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .header("Authorization", "Bearer " + userToken)
-                            .content(cashPickupBody(iphone.getId(), 1)))
-                    .andExpect(status().isCreated())
-                    .andReturn().getResponse().getContentAsString();
+            String responseBody = checkoutCurrentUserCart(iphone.getId());
 
             Long orderId = objectMapper.readTree(responseBody).get("id").asLong();
             Order savedOrder = orderRepository.findById(orderId).orElseThrow();
@@ -956,12 +969,7 @@ class OrderControllerTest {
         @Test
         @DisplayName("Another user cannot cancel order -> 404")
         void anotherUserCannotCancelOrder_returns404() throws Exception {
-            String responseBody = mockMvc.perform(post(ORDER_URL)
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .header("Authorization", "Bearer " + userToken)
-                            .content(cashPickupBody(iphone.getId(), 1)))
-                    .andExpect(status().isCreated())
-                    .andReturn().getResponse().getContentAsString();
+            String responseBody = checkoutCurrentUserCart(iphone.getId());
 
             Long orderId = objectMapper.readTree(responseBody).get("id").asLong();
             String otherToken = testAuthHelper.authorizeAsNewUser("cancel-other@gmail.com", "password");

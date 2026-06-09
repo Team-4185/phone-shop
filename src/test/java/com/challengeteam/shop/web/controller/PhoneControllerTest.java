@@ -75,6 +75,7 @@ class PhoneControllerTest {
     @Autowired
     private ObjectMapper objectMapper;
     private String token;
+    private String adminToken;
     private Long phone1;
     private Long phone2;
     private Long phone3;
@@ -107,6 +108,7 @@ class PhoneControllerTest {
 
         // authorize
         token = testAuthHelper.authorizeLikeTestUser();
+        adminToken = testAuthHelper.authorizeAsAdmin("admin.phones.com");
 
     }
 
@@ -674,6 +676,19 @@ class PhoneControllerTest {
         private final static String URL = "/api/v1/phones";
 
         @Test
+        void whenCustomerCreatesPhone_thenStatus403() throws Exception {
+            PhoneCreateRequestDto json = buildPhoneCreateRequestDto(TestPhone.VALID_PHONE);
+            byte[] content = objectMapper.writeValueAsBytes(json);
+
+            var request = multipart(URL)
+                    .file((MockMultipartFile) buildJsonLikeMultipartFile(content, "phone"))
+                    .header(HttpHeaders.AUTHORIZATION, auth(token));
+
+            mockMvc.perform(request)
+                    .andExpect(status().isForbidden());
+        }
+
+        @Test
         void whenValidRequest_thenStatus201AndLocationHeader() throws Exception {
             PhoneCreateRequestDto json = buildPhoneCreateRequestDto(TestPhone.VALID_PHONE);
             byte[] content = objectMapper.writeValueAsBytes(json);
@@ -681,7 +696,7 @@ class PhoneControllerTest {
             var request = multipart(URL)
                     .file((MockMultipartFile) buildJsonLikeMultipartFile(content, "phone"))
                     .file((MockMultipartFile) buildMultipartFile("images"))
-                    .header(HttpHeaders.AUTHORIZATION, auth(token));
+                    .header(HttpHeaders.AUTHORIZATION, auth(adminToken));
 
             mockMvc.perform(request)
                     .andExpect(status().isCreated())
@@ -696,7 +711,7 @@ class PhoneControllerTest {
             var request = multipart(URL)
                     .file((MockMultipartFile) buildJsonLikeMultipartFile(content, "phone"))
                     .file((MockMultipartFile) buildMultipartFile("images"))
-                    .header(HttpHeaders.AUTHORIZATION, auth(token));
+                    .header(HttpHeaders.AUTHORIZATION, auth(adminToken));
 
             mockMvc.perform(request)
                     .andExpect(status().isCreated())
@@ -711,7 +726,7 @@ class PhoneControllerTest {
             var request = multipart(URL)
                     .file((MockMultipartFile) buildJsonLikeMultipartFile(content, "phone"))
                     .file((MockMultipartFile) buildMultipartFile("images"))
-                    .header(HttpHeaders.AUTHORIZATION, auth(token));
+                    .header(HttpHeaders.AUTHORIZATION, auth(adminToken));
 
             mockMvc.perform(request)
                     .andExpect(status().isCreated())
@@ -726,7 +741,7 @@ class PhoneControllerTest {
             var request = multipart(URL)
                     .file((MockMultipartFile) buildJsonLikeMultipartFile(content, "phone"))
                     .file((MockMultipartFile) buildMultipartFile("images"))
-                    .header(HttpHeaders.AUTHORIZATION, auth(token));
+                    .header(HttpHeaders.AUTHORIZATION, auth(adminToken));
 
             mockMvc.perform(request)
                     .andExpect(status().isCreated())
@@ -978,7 +993,7 @@ class PhoneControllerTest {
 
             var request = multipart(URL)
                     .file((MockMultipartFile) buildJsonLikeMultipartFile(content, "phone"))
-                    .header(HttpHeaders.AUTHORIZATION, auth(token));
+                    .header(HttpHeaders.AUTHORIZATION, auth(adminToken));
 
             mockMvc.perform(request)
                     .andExpect(status().isCreated());
@@ -994,7 +1009,7 @@ class PhoneControllerTest {
                     .file((MockMultipartFile) buildMultipartFile("images"))
                     .file((MockMultipartFile) buildMultipartFile("images"))
                     .file((MockMultipartFile) buildMultipartFile("images"))
-                    .header(HttpHeaders.AUTHORIZATION, auth(token));
+                    .header(HttpHeaders.AUTHORIZATION, auth(adminToken));
 
             mockMvc.perform(request)
                     .andExpect(status().isCreated());
@@ -1010,7 +1025,7 @@ class PhoneControllerTest {
                     .file((MockMultipartFile) buildMultipartFile("images"))
                     .file((MockMultipartFile) buildUnsupportedMultipartFile("images"))      // unsupported file
                     .file((MockMultipartFile) buildMultipartFile("images"))
-                    .header(HttpHeaders.AUTHORIZATION, auth(token));
+                    .header(HttpHeaders.AUTHORIZATION, auth(adminToken));
 
             mockMvc.perform(request)
                     .andExpect(status().isBadRequest());
@@ -1023,7 +1038,7 @@ class PhoneControllerTest {
             var request = multipart(URL)
                     .file((MockMultipartFile) buildJsonLikeMultipartFile(content, "phone"))
                     .file((MockMultipartFile) buildMultipartFile("images"))
-                    .header(HttpHeaders.AUTHORIZATION, auth(token));
+                    .header(HttpHeaders.AUTHORIZATION, auth(adminToken));
 
             mockMvc.perform(request)
                     .andExpect(status().isBadRequest());
@@ -1036,11 +1051,22 @@ class PhoneControllerTest {
         private final static String URL = "/api/v1/phones/{phoneId}";
 
         @Test
-        void whenValidRequest_thenStatus204() throws Exception {
+        void whenCustomerUpdatesPhone_thenStatus403() throws Exception {
             PhoneUpdateRequestDto request = buildPhoneUpdateRequestDto(TestPhone.VALID_PHONE);
 
             mockMvc.perform(put(URL, phone1)
                             .header(HttpHeaders.AUTHORIZATION, auth(token))
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(request)))
+                    .andExpect(status().isForbidden());
+        }
+
+        @Test
+        void whenValidRequest_thenStatus204() throws Exception {
+            PhoneUpdateRequestDto request = buildPhoneUpdateRequestDto(TestPhone.VALID_PHONE);
+
+            mockMvc.perform(put(URL, phone1)
+                            .header(HttpHeaders.AUTHORIZATION, auth(adminToken))
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isNoContent());
@@ -1051,7 +1077,7 @@ class PhoneControllerTest {
             PhoneUpdateRequestDto request = buildPhoneUpdateRequestDto(TestPhone.VALID_PHONE_NULL_DESCRIPTION);
 
             mockMvc.perform(put(URL, phone1)
-                            .header(HttpHeaders.AUTHORIZATION, auth(token))
+                            .header(HttpHeaders.AUTHORIZATION, auth(adminToken))
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isNoContent());
@@ -1062,7 +1088,7 @@ class PhoneControllerTest {
             PhoneUpdateRequestDto request = buildPhoneUpdateRequestDto(VALID_PHONE_BOUNDARY_MIN);
 
             mockMvc.perform(put(URL, phone1)
-                            .header(HttpHeaders.AUTHORIZATION, auth(token))
+                            .header(HttpHeaders.AUTHORIZATION, auth(adminToken))
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isNoContent());
@@ -1073,7 +1099,7 @@ class PhoneControllerTest {
             PhoneUpdateRequestDto request = buildPhoneUpdateRequestDto(VALID_PHONE_BOUNDARY_MAX);
 
             mockMvc.perform(put(URL, phone1)
-                            .header(HttpHeaders.AUTHORIZATION, auth(token))
+                            .header(HttpHeaders.AUTHORIZATION, auth(adminToken))
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isNoContent());
@@ -1104,7 +1130,7 @@ class PhoneControllerTest {
         void whenIdIsNotInteger_thenStatus404() throws Exception {
             var request = put(URL, "not_integer")
                     .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-                    .header(HttpHeaders.AUTHORIZATION, auth(token));
+                    .header(HttpHeaders.AUTHORIZATION, auth(adminToken));
 
             mockMvc.perform(request)
                     .andExpect(status().isNotFound());
@@ -1275,7 +1301,7 @@ class PhoneControllerTest {
             PhoneUpdateRequestDto request = buildPhoneUpdateRequestDto(phone);
 
             mockMvc.perform(put(URL, phone1)
-                            .header(HttpHeaders.AUTHORIZATION, auth(token))
+                            .header(HttpHeaders.AUTHORIZATION, auth(adminToken))
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isBadRequest());
@@ -1289,16 +1315,23 @@ class PhoneControllerTest {
         private final static String URL = "/api/v1/phones/{phoneId}";
 
         @Test
-        void whenExists_thenStatus204() throws Exception {
+        void whenCustomerDeletesPhone_thenStatus403() throws Exception {
             mockMvc.perform(delete(URL, phone1)
                             .header(HttpHeaders.AUTHORIZATION, auth(token)))
+                    .andExpect(status().isForbidden());
+        }
+
+        @Test
+        void whenExists_thenStatus204() throws Exception {
+            mockMvc.perform(delete(URL, phone1)
+                            .header(HttpHeaders.AUTHORIZATION, auth(adminToken)))
                     .andExpect(status().isNoContent());
         }
 
         @Test
         void whenDoesntExist_thenStatus404() throws Exception {
             mockMvc.perform(delete(URL, NON_EXISTING_ID)
-                            .header(HttpHeaders.AUTHORIZATION, auth(token)))
+                            .header(HttpHeaders.AUTHORIZATION, auth(adminToken)))
                     .andExpect(status().isNotFound());
         }
 
@@ -1319,7 +1352,7 @@ class PhoneControllerTest {
         void whenIdIsNotInteger_thenStatus404() throws Exception {
             var request = delete(URL, "not_integer")
                     .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-                    .header(HttpHeaders.AUTHORIZATION, auth(token));
+                    .header(HttpHeaders.AUTHORIZATION, auth(adminToken));
 
             mockMvc.perform(request)
                     .andExpect(status().isNotFound());
@@ -1401,10 +1434,20 @@ class PhoneControllerTest {
         private static final String URL = "/api/v1/phones/{id}/add-image";
 
         @Test
-        void whenPhoneExists_thenAddImageAndReturn204() throws Exception {
+        void whenCustomerAddsImage_thenStatus403() throws Exception {
             var request = multipart(URL, phone1)
                     .file((MockMultipartFile) buildMultipartFile("image"))
                     .header(HttpHeaders.AUTHORIZATION, auth(token));
+
+            mockMvc.perform(request)
+                    .andExpect(status().isForbidden());
+        }
+
+        @Test
+        void whenPhoneExists_thenAddImageAndReturn204() throws Exception {
+            var request = multipart(URL, phone1)
+                    .file((MockMultipartFile) buildMultipartFile("image"))
+                    .header(HttpHeaders.AUTHORIZATION, auth(adminToken));
 
             mockMvc.perform(request)
                     .andExpect(status().isNoContent());
@@ -1414,7 +1457,7 @@ class PhoneControllerTest {
         void whenPhoneDoesntExists_thenReturn404() throws Exception {
             var request = multipart(URL, NON_EXISTING_ID)
                     .file((MockMultipartFile) buildMultipartFile("image"))
-                    .header(HttpHeaders.AUTHORIZATION, auth(token));
+                    .header(HttpHeaders.AUTHORIZATION, auth(adminToken));
 
             mockMvc.perform(request)
                     .andExpect(status().isNotFound());
@@ -1423,7 +1466,7 @@ class PhoneControllerTest {
         @Test
         void whenImageIsMissing_thenReturn400() throws Exception {
             var request = multipart(URL, phone1)
-                    .header(HttpHeaders.AUTHORIZATION, auth(token));
+                    .header(HttpHeaders.AUTHORIZATION, auth(adminToken));
 
             mockMvc.perform(request)
                     .andExpect(status().isBadRequest());
@@ -1434,7 +1477,7 @@ class PhoneControllerTest {
         void whenAddUnsupportedImage_thenReturn400() throws Exception {
             var request = multipart(URL, phone1)
                     .file((MockMultipartFile) buildUnsupportedMultipartFile("image"))
-                    .header(HttpHeaders.AUTHORIZATION, auth(token));
+                    .header(HttpHeaders.AUTHORIZATION, auth(adminToken));
 
             mockMvc.perform(request)
                     .andExpect(status().isBadRequest());
@@ -1466,7 +1509,7 @@ class PhoneControllerTest {
             var request = multipart(URL, "not_integer")
                     .file((MockMultipartFile) buildUnsupportedMultipartFile("image"))
                     .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-                    .header(HttpHeaders.AUTHORIZATION, auth(token));
+                    .header(HttpHeaders.AUTHORIZATION, auth(adminToken));
 
             mockMvc.perform(request)
                     .andExpect(status().isNotFound());
@@ -1491,9 +1534,16 @@ class PhoneControllerTest {
         }
 
         @Test
+        void whenCustomerDeletesPhoneImage_thenStatus403() throws Exception {
+            mockMvc.perform(delete(URL, phone3, phone3Images.get(0).getId())
+                            .header(HttpHeaders.AUTHORIZATION, auth(token)))
+                    .andExpect(status().isForbidden());
+        }
+
+        @Test
         void whenPhoneExistsAndHaveImage_thenDeleteImageAndReturn204() throws Exception {
             var request = delete(URL, phone3, phone3Images.get(0).getId())
-                    .header(HttpHeaders.AUTHORIZATION, auth(token));
+                    .header(HttpHeaders.AUTHORIZATION, auth(adminToken));
 
             mockMvc.perform(request)
                     .andExpect(status().isNoContent());
@@ -1502,7 +1552,7 @@ class PhoneControllerTest {
         @Test
         void whenPhoneDoesntExist_thenReturn404() throws Exception {
             var request = delete(URL, NON_EXISTING_ID, phone3Images.get(0).getId())
-                    .header(HttpHeaders.AUTHORIZATION, auth(token));
+                    .header(HttpHeaders.AUTHORIZATION, auth(adminToken));
 
             mockMvc.perform(request)
                     .andExpect(status().isNotFound());
@@ -1511,7 +1561,7 @@ class PhoneControllerTest {
         @Test
         void whenImageDoesntExist_thenReturn404() throws Exception {
             var request = delete(URL, phone3, NON_EXISTING_IMAGE_ID)
-                    .header(HttpHeaders.AUTHORIZATION, auth(token));
+                    .header(HttpHeaders.AUTHORIZATION, auth(adminToken));
 
             mockMvc.perform(request)
                     .andExpect(status().isNotFound());
@@ -1521,7 +1571,7 @@ class PhoneControllerTest {
         void whenTryToDeleteForeignImage_thenReturn400() throws Exception {
             // use phone3, but delete image from phone2
             var request = delete(URL, phone3, phone2Images.get(0).getId())
-                    .header(HttpHeaders.AUTHORIZATION, auth(token));
+                    .header(HttpHeaders.AUTHORIZATION, auth(adminToken));
 
             mockMvc.perform(request)
                     .andExpect(status().isNotFound());
@@ -1544,7 +1594,7 @@ class PhoneControllerTest {
         void whenIdIsNotInteger_thenStatus404() throws Exception {
             var request = delete(URL, "not_integer", phone3Images.get(0).getId())
                     .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-                    .header(HttpHeaders.AUTHORIZATION, auth(token));
+                    .header(HttpHeaders.AUTHORIZATION, auth(adminToken));
 
             mockMvc.perform(request)
                     .andExpect(status().isNotFound());
@@ -1554,7 +1604,7 @@ class PhoneControllerTest {
         void whenImageIdIsNotInteger_thenStatus404() throws Exception {
             var request = delete(URL, phone3, "not_integer")
                     .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-                    .header(HttpHeaders.AUTHORIZATION, auth(token));
+                    .header(HttpHeaders.AUTHORIZATION, auth(adminToken));
 
             mockMvc.perform(request)
                     .andExpect(status().isNotFound());

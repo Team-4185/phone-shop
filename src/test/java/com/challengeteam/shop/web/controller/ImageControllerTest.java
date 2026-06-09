@@ -104,16 +104,20 @@ class ImageControllerTest {
         }
 
         @Test
-        void whenRequestMissingToken_thenStatus401() throws Exception {
+        void whenRequestMissingToken_thenStatus200() throws Exception {
             mockMvc.perform(get(URL, imageId))
-                    .andExpect(status().isUnauthorized());
+                    .andExpect(status().isOk())
+                    .andExpect(content().contentType(MediaType.IMAGE_JPEG))
+                    .andExpect(content().bytes(TestImage.IMAGE_1.content));
         }
 
         @Test
-        void whenRequestHasInvalidToken_thenStatus401() throws Exception {
+        void whenRequestHasInvalidToken_thenStatus200() throws Exception {
             mockMvc.perform(get(URL, imageId)
                             .header(HttpHeaders.AUTHORIZATION, auth("some_invalid_text")))
-                    .andExpect(status().isUnauthorized());
+                    .andExpect(status().isOk())
+                    .andExpect(content().contentType(MediaType.IMAGE_JPEG))
+                    .andExpect(content().bytes(TestImage.IMAGE_1.content));
         }
 
         @Test
@@ -150,16 +154,26 @@ class ImageControllerTest {
         }
 
         @Test
-        void whenRequestMissingToken_thenStatus401() throws Exception {
+        void whenRequestMissingToken_thenStatus200() throws Exception {
             mockMvc.perform(get(URL, imageId))
-                    .andExpect(status().isUnauthorized());
+                    .andExpect(status().isOk())
+                    .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                    .andExpect(jsonPath("$.name").exists())
+                    .andExpect(jsonPath("$.url").exists())
+                    .andExpect(jsonPath("$.size").exists())
+                    .andExpect(jsonPath("$.mimeType").exists());
         }
 
         @Test
-        void whenRequestHasInvalidToken_thenStatus401() throws Exception {
+        void whenRequestHasInvalidToken_thenStatus200() throws Exception {
             mockMvc.perform(get(URL, imageId)
                             .header(HttpHeaders.AUTHORIZATION, auth("some_invalid_text")))
-                    .andExpect(status().isUnauthorized());
+                    .andExpect(status().isOk())
+                    .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                    .andExpect(jsonPath("$.name").exists())
+                    .andExpect(jsonPath("$.url").exists())
+                    .andExpect(jsonPath("$.size").exists())
+                    .andExpect(jsonPath("$.mimeType").exists());
         }
     }
 

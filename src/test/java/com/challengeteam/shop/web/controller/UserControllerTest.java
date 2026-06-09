@@ -72,6 +72,7 @@ class UserControllerTest {
     private PhoneRepository phoneRepository;
 
     private String token;
+    private String adminToken;
     private Long user1;
     private Long user2;
     private Long user3;
@@ -96,6 +97,7 @@ class UserControllerTest {
         user3 = userService.createDefaultUser(buildCreateUserDto(TestUserCredentials.USER_3));
 
         token = testAuthHelper.authorizeLikeTestUser();
+        adminToken = testAuthHelper.authorizeAsAdmin("admin.users.com");
         accessToken = testAuthHelper.authorizeAndReturnTokens().accessToken();
         refreshToken = testAuthHelper.authorizeAndReturnTokens().refreshToken();
     }
@@ -108,13 +110,20 @@ class UserControllerTest {
         @Test
         void whenValidRequest_thenStatus200AndReturnUsers() throws Exception {
             mockMvc.perform(get(URL)
-                            .header(HttpHeaders.AUTHORIZATION, auth(token)))
+                            .header(HttpHeaders.AUTHORIZATION, auth(adminToken)))
                     .andExpect(status().isOk())
                     .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                     .andExpect(jsonPath("$").isArray())
-                    .andExpect(jsonPath("$.length()").value(4))
+                    .andExpect(jsonPath("$.length()").value(5))
                     .andExpect(jsonPath("$[0].id").exists())
                     .andExpect(jsonPath("$[0].email").exists());
+        }
+
+        @Test
+        void whenCustomerRequestsUsers_thenStatus403() throws Exception {
+            mockMvc.perform(get(URL)
+                            .header(HttpHeaders.AUTHORIZATION, auth(token)))
+                    .andExpect(status().isForbidden());
         }
 
         @Test
@@ -139,7 +148,7 @@ class UserControllerTest {
         @Test
         void whenExists_thenStatus200AndReturnUser() throws Exception {
             mockMvc.perform(get(URL, user1)
-                            .header(HttpHeaders.AUTHORIZATION, auth(token)))
+                            .header(HttpHeaders.AUTHORIZATION, auth(adminToken)))
                     .andExpect(status().isOk())
                     .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                     .andExpect(jsonPath("$.id").value(user1))
@@ -149,7 +158,7 @@ class UserControllerTest {
         @Test
         void whenDoesntExist_thenStatus404() throws Exception {
             mockMvc.perform(get(URL, NON_EXISTING_ID)
-                            .header(HttpHeaders.AUTHORIZATION, auth(token)))
+                            .header(HttpHeaders.AUTHORIZATION, auth(adminToken)))
                     .andExpect(status().isNotFound());
         }
 
@@ -170,7 +179,7 @@ class UserControllerTest {
         void whenIdIsNotInteger_thenStatus404() throws Exception {
             var request = get(URL, "not_integer")
                     .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-                    .header(HttpHeaders.AUTHORIZATION, auth(token));
+                    .header(HttpHeaders.AUTHORIZATION, auth(adminToken));
 
             mockMvc.perform(request)
                     .andExpect(status().isNotFound());
@@ -187,7 +196,7 @@ class UserControllerTest {
             CreateUserDto request = buildCreateUserDto(TestUserCredentials.VALID_USER);
 
             mockMvc.perform(post(URL)
-                            .header(HttpHeaders.AUTHORIZATION, auth(token))
+                            .header(HttpHeaders.AUTHORIZATION, auth(adminToken))
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isCreated())
@@ -199,7 +208,7 @@ class UserControllerTest {
             CreateUserDto request = buildCreateUserDto(TestUserCredentials.VALID_USER_BOUNDARY_MIN);
 
             mockMvc.perform(post(URL)
-                            .header(HttpHeaders.AUTHORIZATION, auth(token))
+                            .header(HttpHeaders.AUTHORIZATION, auth(adminToken))
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isCreated());
@@ -210,7 +219,7 @@ class UserControllerTest {
             CreateUserDto request = buildCreateUserDto(TestUserCredentials.VALID_USER_BOUNDARY_MAX);
 
             mockMvc.perform(post(URL)
-                            .header(HttpHeaders.AUTHORIZATION, auth(token))
+                            .header(HttpHeaders.AUTHORIZATION, auth(adminToken))
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isCreated());
@@ -312,7 +321,7 @@ class UserControllerTest {
             CreateUserDto request = buildCreateUserDto(TestUserCredentials.USER_1);
 
             mockMvc.perform(post(URL)
-                            .header(HttpHeaders.AUTHORIZATION, auth(token))
+                            .header(HttpHeaders.AUTHORIZATION, auth(adminToken))
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isConflict());
@@ -322,7 +331,7 @@ class UserControllerTest {
             CreateUserDto request = buildCreateUserDto(credentials);
 
             mockMvc.perform(post(URL)
-                            .header(HttpHeaders.AUTHORIZATION, auth(token))
+                            .header(HttpHeaders.AUTHORIZATION, auth(adminToken))
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isBadRequest());
@@ -339,7 +348,7 @@ class UserControllerTest {
             UpdateProfileDto request = buildUpdateProfileDto(TestUserProfile.VALID_PROFILE);
 
             mockMvc.perform(patch(URL, user1)
-                            .header(HttpHeaders.AUTHORIZATION, auth(token))
+                            .header(HttpHeaders.AUTHORIZATION, auth(adminToken))
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isNoContent());
@@ -350,7 +359,7 @@ class UserControllerTest {
             UpdateProfileDto request = buildUpdateProfileDto(TestUserProfile.VALID_PROFILE_BOUNDARY_MIN);
 
             mockMvc.perform(patch(URL, user1)
-                            .header(HttpHeaders.AUTHORIZATION, auth(token))
+                            .header(HttpHeaders.AUTHORIZATION, auth(adminToken))
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isNoContent());
@@ -361,7 +370,7 @@ class UserControllerTest {
             UpdateProfileDto request = buildUpdateProfileDto(TestUserProfile.VALID_PROFILE_BOUNDARY_MAX);
 
             mockMvc.perform(patch(URL, user1)
-                            .header(HttpHeaders.AUTHORIZATION, auth(token))
+                            .header(HttpHeaders.AUTHORIZATION, auth(adminToken))
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isNoContent());
@@ -372,7 +381,7 @@ class UserControllerTest {
             UpdateProfileDto request = buildUpdateProfileDto(TestUserProfile.VALID_PROFILE_WITH_HYPHEN);
 
             mockMvc.perform(patch(URL, user1)
-                            .header(HttpHeaders.AUTHORIZATION, auth(token))
+                            .header(HttpHeaders.AUTHORIZATION, auth(adminToken))
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isNoContent());
@@ -383,7 +392,7 @@ class UserControllerTest {
             UpdateProfileDto request = buildUpdateProfileDto(TestUserProfile.VALID_PROFILE_WITH_APOSTROPHE);
 
             mockMvc.perform(patch(URL, user1)
-                            .header(HttpHeaders.AUTHORIZATION, auth(token))
+                            .header(HttpHeaders.AUTHORIZATION, auth(adminToken))
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isNoContent());
@@ -394,7 +403,7 @@ class UserControllerTest {
             UpdateProfileDto request = buildUpdateProfileDto(TestUserProfile.VALID_PROFILE_WITH_SPACE);
 
             mockMvc.perform(patch(URL, user1)
-                            .header(HttpHeaders.AUTHORIZATION, auth(token))
+                            .header(HttpHeaders.AUTHORIZATION, auth(adminToken))
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isNoContent());
@@ -405,7 +414,7 @@ class UserControllerTest {
             UpdateProfileDto request = buildUpdateProfileDto(TestUserProfile.VALID_PROFILE_LATIN);
 
             mockMvc.perform(patch(URL, user1)
-                            .header(HttpHeaders.AUTHORIZATION, auth(token))
+                            .header(HttpHeaders.AUTHORIZATION, auth(adminToken))
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isNoContent());
@@ -416,7 +425,7 @@ class UserControllerTest {
             UpdateProfileDto request = buildUpdateProfileDto(TestUserProfile.VALID_PROFILE_CYRILLIC);
 
             mockMvc.perform(patch(URL, user1)
-                            .header(HttpHeaders.AUTHORIZATION, auth(token))
+                            .header(HttpHeaders.AUTHORIZATION, auth(adminToken))
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isNoContent());
@@ -427,7 +436,7 @@ class UserControllerTest {
             UpdateProfileDto request = buildUpdateProfileDto(TestUserProfile.VALID_PROFILE_WITHOUT_PHONE);
 
             mockMvc.perform(patch(URL, user1)
-                            .header(HttpHeaders.AUTHORIZATION, auth(token))
+                            .header(HttpHeaders.AUTHORIZATION, auth(adminToken))
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isNoContent());
@@ -438,7 +447,7 @@ class UserControllerTest {
             UpdateProfileDto request = buildUpdateProfileDto(TestUserProfile.VALID_PROFILE_PHONE_WITHOUT_PLUS);
 
             mockMvc.perform(patch(URL, user1)
-                            .header(HttpHeaders.AUTHORIZATION, auth(token))
+                            .header(HttpHeaders.AUTHORIZATION, auth(adminToken))
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isNoContent());
@@ -469,7 +478,7 @@ class UserControllerTest {
         void whenIdIsNotInteger_thenStatus404() throws Exception {
             var request = put(URL, "not_integer")
                     .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-                    .header(HttpHeaders.AUTHORIZATION, auth(token));
+                    .header(HttpHeaders.AUTHORIZATION, auth(adminToken));
 
             mockMvc.perform(request)
                     .andExpect(status().isNotFound());
@@ -480,7 +489,7 @@ class UserControllerTest {
             UpdateProfileDto request = buildUpdateProfileDto(TestUserProfile.VALID_PROFILE);
 
             mockMvc.perform(patch(URL, NON_EXISTING_ID)
-                            .header(HttpHeaders.AUTHORIZATION, auth(token))
+                            .header(HttpHeaders.AUTHORIZATION, auth(adminToken))
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isNotFound());
@@ -630,7 +639,7 @@ class UserControllerTest {
             UpdateProfileDto request = buildUpdateProfileDto(profile);
 
             mockMvc.perform(patch(URL, user1)
-                            .header(HttpHeaders.AUTHORIZATION, auth(token))
+                            .header(HttpHeaders.AUTHORIZATION, auth(adminToken))
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isBadRequest());
@@ -645,14 +654,14 @@ class UserControllerTest {
         @Test
         void whenExists_thenStatus204() throws Exception {
             mockMvc.perform(delete(URL, user1)
-                            .header(HttpHeaders.AUTHORIZATION, auth(token)))
+                            .header(HttpHeaders.AUTHORIZATION, auth(adminToken)))
                     .andExpect(status().isNoContent());
         }
 
         @Test
         void whenDoesntExist_thenStatus404() throws Exception {
             mockMvc.perform(delete(URL, NON_EXISTING_ID)
-                            .header(HttpHeaders.AUTHORIZATION, auth(token)))
+                            .header(HttpHeaders.AUTHORIZATION, auth(adminToken)))
                     .andExpect(status().isNotFound());
         }
 
@@ -673,7 +682,7 @@ class UserControllerTest {
         void whenIdIsNotInteger_thenStatus404() throws Exception {
             var request = delete(URL, "not_integer")
                     .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-                    .header(HttpHeaders.AUTHORIZATION, auth(token));
+                    .header(HttpHeaders.AUTHORIZATION, auth(adminToken));
 
             mockMvc.perform(request)
                     .andExpect(status().isNotFound());
@@ -1042,7 +1051,7 @@ class UserControllerTest {
                     TestAuthHelper.TEST_COMPONENT_PASSWORD, null);
 
             mockMvc.perform(patch(URL)
-                            .header(HttpHeaders.AUTHORIZATION, auth(token))
+                            .header(HttpHeaders.AUTHORIZATION, auth(accessToken))
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(dto)))
                     .andExpect(status().isBadRequest());
@@ -1195,7 +1204,7 @@ class UserControllerTest {
 
     private MockHttpServletRequestBuilder patchSensitive(Object dto, String URL) throws Exception {
         return patch(URL)
-                .header(HttpHeaders.AUTHORIZATION, auth(token))
+                .header(HttpHeaders.AUTHORIZATION, auth(accessToken))
                 .cookie(new Cookie(JwtTokenNameConstants.REFRESH_TOKEN_HEADER, refreshToken))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(dto));
