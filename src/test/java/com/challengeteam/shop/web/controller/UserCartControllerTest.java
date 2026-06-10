@@ -6,11 +6,15 @@ import com.challengeteam.shop.entity.image.Image;
 import com.challengeteam.shop.entity.image.MIMEType;
 import com.challengeteam.shop.entity.phone.Phone;
 import com.challengeteam.shop.entity.phone.PhoneCharacteristics;
+import com.challengeteam.shop.entity.phone.PhoneColor;
 import com.challengeteam.shop.entity.phone.ProductStatus;
+import com.challengeteam.shop.entity.phone.ProductVariant;
+import com.challengeteam.shop.entity.phone.StorageCapacity;
 import com.challengeteam.shop.persistence.repository.CartRepository;
 import com.challengeteam.shop.persistence.repository.ImageRepository;
 import com.challengeteam.shop.persistence.repository.MIMETypeRepository;
 import com.challengeteam.shop.persistence.repository.PhoneRepository;
+import com.challengeteam.shop.persistence.repository.ProductVariantRepository;
 import com.challengeteam.shop.service.UserCartService;
 import com.challengeteam.shop.testContainer.ContainerExtension;
 import com.challengeteam.shop.testContainer.TestContextConfigurator;
@@ -31,6 +35,7 @@ import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.math.BigDecimal;
+import java.util.Set;
 
 import static com.challengeteam.shop.web.controller.UserCartControllerTest.TestCartItem.*;
 import static com.challengeteam.shop.web.controller.UserCartControllerTest.TestResources.*;
@@ -56,6 +61,8 @@ class UserCartControllerTest {
     @Autowired
     private PhoneRepository phoneRepository;
     @Autowired
+    private ProductVariantRepository productVariantRepository;
+    @Autowired
     private MockMvc mockMvc;
     @Autowired
     private ObjectMapper objectMapper;
@@ -76,6 +83,7 @@ class UserCartControllerTest {
         // clear all
         cartRepository.deleteAll();
         imageRepository.deleteAll();
+        productVariantRepository.deleteAll();
         phoneRepository.deleteAll();
 
         // add 3 phones
@@ -106,9 +114,21 @@ class UserCartControllerTest {
                         .frontCamera(testPhone.frontCamera)
                         .mainCamera(testPhone.mainCamera)
                         .batteryCapacity(testPhone.batteryCapacity)
+                        .phoneColors(Set.of(PhoneColor.BLACK))
+                        .storageCapacities(Set.of(StorageCapacity.CAPACITY_128GB))
                         .build()
         );
-        return phoneRepository.save(phone).getId();
+        Phone savedPhone = phoneRepository.save(phone);
+        productVariantRepository.save(ProductVariant.builder()
+                .phone(savedPhone)
+                .sku(savedPhone.getSku() + "-BLACK-128")
+                .color(PhoneColor.BLACK)
+                .storageCapacity(StorageCapacity.CAPACITY_128GB)
+                .price(savedPhone.getPrice())
+                .stock(savedPhone.getStock())
+                .status(savedPhone.getStatus())
+                .build());
+        return savedPhone.getId();
     }
 
     private String buildSku(TestPhone testPhone) {

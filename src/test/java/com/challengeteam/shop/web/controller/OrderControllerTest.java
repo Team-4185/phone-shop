@@ -9,6 +9,7 @@ import com.challengeteam.shop.entity.phone.*;
 import com.challengeteam.shop.persistence.repository.CartRepository;
 import com.challengeteam.shop.persistence.repository.OrderRepository;
 import com.challengeteam.shop.persistence.repository.PhoneRepository;
+import com.challengeteam.shop.persistence.repository.ProductVariantRepository;
 import com.challengeteam.shop.service.UserCartService;
 import com.challengeteam.shop.service.mock.PaymentMockService;
 import com.challengeteam.shop.service.notification.EmailNotificationSenderService;
@@ -58,6 +59,8 @@ class OrderControllerTest {
     @Autowired
     private PhoneRepository phoneRepository;
     @Autowired
+    private ProductVariantRepository productVariantRepository;
+    @Autowired
     private CartRepository cartRepository;
     @Autowired
     private OrderRepository orderRepository;
@@ -85,10 +88,13 @@ class OrderControllerTest {
     void setUp() {
         cartRepository.deleteAll();
         orderRepository.deleteAll();
+        productVariantRepository.deleteAll();
         phoneRepository.deleteAll();
 
-        iphone = phoneRepository.save(phone("iPhone 15 Pro", "Apple", new BigDecimal("999.00"), 10, ProductStatus.IN_STOCK));
-        samsung = phoneRepository.save(phone("Samsung Galaxy S24", "Samsung", new BigDecimal("799.00"), 5, ProductStatus.IN_STOCK));
+        iphone = savePhoneWithDefaultVariant(
+                phone("iPhone 15 Pro", "Apple", new BigDecimal("999.00"), 10, ProductStatus.IN_STOCK));
+        samsung = savePhoneWithDefaultVariant(
+                phone("Samsung Galaxy S24", "Samsung", new BigDecimal("799.00"), 5, ProductStatus.IN_STOCK));
 
         userToken = testAuthHelper.authorizeLikeTestUser();
         adminToken = testAuthHelper.authorizeAsAdmin("admin.orders@valid.com");
@@ -98,6 +104,7 @@ class OrderControllerTest {
     void tearDown() {
         cartRepository.deleteAll();
         orderRepository.deleteAll();
+        productVariantRepository.deleteAll();
         phoneRepository.deleteAll();
     }
 
@@ -123,6 +130,20 @@ class OrderControllerTest {
                 .build());
 
         return p;
+    }
+
+    private Phone savePhoneWithDefaultVariant(Phone phone) {
+        Phone savedPhone = phoneRepository.save(phone);
+        productVariantRepository.save(ProductVariant.builder()
+                .phone(savedPhone)
+                .sku(savedPhone.getSku() + "-BLACK-128")
+                .color(PhoneColor.BLACK)
+                .storageCapacity(StorageCapacity.CAPACITY_128GB)
+                .price(savedPhone.getPrice())
+                .stock(savedPhone.getStock())
+                .status(savedPhone.getStatus())
+                .build());
+        return savedPhone;
     }
 
     private Map<String, Object> cardDetails() {
@@ -431,7 +452,7 @@ class OrderControllerTest {
         void remainingStockTenOrMore_setsInStockStatus() throws Exception {
             when(paymentMockService.pay(any(), any())).thenReturn(paid());
 
-            Phone highStockPhone = phoneRepository.save(
+            Phone highStockPhone = savePhoneWithDefaultVariant(
                     phone("Google Pixel 9", "Google", new BigDecimal("699.00"), 12, ProductStatus.IN_STOCK));
 
             mockMvc.perform(post(ORDER_URL)
@@ -542,7 +563,7 @@ class OrderControllerTest {
         @Test
         @DisplayName("Phone OUT_OF_STOCK → 422")
         void phoneOutOfStock_returns422() throws Exception {
-            Phone outOfStock = phoneRepository.save(
+            Phone outOfStock = savePhoneWithDefaultVariant(
                     phone("OnePlus 12", "OnePlus", new BigDecimal("599.00"), 0, ProductStatus.OUT_OF_STOCK));
 
             mockMvc.perform(post(ORDER_URL)

@@ -172,12 +172,6 @@ VALUES
  NOW(),
  NULL)
 ON CONFLICT (id) DO NOTHING;
--- set sequences
-SELECT setval(pg_get_serial_sequence('users', 'id'), (SELECT MAX(id) FROM users));
-SELECT setval(pg_get_serial_sequence('phones', 'id'), (SELECT MAX(id) FROM phones));
-SELECT setval(pg_get_serial_sequence('orders', 'id'), (SELECT MAX(id) FROM orders));
-SELECT setval(pg_get_serial_sequence('orders_items', 'id'), (SELECT MAX(id) FROM orders_items));
-
 
 -- phone_colors
 INSERT INTO phone_colors (phone_id, color)
@@ -383,6 +377,53 @@ VALUES
 (25, 'CAPACITY_512GB')
 ON CONFLICT DO NOTHING;
 
+-- product variants
+WITH variant_options AS (
+    SELECT p.id AS phone_id,
+           p.sku AS phone_sku,
+           p.price,
+           p.stock AS phone_stock,
+           COALESCE(pc.color, 'BLACK') AS color,
+           COALESCE(ps.storage, 'CAPACITY_128GB') AS storage_capacity,
+           ROW_NUMBER() OVER (PARTITION BY p.id ORDER BY COALESCE(pc.color, 'BLACK'), COALESCE(ps.storage, 'CAPACITY_128GB')) AS row_number,
+           COUNT(*) OVER (PARTITION BY p.id) AS variant_count
+    FROM phones p
+    LEFT JOIN phone_colors pc ON pc.phone_id = p.id
+    LEFT JOIN phone_storages ps ON ps.phone_id = p.id
+),
+variant_stock AS (
+    SELECT *,
+           (phone_stock / variant_count)
+               + CASE WHEN row_number <= MOD(phone_stock, variant_count) THEN 1 ELSE 0 END AS stock
+    FROM variant_options
+)
+INSERT INTO product_variants (fk_phone_id, sku, color, storage_capacity, price, stock, status)
+SELECT phone_id,
+       LEFT(phone_sku || '-' || color || '-' || REPLACE(storage_capacity, 'CAPACITY_', ''), 64),
+       color,
+       storage_capacity,
+       price,
+       stock,
+       CASE
+           WHEN stock = 0 THEN 'OUT_OF_STOCK'
+           WHEN stock <= 9 THEN 'LOW_STOCK'
+           ELSE 'IN_STOCK'
+       END
+FROM variant_stock
+ON CONFLICT (fk_phone_id, color, storage_capacity) DO NOTHING;
+
+UPDATE orders_items oi
+SET fk_variant_id = (
+    SELECT pv.id
+    FROM product_variants pv
+    WHERE pv.fk_phone_id = oi.fk_phone_id
+      AND pv.color = oi.selected_color
+      AND pv.storage_capacity = oi.selected_storage
+    ORDER BY pv.id ASC
+    LIMIT 1
+)
+WHERE oi.fk_variant_id IS NULL;
+
 -- carts
 INSERT INTO carts (id, fk_user_id, total_price, created_at, updated_at)
     OVERRIDING SYSTEM VALUE
@@ -396,14 +437,14 @@ VALUES
 ON CONFLICT (id) DO NOTHING;
 
 -- cart_items
-INSERT INTO carts_items (id, fk_cart_id, fk_phone_id, amount)
+INSERT INTO carts_items (id, fk_cart_id, fk_phone_id, fk_variant_id, amount)
     OVERRIDING SYSTEM VALUE
 VALUES
 -- us1: iPhone 15 (id=2) x1 + Xiaomi Redmi Note 13 (id=15) x1
-(1, 1, 2,  1),
-(2, 1, 15, 1),
+(1, 1, 2,  (SELECT id FROM product_variants WHERE fk_phone_id = 2 ORDER BY price ASC, id ASC LIMIT 1), 1),
+(2, 1, 15, (SELECT id FROM product_variants WHERE fk_phone_id = 15 ORDER BY price ASC, id ASC LIMIT 1), 1),
 -- us2: Samsung Galaxy S24 Ultra (id=5) x1
-(3, 2, 5,  1)
+(3, 2, 5,  (SELECT id FROM product_variants WHERE fk_phone_id = 5 ORDER BY price ASC, id ASC LIMIT 1), 1)
 ON CONFLICT (id) DO NOTHING;
 
 -- favorites
@@ -421,6 +462,11 @@ VALUES
 ON CONFLICT (id) DO NOTHING;
 
 --  sequences
+SELECT setval(pg_get_serial_sequence('users', 'id'),       (SELECT MAX(id) FROM users));
+SELECT setval(pg_get_serial_sequence('phones', 'id'),      (SELECT MAX(id) FROM phones));
+SELECT setval(pg_get_serial_sequence('orders', 'id'),      (SELECT MAX(id) FROM orders));
+SELECT setval(pg_get_serial_sequence('orders_items', 'id'), (SELECT MAX(id) FROM orders_items));
+SELECT setval(pg_get_serial_sequence('product_variants', 'id'), (SELECT MAX(id) FROM product_variants));
 SELECT setval(pg_get_serial_sequence('carts', 'id'),       (SELECT MAX(id) FROM carts));
 SELECT setval(pg_get_serial_sequence('carts_items', 'id'), (SELECT MAX(id) FROM carts_items));
 SELECT setval(pg_get_serial_sequence('favorites', 'id'),   (SELECT MAX(id) FROM favorites));
