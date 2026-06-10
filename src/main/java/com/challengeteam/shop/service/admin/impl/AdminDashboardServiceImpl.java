@@ -14,6 +14,7 @@ import com.challengeteam.shop.entity.order.Order;
 import com.challengeteam.shop.mapper.AdminDashboardMapper;
 import com.challengeteam.shop.persistence.repository.OrderRepository;
 import com.challengeteam.shop.persistence.repository.PhoneRepository;
+import com.challengeteam.shop.persistence.repository.ProductVariantRepository;
 import com.challengeteam.shop.persistence.repository.UserRepository;
 import com.challengeteam.shop.service.admin.AdminDashboardService;
 import java.math.BigDecimal;
@@ -45,6 +46,7 @@ public class AdminDashboardServiceImpl implements AdminDashboardService {
   private final OrderRepository orderRepository;
   private final UserRepository userRepository;
   private final PhoneRepository phoneRepository;
+  private final ProductVariantRepository productVariantRepository;
   private final AdminDashboardMapper adminDashboardMapper;
 
   @Override
@@ -79,9 +81,9 @@ public class AdminDashboardServiceImpl implements AdminDashboardService {
         currentOrders,
         calculateChangePercent(currentOrders, previousOrders),
         orderRepository.countByStatus(OrderStatus.PROCESSING),
-        phoneRepository.sumStock(),
+        productVariantRepository.sumStock(),
         null,
-        phoneRepository.countByStockLessThanEqual(LOW_STOCK_THRESHOLD),
+        productVariantRepository.countByStockLessThanEqual(LOW_STOCK_THRESHOLD),
         newClients,
         calculateChangePercent(newClients, previousNewClients));
   }

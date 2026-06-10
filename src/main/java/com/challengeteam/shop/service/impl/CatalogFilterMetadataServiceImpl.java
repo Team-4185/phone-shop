@@ -8,6 +8,7 @@ import com.challengeteam.shop.dto.phone.response.StorageCapacityResponseDto;
 import com.challengeteam.shop.entity.phone.PhoneColor;
 import com.challengeteam.shop.entity.phone.StorageCapacity;
 import com.challengeteam.shop.persistence.repository.PhoneRepository;
+import com.challengeteam.shop.persistence.repository.ProductVariantRepository;
 import com.challengeteam.shop.service.CatalogFilterMetadataService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -24,19 +25,20 @@ public class CatalogFilterMetadataServiceImpl implements CatalogFilterMetadataSe
     private static final List<String> STOCK_OPTIONS = List.of("IN_STOCK", "PREORDER");
 
     private final PhoneRepository phoneRepository;
+    private final ProductVariantRepository productVariantRepository;
 
     @Transactional(readOnly = true)
     @Override
     public CatalogFilterMetadataResponseDto getMetadata() {
-        BigDecimal minPrice = phoneRepository.findCatalogMinPrice().orElse(BigDecimal.ZERO);
-        BigDecimal maxPrice = phoneRepository.findCatalogMaxPrice().orElse(BigDecimal.ZERO);
+        BigDecimal minPrice = productVariantRepository.findCatalogMinPrice().orElse(BigDecimal.ZERO);
+        BigDecimal maxPrice = productVariantRepository.findCatalogMaxPrice().orElse(BigDecimal.ZERO);
 
         return new CatalogFilterMetadataResponseDto(
                 phoneRepository.findDistinctBrands(),
-                phoneRepository.findDistinctColors().stream()
+                productVariantRepository.findDistinctColors().stream()
                         .map(this::toColorDto)
                         .toList(),
-                phoneRepository.findDistinctStorageCapacities().stream()
+                productVariantRepository.findDistinctStorageCapacities().stream()
                         .map(this::toStorageCapacityDto)
                         .toList(),
                 new CatalogPriceRangeResponseDto(minPrice, maxPrice),

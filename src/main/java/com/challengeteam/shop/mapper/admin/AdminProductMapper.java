@@ -8,7 +8,10 @@ import com.challengeteam.shop.dto.image.ImageMetadataResponseDto;
 import com.challengeteam.shop.entity.image.Image;
 import com.challengeteam.shop.entity.phone.Phone;
 import com.challengeteam.shop.entity.phone.PhoneCharacteristics;
+import com.challengeteam.shop.entity.phone.ProductVariant;
 import com.challengeteam.shop.mapper.image.ImageMapper;
+import com.challengeteam.shop.mapper.phone.ProductVariantMapper;
+import com.challengeteam.shop.persistence.repository.ProductVariantRepository;
 import com.challengeteam.shop.utility.ProductStatusResolver;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -26,38 +29,43 @@ import java.util.Objects;
 @RequiredArgsConstructor
 public class AdminProductMapper {
   private final ImageMapper imageMapper;
+  private final ProductVariantMapper productVariantMapper;
+  private final ProductVariantRepository productVariantRepository;
 
   public AdminProductListItemResponseDto toListItem(Phone phone) {
+    List<ProductVariant> variants = variants(phone);
     return new AdminProductListItemResponseDto(
         phone.getId(),
         phone.getName(),
         phone.getSku(),
         phone.getBrand(),
-        phone.getPrice(),
-        phone.getStock(),
-        phone.getStatus(),
+        displayPrice(phone, variants),
+        displayStock(phone, variants),
+        ProductStatusResolver.resolve(displayStock(phone, variants)),
         toPreviewImage(phone.getImages()));
   }
 
   public AdminProductDetailsResponseDto toDetails(Phone phone) {
     PhoneCharacteristics characteristics = phone.getPhoneCharacteristics();
+    List<ProductVariant> variants = variants(phone);
 
     return new AdminProductDetailsResponseDto(
         phone.getId(),
         phone.getName(),
         phone.getSku(),
         phone.getDescription(),
-        phone.getPrice(),
+        displayPrice(phone, variants),
         phone.getBrand(),
         phone.getReleaseYear(),
-        phone.getStock(),
-        phone.getStatus(),
+        displayStock(phone, variants),
+        ProductStatusResolver.resolve(displayStock(phone, variants)),
         characteristics != null ? characteristics.getCpu() : null,
         characteristics != null ? characteristics.getCoresNumber() : null,
         characteristics != null ? characteristics.getScreenSize() : null,
         characteristics != null ? characteristics.getFrontCamera() : null,
         characteristics != null ? characteristics.getMainCamera() : null,
         characteristics != null ? characteristics.getBatteryCapacity() : null,
+        productVariantMapper.toResponses(variants),
         phone.getImages() == null ? List.of() : imageMapper.toListOfMetadata(phone.getImages()));
   }
 
@@ -121,5 +129,26 @@ public class AdminProductMapper {
     if (images == null || images.isEmpty()) return null;
 
     return imageMapper.toMetadata(images.getFirst());
+  }
+
+  private List<ProductVariant> variants(Phone phone) {
+    if (phone.getId() == null) {
+      return phone.getVariants() == null ? List.of() : phone.getVariants();
+    }
+    return productVariantRepository.findAllByPhoneIdOrderByPriceAscIdAsc(phone.getId());
+  }
+
+  private java.math.BigDecimal displayPrice(Phone phone, List<ProductVariant> variants) {
+    return variants.stream()
+        .map(ProductVariant::getPrice)
+        .min(java.math.BigDecimal::compareTo)
+        .orElse(phone.getPrice());
+  }
+
+  private int displayStock(Phone phone, List<ProductVariant> variants) {
+    if (variants.isEmpty()) {
+      return phone.getStock();
+    }
+    return variants.stream().mapToInt(ProductVariant::getStock).sum();
   }
 }

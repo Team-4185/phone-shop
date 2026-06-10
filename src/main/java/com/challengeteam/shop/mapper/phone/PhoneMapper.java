@@ -30,7 +30,7 @@ import java.util.List;
  * @see ImageMapper
  */
 @Mapper(componentModel = MappingConstants.ComponentModel.SPRING,
-        uses = {ImageMapper.class})
+        uses = {ImageMapper.class, ProductVariantMapper.class})
 public interface PhoneMapper {
 
     /**
@@ -53,6 +53,7 @@ public interface PhoneMapper {
     @Mapping(source = "images", target = "images")
     @Mapping(source = "phoneCharacteristics.phoneColors", target = "colors")
     @Mapping(source = "phoneCharacteristics.storageCapacities", target = "storageCapacity")
+    @Mapping(source = "variants", target = "variants")
     @Mapping(target = "previewImage", expression = "java(toPreviewImage(phone.getImages()))")
     @Mapping(target = "badges", expression = "java(java.util.Set.of())")
     @Mapping(target = "discountPercent", constant = "0")
