@@ -67,12 +67,16 @@ public class AdminOrderMapper {
 
     private AdminOrderItemResponseDto toItem(OrderItem item) {
         Long phoneId = item.getPhone() == null ? null : item.getPhone().getId();
+        Long variantId = item.getVariant() == null ? null : item.getVariant().getId();
 
         return new AdminOrderItemResponseDto(
                 item.getId(),
                 phoneId,
+                variantId,
                 item.getProductName(),
                 item.getSku(),
+                item.getSelectedColor(),
+                item.getSelectedStorage(),
                 item.getUnitPrice(),
                 item.getQuantity(),
                 item.getTotalPrice());

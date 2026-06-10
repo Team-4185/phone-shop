@@ -103,9 +103,9 @@ public class CustomerOrderServiceImpl implements CustomerOrderService {
     }
 
     private OrderRequestDto toOrderRequest(CheckoutRequestDto request, Cart cart) {
-        Map<Long, CartItemSelectionRequestDto> selectionsByPhoneId = resolveSelections(request, cart);
+        resolveSelections(request, cart);
         List<OrderItemRequestDto> orderItems = cart.getCartItems().stream()
-                .map(item -> toOrderItemRequest(item, selectionsByPhoneId.get(item.getPhone().getId())))
+                .map(this::toOrderItemRequest)
                 .toList();
 
         return new OrderRequestDto(
@@ -122,36 +122,47 @@ public class CustomerOrderServiceImpl implements CustomerOrderService {
     }
 
     private Map<Long, CartItemSelectionRequestDto> resolveSelections(CheckoutRequestDto request, Cart cart) {
-        Map<Long, CartItemSelectionRequestDto> selectionsByPhoneId = request.itemSelections().stream()
+        Map<Long, CartItemSelectionRequestDto> selectionsByVariantId = request.itemSelections().stream()
                 .collect(toMap(
-                        CartItemSelectionRequestDto::phoneId,
+                        selection -> resolveSelectionVariantId(selection, cart),
                         Function.identity(),
                         (left, right) -> {
                             throw new InvalidAPIRequestException(
-                                    "Duplicate cart item selection for phone id " + left.phoneId());
+                                    "Duplicate cart item selection");
                         }
                 ));
 
-        Set<Long> cartPhoneIds = cart.getCartItems().stream()
-                .map(item -> item.getPhone().getId())
+        Set<Long> cartVariantIds = cart.getCartItems().stream()
+                .map(item -> item.getVariant().getId())
                 .collect(toSet());
-        Set<Long> selectionPhoneIds = selectionsByPhoneId.keySet();
+        Set<Long> selectionVariantIds = selectionsByVariantId.keySet();
 
-        if (!selectionPhoneIds.equals(cartPhoneIds)) {
+        if (!selectionVariantIds.equals(cartVariantIds)) {
             throw new InvalidAPIRequestException(
                     "Cart item selections must match current cart items");
         }
 
-        return selectionsByPhoneId;
+        return selectionsByVariantId;
     }
 
-    private OrderItemRequestDto toOrderItemRequest(CartItem item, CartItemSelectionRequestDto selection) {
+    private OrderItemRequestDto toOrderItemRequest(CartItem item) {
         return new OrderItemRequestDto(
                 item.getPhone().getId(),
+                item.getVariant().getId(),
                 item.getAmount(),
-                selection.color(),
-                selection.storage()
+                item.getVariant().getColor(),
+                item.getVariant().getStorageCapacity()
         );
+    }
+
+    private Long resolveSelectionVariantId(CartItemSelectionRequestDto selection, Cart cart) {
+        return java.util.Optional.ofNullable(selection.variantId())
+                .orElseGet(() -> cart.getCartItems().stream()
+                        .filter(item -> item.getPhone().getId().equals(selection.phoneId()))
+                        .map(item -> item.getVariant().getId())
+                        .findFirst()
+                        .orElseThrow(() -> new InvalidAPIRequestException(
+                                "Cart item selection does not match current cart items")));
     }
 
     private User getAuthenticatedUser(Authentication authentication) {
