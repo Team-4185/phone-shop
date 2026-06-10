@@ -71,6 +71,9 @@ class AdminCustomerDashboardControllerTest {
     private PhoneRepository phoneRepository;
 
     @Autowired
+    private ProductVariantRepository productVariantRepository;
+
+    @Autowired
     private OrderRepository orderRepository;
 
     @Autowired
@@ -86,6 +89,7 @@ class AdminCustomerDashboardControllerTest {
     private String userToken;
     private User customer;
     private Phone phone;
+    private ProductVariant productVariant;
 
     @DynamicPropertySource
     static void loadPropertiesForTest(DynamicPropertyRegistry propertyRegistry) {
@@ -96,13 +100,14 @@ class AdminCustomerDashboardControllerTest {
     void setup() {
         orderRepository.deleteAll();
         imageRepository.deleteAll();
+        productVariantRepository.deleteAll();
         phoneRepository.deleteAll();
         userRepository.deleteAll();
 
         adminToken = createAdminAccessToken();
         userToken = testAuthHelper.authorizeAsNewUser("customer.ntt46@valid.com", "Password123!");
         customer = userRepository.findByEmail("customer.ntt46@valid.com").orElseThrow();
-        phone = phoneRepository.save(phone("Dashboard Phone", "DashBrand", "DASH-001", 20, ProductStatus.IN_STOCK));
+        phone = savePhoneWithDefaultVariant(phone("Dashboard Phone", "DashBrand", "DASH-001", 20, ProductStatus.IN_STOCK));
         imageRepository.save(image("dashboard-phone.jpg", phone));
     }
 
@@ -225,7 +230,7 @@ class AdminCustomerDashboardControllerTest {
     @Test
     void whenDashboardDataExists_thenReturnSummaryRecentOrdersAndLowStockAlerts() throws Exception {
         createOrder(OrderStatus.DELIVERED, PaymentStatus.PAID, "799.99", 1);
-        phoneRepository.save(phone("Low Stock Phone", "DashBrand", "LOW-001", 3, ProductStatus.LOW_STOCK));
+        savePhoneWithDefaultVariant(phone("Low Stock Phone", "DashBrand", "LOW-001", 3, ProductStatus.LOW_STOCK));
 
         mockMvc.perform(get(ADMIN_DASHBOARD_URL + "/summary").header(HttpHeaders.AUTHORIZATION, auth(adminToken)))
                 .andExpect(status().isOk())
@@ -363,6 +368,23 @@ class AdminCustomerDashboardControllerTest {
                 .build();
     }
 
+    private Phone savePhoneWithDefaultVariant(Phone phone) {
+        Phone savedPhone = phoneRepository.save(phone);
+        ProductVariant savedVariant = productVariantRepository.save(ProductVariant.builder()
+                .phone(savedPhone)
+                .sku(savedPhone.getSku() + "-GOLD-128")
+                .color(PhoneColor.GOLD)
+                .storageCapacity(StorageCapacity.CAPACITY_128GB)
+                .price(savedPhone.getPrice())
+                .stock(savedPhone.getStock())
+                .status(savedPhone.getStatus())
+                .build());
+        if ("DASH-001".equals(savedPhone.getSku())) {
+            productVariant = savedVariant;
+        }
+        return savedPhone;
+    }
+
     private Image image(String name, Phone phone) {
         MIMEType mimeType = mimeTypeRepository.findByExtension("jpg")
                 .orElseGet(() -> mimeTypeRepository.save(
@@ -415,13 +437,14 @@ class AdminCustomerDashboardControllerTest {
 
         order.addItem(OrderItem.builder()
                 .phone(phone)
+                .variant(productVariant)
                 .productName(phone.getName())
-                .sku(phone.getSku())
-                .unitPrice(phone.getPrice())
+                .sku(productVariant.getSku())
+                .unitPrice(productVariant.getPrice())
                 .quantity(quantity)
-                .totalPrice(phone.getPrice().multiply(BigDecimal.valueOf(quantity)))
-                .selectedColor(PhoneColor.GOLD)
-                .selectedStorage(StorageCapacity.CAPACITY_128GB)
+                .totalPrice(productVariant.getPrice().multiply(BigDecimal.valueOf(quantity)))
+                .selectedColor(productVariant.getColor())
+                .selectedStorage(productVariant.getStorageCapacity())
                 .build());
 
         Order savedOrder = orderRepository.save(order);

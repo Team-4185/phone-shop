@@ -4,10 +4,12 @@ import com.challengeteam.shop.dto.cart.CartItemAddRequestDto;
 import com.challengeteam.shop.entity.cart.Cart;
 import com.challengeteam.shop.entity.cart.CartItem;
 import com.challengeteam.shop.entity.phone.Phone;
+import com.challengeteam.shop.entity.phone.ProductVariant;
 import com.challengeteam.shop.exceptionHandling.exception.ResourceNotFoundException;
 import com.challengeteam.shop.exceptionHandling.exception.phone.PhoneAlreadyInCartException;
 import com.challengeteam.shop.persistence.repository.CartItemRepository;
 import com.challengeteam.shop.persistence.repository.CartRepository;
+import com.challengeteam.shop.persistence.repository.ProductVariantRepository;
 import com.challengeteam.shop.service.PhoneService;
 import com.challengeteam.shop.service.impl.validator.CartValidator;
 import org.junit.jupiter.api.Nested;
@@ -20,6 +22,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 import static com.challengeteam.shop.service.impl.CartServiceImplTest.TestResources.*;
@@ -39,6 +42,9 @@ class CartServiceImplTest {
 
     @Mock
     private PhoneService phoneService;
+
+    @Mock
+    private ProductVariantRepository productVariantRepository;
 
     @Mock
     private CartValidator cartValidator;
@@ -98,6 +104,8 @@ class CartServiceImplTest {
             // mockito
             Mockito.when(phoneService.getById(PHONE_ID))
                     .thenReturn(Optional.of(buildPhone()));
+            Mockito.when(productVariantRepository.findAllByPhoneIdOrderByPriceAscIdAsc(PHONE_ID))
+                    .thenReturn(List.of(buildVariant()));
             Mockito.when(cartRepository.save(cart))
                     .thenReturn(cart);
 
@@ -109,6 +117,7 @@ class CartServiceImplTest {
             assertThat(result.getTotalPrice()).isEqualTo(BigDecimal.valueOf(100));
             Mockito.verify(cartValidator).validateItemAmount(dto.amount());
             Mockito.verify(phoneService).getById(PHONE_ID);
+            Mockito.verify(productVariantRepository).findAllByPhoneIdOrderByPriceAscIdAsc(PHONE_ID);
             Mockito.verify(cartValidator).validateTotalAmount(cart);
             Mockito.verify(cartItemRepository).save(any(CartItem.class));
             Mockito.verify(cartRepository).save(cart);
@@ -123,6 +132,8 @@ class CartServiceImplTest {
             // mockito
             Mockito.when(phoneService.getById(PHONE_ID))
                     .thenReturn(Optional.of(buildPhone()));
+            Mockito.when(productVariantRepository.findAllByPhoneIdOrderByPriceAscIdAsc(PHONE_ID))
+                    .thenReturn(List.of(buildVariant()));
 
             // when + then
             assertThatThrownBy(() -> cartService.putItemToCart(cart, dto))
@@ -130,6 +141,7 @@ class CartServiceImplTest {
 
             Mockito.verify(cartValidator).validateItemAmount(dto.amount());
             Mockito.verify(phoneService).getById(PHONE_ID);
+            Mockito.verify(productVariantRepository).findAllByPhoneIdOrderByPriceAscIdAsc(PHONE_ID);
             Mockito.verify(cartItemRepository, never()).save(any());
             Mockito.verify(cartRepository, never()).save(any());
         }
@@ -212,7 +224,7 @@ class CartServiceImplTest {
             // when + then
             assertThatThrownBy(() -> cartService.updateAmountCartItem(cart, PHONE_ID, newAmount))
                     .isInstanceOf(ResourceNotFoundException.class)
-                    .hasMessageContaining("Phone with id " + PHONE_ID + " not found in cart");
+                    .hasMessageContaining("Variant with id " + PHONE_ID + " not found in cart");
 
             Mockito.verify(cartValidator).validateItemAmount(newAmount);
             Mockito.verify(cartItemRepository, never()).save(any());
@@ -257,7 +269,7 @@ class CartServiceImplTest {
             CartItem item = cart.getCartItems().get(0);
 
             // mockito
-            Mockito.when(cartItemRepository.findByCartIdAndPhoneId(CART_ID, PHONE_ID))
+            Mockito.when(cartItemRepository.findByCartIdAndVariantId(CART_ID, PHONE_ID))
                     .thenReturn(Optional.of(item));
             Mockito.when(cartRepository.save(cart))
                     .thenReturn(cart);
@@ -268,7 +280,7 @@ class CartServiceImplTest {
             // then
             assertThat(result.getCartItems()).isEmpty();
             assertThat(result.getTotalPrice()).isEqualTo(BigDecimal.ZERO);
-            Mockito.verify(cartItemRepository).findByCartIdAndPhoneId(CART_ID, PHONE_ID);
+            Mockito.verify(cartItemRepository).findByCartIdAndVariantId(CART_ID, PHONE_ID);
             Mockito.verify(cartItemRepository).delete(item);
             Mockito.verify(cartRepository).save(cart);
         }
@@ -279,14 +291,14 @@ class CartServiceImplTest {
             Cart cart = buildCart();
 
             // mockito
-            Mockito.when(cartItemRepository.findByCartIdAndPhoneId(CART_ID, PHONE_ID))
+            Mockito.when(cartItemRepository.findByCartIdAndVariantId(CART_ID, PHONE_ID))
                     .thenReturn(Optional.empty());
 
             // when + then
             assertThatThrownBy(() -> cartService.removeItemFromCart(cart, PHONE_ID))
                     .isInstanceOf(ResourceNotFoundException.class);
 
-            Mockito.verify(cartItemRepository).findByCartIdAndPhoneId(CART_ID, PHONE_ID);
+            Mockito.verify(cartItemRepository).findByCartIdAndVariantId(CART_ID, PHONE_ID);
             Mockito.verify(cartItemRepository, never()).delete(any());
             Mockito.verify(cartRepository, never()).save(any());
         }
@@ -425,6 +437,7 @@ class CartServiceImplTest {
                     .id(1L)
                     .cart(cart)
                     .phone(buildPhone())
+                    .variant(buildVariant())
                     .amount(1)
                     .build();
         }
@@ -433,6 +446,15 @@ class CartServiceImplTest {
             return Phone.builder()
                     .id(PHONE_ID)
                     .price(BigDecimal.valueOf(100))
+                    .build();
+        }
+
+        static ProductVariant buildVariant() {
+            return ProductVariant.builder()
+                    .id(PHONE_ID)
+                    .phone(buildPhone())
+                    .price(BigDecimal.valueOf(100))
+                    .stock(10)
                     .build();
         }
 

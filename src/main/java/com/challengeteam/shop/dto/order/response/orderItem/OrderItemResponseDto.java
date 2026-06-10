@@ -12,6 +12,7 @@ import java.math.BigDecimal;
  */
 public record OrderItemResponseDto(Long id,
                                    PhoneResponseDto phone,
+                                   Long variantId,
                                    String productName,
                                    String sku,
                                    PhoneColor selectedColor,

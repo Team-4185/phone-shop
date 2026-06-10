@@ -2,7 +2,10 @@ package com.challengeteam.shop.service.impl;
 
 import com.challengeteam.shop.dto.phone.response.PhoneResponseDto;
 import com.challengeteam.shop.entity.phone.Phone;
+import com.challengeteam.shop.entity.phone.ProductVariant;
+import com.challengeteam.shop.mapper.phone.ProductVariantMapper;
 import com.challengeteam.shop.mapper.phone.PhoneMapper;
+import com.challengeteam.shop.persistence.repository.ProductVariantRepository;
 import com.challengeteam.shop.persistence.repository.ProductReviewRepository;
 import com.challengeteam.shop.persistence.repository.projection.PhoneReviewSummaryProjection;
 import com.challengeteam.shop.service.CatalogProductResponseAssembler;
@@ -23,8 +26,10 @@ import java.util.stream.Collectors;
 public class CatalogProductResponseAssemblerImpl implements CatalogProductResponseAssembler {
 
     private final PhoneMapper phoneMapper;
+    private final ProductVariantMapper productVariantMapper;
     private final ProductBadgeService productBadgeService;
     private final ProductReviewRepository productReviewRepository;
+    private final ProductVariantRepository productVariantRepository;
 
     @Override
     public PhoneResponseDto toResponse(Phone phone) {
@@ -42,10 +47,25 @@ public class CatalogProductResponseAssemblerImpl implements CatalogProductRespon
 
         List<PhoneResponseDto> responses = productBadgeService.applyBadges(phoneMapper.toResponseList(phones), phones);
         Map<Long, PhoneReviewSummaryProjection> summaries = reviewSummaries(phones);
+        Map<Long, List<ProductVariant>> variantsByPhoneId = variantsByPhoneId(phones);
 
         return responses.stream()
+                .map(response -> applyVariants(response, variantsByPhoneId.getOrDefault(response.id(), List.of())))
                 .map(response -> applyReviewSummary(response, summaries.get(response.id())))
                 .toList();
+    }
+
+    private Map<Long, List<ProductVariant>> variantsByPhoneId(List<Phone> phones) {
+        List<Long> phoneIds = phones.stream()
+                .map(Phone::getId)
+                .filter(Objects::nonNull)
+                .toList();
+        if (phoneIds.isEmpty()) {
+            return Map.of();
+        }
+
+        return productVariantRepository.findAllByPhoneIdIn(phoneIds).stream()
+                .collect(Collectors.groupingBy(variant -> variant.getPhone().getId()));
     }
 
     private Map<Long, PhoneReviewSummaryProjection> reviewSummaries(List<Phone> phones) {
@@ -87,10 +107,50 @@ public class CatalogProductResponseAssemblerImpl implements CatalogProductRespon
                 response.batteryCapacity(),
                 response.colors(),
                 response.storageCapacity(),
+                response.variants(),
                 response.images(),
                 response.badges(),
                 response.discountPercent(),
                 averageRating,
                 reviewsCount);
+    }
+
+    private PhoneResponseDto applyVariants(PhoneResponseDto response, List<ProductVariant> variants) {
+        if (variants.isEmpty()) {
+            return response;
+        }
+
+        BigDecimal displayPrice = variants.stream()
+                .map(ProductVariant::getPrice)
+                .min(BigDecimal::compareTo)
+                .orElse(response.price());
+        int displayStock = variants.stream()
+                .mapToInt(ProductVariant::getStock)
+                .sum();
+
+        return new PhoneResponseDto(
+                response.id(),
+                response.name(),
+                response.description(),
+                displayPrice,
+                response.brand(),
+                displayStock,
+                com.challengeteam.shop.utility.ProductStatusResolver.resolve(displayStock),
+                response.previewImage(),
+                response.releaseYear(),
+                response.cpu(),
+                response.coresNumber(),
+                response.screenSize(),
+                response.frontCamera(),
+                response.mainCamera(),
+                response.batteryCapacity(),
+                response.colors(),
+                response.storageCapacity(),
+                productVariantMapper.toResponses(variants),
+                response.images(),
+                response.badges(),
+                response.discountPercent(),
+                response.averageRating(),
+                response.reviewsCount());
     }
 }

@@ -3,6 +3,7 @@ package com.challengeteam.shop.service.impl;
 import com.challengeteam.shop.dto.cart.CartItemAddRequestDto;
 import com.challengeteam.shop.dto.cart.CartItemRemoveRequestDto;
 import com.challengeteam.shop.entity.cart.Cart;
+import com.challengeteam.shop.entity.cart.CartItem;
 import com.challengeteam.shop.exceptionHandling.exception.ResourceNotFoundException;
 import com.challengeteam.shop.service.CartService;
 import com.challengeteam.shop.service.UserCartService;
@@ -39,20 +40,12 @@ public class UserCartServiceImpl implements UserCartService {
         Cart cart = cartService.getCartByUserId(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Cart for user with id " + userId + " not found"));
 
-        Long phoneId = cartItemAddRequestDto.phoneId();
+        Long variantId = resolveVariantId(cart, cartItemAddRequestDto.variantId(), cartItemAddRequestDto.phoneId());
         Integer amountToAdd = cartItemAddRequestDto.amount();
 
-        boolean isCartHasPhone = CartUtility.isCartHasPhone(cart, phoneId);
-
-        if (isCartHasPhone) {
-            log.debug("Phone {} already in cart.", phoneId);
-            Integer currentAmount = CartUtility.getCartItemAmount(cart, phoneId);
-            Integer newAmount = currentAmount + amountToAdd;
-            return cartService.updateAmountCartItem(cart, phoneId, newAmount);
-        } else {
-            log.debug("Adding new phone {} to cart with amount {}", phoneId, amountToAdd);
-            return cartService.putItemToCart(cart, cartItemAddRequestDto);
-        }
+        return CartUtility.isCartHasVariant(cart, variantId)
+                ? increaseExistingVariant(cart, variantId, amountToAdd)
+                : cartService.putItemToCart(cart, cartItemAddRequestDto);
     }
 
     @Transactional
@@ -64,23 +57,16 @@ public class UserCartServiceImpl implements UserCartService {
         Cart cart = cartService.getCartByUserId(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Cart for user with id " + userId + " not found"));
 
-        Long phoneId = cartItemRemoveRequestDto.phoneId();
+        Long variantId = resolveVariantId(cart, cartItemRemoveRequestDto.variantId(), cartItemRemoveRequestDto.phoneId());
         Integer amountToRemove = cartItemRemoveRequestDto.amount();
 
-        if (!CartUtility.isCartHasPhone(cart, phoneId)) {
-            throw new ResourceNotFoundException("Phone with id " + phoneId + " not found in user's cart");
-        }
+        ensureVariantExistsInCart(cart, variantId);
 
-        Integer currentAmount = CartUtility.getCartItemAmount(cart, phoneId);
+        Integer currentAmount = CartUtility.getCartItemAmountByVariant(cart, variantId);
 
-        if (currentAmount > amountToRemove) {
-            Integer newAmount = currentAmount - amountToRemove;
-            log.debug("Decreasing amount of phone {} from {} to {}", phoneId, currentAmount, newAmount);
-            return cartService.updateAmountCartItem(cart, phoneId, newAmount);
-        } else {
-            log.debug("Removing phone {} from cart completely", phoneId);
-            return cartService.removeItemFromCart(cart, phoneId);
-        }
+        return currentAmount > amountToRemove
+                ? decreaseExistingVariant(cart, variantId, currentAmount, amountToRemove)
+                : cartService.removeItemFromCart(cart, variantId);
     }
 
     @Transactional
@@ -91,6 +77,37 @@ public class UserCartServiceImpl implements UserCartService {
         Cart cart = cartService.getCartByUserId(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Cart for user with id " + userId + " not found"));
         return cartService.clearCart(cart);
+    }
+
+    private Cart increaseExistingVariant(Cart cart, Long variantId, Integer amountToAdd) {
+        Integer currentAmount = CartUtility.getCartItemAmountByVariant(cart, variantId);
+        Integer newAmount = currentAmount + amountToAdd;
+        log.debug("Increasing amount of variant {} from {} to {}", variantId, currentAmount, newAmount);
+        return cartService.updateAmountCartItem(cart, variantId, newAmount);
+    }
+
+    private Cart decreaseExistingVariant(
+            Cart cart, Long variantId, Integer currentAmount, Integer amountToRemove) {
+        Integer newAmount = currentAmount - amountToRemove;
+        log.debug("Decreasing amount of variant {} from {} to {}", variantId, currentAmount, newAmount);
+        return cartService.updateAmountCartItem(cart, variantId, newAmount);
+    }
+
+    private Long resolveVariantId(Cart cart, Long variantId, Long legacyPhoneId) {
+        return Optional.ofNullable(variantId)
+                .orElseGet(() -> cart.getCartItems().stream()
+                        .filter(item -> item.getPhone().getId().equals(legacyPhoneId))
+                        .map(CartItem::getVariant)
+                        .filter(Objects::nonNull)
+                        .map(variant -> variant.getId())
+                        .findFirst()
+                        .orElse(legacyPhoneId));
+    }
+
+    private void ensureVariantExistsInCart(Cart cart, Long variantId) {
+        if (!CartUtility.isCartHasVariant(cart, variantId)) {
+            throw new ResourceNotFoundException("Variant with id " + variantId + " not found in user's cart");
+        }
     }
 
 }

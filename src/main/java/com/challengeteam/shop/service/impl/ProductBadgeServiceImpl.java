@@ -99,6 +99,7 @@ public class ProductBadgeServiceImpl implements ProductBadgeService {
                 phoneResponseDto.batteryCapacity(),
                 phoneResponseDto.colors(),
                 phoneResponseDto.storageCapacity(),
+                phoneResponseDto.variants(),
                 phoneResponseDto.images(),
                 badgeInfo.badges(),
                 badgeInfo.discountPercent(),

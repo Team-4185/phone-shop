@@ -1,6 +1,7 @@
 package com.challengeteam.shop.entity.cart;
 
 import com.challengeteam.shop.entity.phone.Phone;
+import com.challengeteam.shop.entity.phone.ProductVariant;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -24,6 +25,10 @@ public class CartItem {
     @ManyToOne
     @JoinColumn(nullable = false, name = "fk_phone_id")
     private Phone phone;
+
+    @ManyToOne
+    @JoinColumn(nullable = false, name = "fk_variant_id")
+    private ProductVariant variant;
 
     @Column(nullable = false)
     private Integer amount;

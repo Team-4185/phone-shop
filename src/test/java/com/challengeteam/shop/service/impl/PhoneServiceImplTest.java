@@ -12,6 +12,7 @@ import com.challengeteam.shop.exceptionHandling.exception.ResourceNotFoundExcept
 import com.challengeteam.shop.persistence.repository.ImageRepository;
 import com.challengeteam.shop.persistence.repository.PhoneRepository;
 import com.challengeteam.shop.service.ImageService;
+import com.challengeteam.shop.service.ProductVariantService;
 import com.challengeteam.shop.service.impl.merger.PhoneMerger;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -49,6 +50,8 @@ class PhoneServiceImplTest {
     private ImageService imageService;
     @Mock
     private ImageRepository imageRepository;
+    @Mock
+    private ProductVariantService productVariantService;
     @InjectMocks
     private PhoneServiceImpl phoneService;
 

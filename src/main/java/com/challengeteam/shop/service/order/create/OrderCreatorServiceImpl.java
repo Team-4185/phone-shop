@@ -15,6 +15,7 @@ import com.challengeteam.shop.entity.order.payment.PaymentDetails;
 import com.challengeteam.shop.entity.order.payment.PaymentStatus;
 import com.challengeteam.shop.entity.order.shipping.ShippingAddress;
 import com.challengeteam.shop.entity.phone.Phone;
+import com.challengeteam.shop.entity.phone.ProductVariant;
 import com.challengeteam.shop.entity.user.User;
 import com.challengeteam.shop.exceptionHandling.exception.order.PaymentFailedException;
 import com.challengeteam.shop.exceptionHandling.exception.phone.PhoneNotFoundException;
@@ -22,6 +23,7 @@ import com.challengeteam.shop.mapper.order.OrderMapper;
 import com.challengeteam.shop.mapper.order.ShippingAddressOrderMapper;
 import com.challengeteam.shop.persistence.repository.OrderRepository;
 import com.challengeteam.shop.persistence.repository.PhoneRepository;
+import com.challengeteam.shop.persistence.repository.ProductVariantRepository;
 import com.challengeteam.shop.service.delivery.DeliveryProvider;
 import com.challengeteam.shop.service.delivery.DeliveryProviderResolver;
 import com.challengeteam.shop.service.notification.NotificationSenderService;
@@ -30,7 +32,7 @@ import com.challengeteam.shop.service.payment.PaymentProviderResolver;
 import com.challengeteam.shop.utility.AuthenticationUserExtractorHelper;
 import com.challengeteam.shop.utility.InputNormalizer;
 import com.challengeteam.shop.utility.notification.email.OrderConfirmationEmailBuilder;
-import com.challengeteam.shop.utility.order.OrderUtils;
+import com.challengeteam.shop.utility.ProductStatusResolver;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
@@ -51,6 +53,7 @@ import static java.util.stream.Collectors.toSet;
 public class OrderCreatorServiceImpl implements OrderCreatorService {
 
     private final PhoneRepository phoneRepository;
+    private final ProductVariantRepository productVariantRepository;
     private final OrderRepository orderRepository;
     private final AuthenticationUserExtractorHelper authenticationUserExtractorHelper;
     private final NotificationSenderService notificationSenderService;
@@ -72,23 +75,23 @@ public class OrderCreatorServiceImpl implements OrderCreatorService {
     @Transactional(isolation = Isolation.REPEATABLE_READ)
     @Override
     public OrderResponseDto create(OrderRequestDto request, Authentication authentication) {
-        Map<Long, Phone> phoneMap = resolveAndValidatePhones(request.items());
-        OrderUtils.checkIfStockAvailable(phoneMap, request.items());
-        OrderUtils.checkIfColorAndStorageAvailable(phoneMap, request.items());
+        Map<Long, ProductVariant> variantMap = resolveAndValidateVariants(request.items());
+        checkVariantStockAvailable(variantMap, request.items());
 
-        BigDecimal itemsTotal = calculateItemsTotal(request, phoneMap);
+        BigDecimal itemsTotal = calculateItemsTotal(request, variantMap);
         DeliveryProvider deliveryProvider = deliveryProviderResolver.getDefaultProvider();
         DeliveryQuote deliveryQuote = deliveryProvider.quote(
                 request.deliveryMethod(), request.shippingAddress(), itemsTotal);
 
-        Order order = buildOrder(request, authentication, phoneMap, itemsTotal, deliveryQuote);
+        Order order = buildOrder(request, authentication, variantMap, itemsTotal, deliveryQuote);
         PaymentDetails paymentDetails = processPayment(request, order.getTotal());
 
         order.setPaymentDetails(paymentDetails);
 
-        updatePhoneStock(phoneMap, request.items());
-        phoneRepository.saveAll(phoneMap.values());
-        log.debug("Saved {} phones after stock update", phoneMap.size());
+        updateVariantStock(variantMap, request.items());
+        productVariantRepository.saveAll(variantMap.values().stream().toList());
+        phoneRepository.saveAll(variantMap.values().stream().map(ProductVariant::getPhone).distinct().toList());
+        log.debug("Saved {} variants after stock update", variantMap.size());
 
         orderRepository.save(order);
         log.debug("Saved order: {}", order.getId());
@@ -99,31 +102,31 @@ public class OrderCreatorServiceImpl implements OrderCreatorService {
     }
 
 
-    private Map<Long, Phone> resolveAndValidatePhones(List<OrderItemRequestDto> items) {
-        Set<Long> uniquePhoneIds = items.stream()
-                .map(OrderItemRequestDto::phoneId)
+    private Map<Long, ProductVariant> resolveAndValidateVariants(List<OrderItemRequestDto> items) {
+        Set<Long> uniqueVariantIds = items.stream()
+                .map(this::resolveVariantId)
                 .collect(toSet());
 
-        List<Phone> foundPhones = phoneRepository.findAllById(uniquePhoneIds);
+        List<ProductVariant> foundVariants = productVariantRepository.findAllByIdWithPhone(uniqueVariantIds);
 
-        if (foundPhones.size() != uniquePhoneIds.size()) {
-            Set<Long> foundIds = foundPhones.stream()
-                    .map(Phone::getId)
+        if (foundVariants.size() != uniqueVariantIds.size()) {
+            Set<Long> foundIds = foundVariants.stream()
+                    .map(ProductVariant::getId)
                     .collect(toSet());
-            Set<Long> missingIds = uniquePhoneIds.stream()
+            Set<Long> missingIds = uniqueVariantIds.stream()
                     .filter(id -> !foundIds.contains(id))
                     .collect(toSet());
-            log.error("Phones not found for IDs: {}", missingIds);
-            throw new PhoneNotFoundException("Phones not found: " + missingIds);
+            log.error("Product variants not found for IDs: {}", missingIds);
+            throw new PhoneNotFoundException("Product variants not found: " + missingIds);
         }
 
-        return foundPhones.stream()
-                .collect(toMap(Phone::getId, Function.identity()));
+        return foundVariants.stream()
+                .collect(toMap(ProductVariant::getId, Function.identity()));
     }
 
     private Order buildOrder(OrderRequestDto request,
                              Authentication authentication,
-                             Map<Long, Phone> phoneMap,
+                             Map<Long, ProductVariant> variantMap,
                              BigDecimal itemsTotal,
                              DeliveryQuote deliveryQuote) {
         Optional<User> extractedUser = authenticationUserExtractorHelper
@@ -132,16 +135,18 @@ public class OrderCreatorServiceImpl implements OrderCreatorService {
         List<OrderItem> orderItems = new ArrayList<>(request.items().size());
 
         for (OrderItemRequestDto item : request.items()) {
-            Phone phone = phoneMap.get(item.phoneId());
-            BigDecimal itemTotal = phone.getPrice()
+            ProductVariant variant = variantMap.get(resolveVariantId(item));
+            Phone phone = variant.getPhone();
+            BigDecimal itemTotal = variant.getPrice()
                     .multiply(BigDecimal.valueOf(item.quantity()));
             orderItems.add(OrderItem.builder()
                     .phone(phone)
+                    .variant(variant)
                     .productName(phone.getName())
-                    .sku(phone.getSku())
-                    .selectedColor(item.color())
-                    .selectedStorage(item.storage())
-                    .unitPrice(phone.getPrice())
+                    .sku(variant.getSku())
+                    .selectedColor(variant.getColor())
+                    .selectedStorage(variant.getStorageCapacity())
+                    .unitPrice(variant.getPrice())
                     .quantity(item.quantity())
                     .totalPrice(itemTotal)
                     .build());
@@ -196,10 +201,13 @@ public class OrderCreatorServiceImpl implements OrderCreatorService {
         };
     }
 
-    private void updatePhoneStock(Map<Long, Phone> phoneMap, List<OrderItemRequestDto> items) {
-        items.forEach(item ->
-                OrderUtils.updatePhoneStock(phoneMap.get(item.phoneId()), item.quantity()));
-        log.debug("Updated stock for {} phones", phoneMap.size());
+    private void updateVariantStock(Map<Long, ProductVariant> variantMap, List<OrderItemRequestDto> items) {
+        items.forEach(item -> updateVariantStock(variantMap.get(resolveVariantId(item)), item.quantity()));
+        variantMap.values().stream()
+                .map(ProductVariant::getPhone)
+                .distinct()
+                .forEach(this::syncPhoneStockFromVariants);
+        log.debug("Updated stock for {} variants", variantMap.size());
     }
 
     private void sendConfirmationNotification(Order order) {
@@ -218,11 +226,51 @@ public class OrderCreatorServiceImpl implements OrderCreatorService {
         return address;
     }
 
-    private BigDecimal calculateItemsTotal(OrderRequestDto request, Map<Long, Phone> phoneMap) {
+    private BigDecimal calculateItemsTotal(OrderRequestDto request, Map<Long, ProductVariant> variantMap) {
         return request.items().stream()
-                .map(item -> phoneMap.get(item.phoneId()).getPrice()
+                .map(item -> variantMap.get(resolveVariantId(item)).getPrice()
                         .multiply(BigDecimal.valueOf(item.quantity())))
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+
+    private Long resolveVariantId(OrderItemRequestDto item) {
+        return Optional.ofNullable(item.variantId())
+                .orElseGet(() -> productVariantRepository
+                        .findByPhoneIdAndColorAndStorageCapacity(item.phoneId(), item.color(), item.storage())
+                        .map(ProductVariant::getId)
+                        .orElseThrow(() -> new PhoneNotFoundException(
+                                "Product variant not found for phone id %s, color %s and storage %s"
+                                        .formatted(item.phoneId(), item.color(), item.storage()))));
+    }
+
+    private void checkVariantStockAvailable(
+            Map<Long, ProductVariant> variantMap, List<OrderItemRequestDto> items) {
+        List<String> unavailableVariants = items.stream()
+                .filter(item -> variantMap.get(resolveVariantId(item)).getStock() < item.quantity())
+                .map(item -> variantMap.get(resolveVariantId(item)).getSku())
+                .toList();
+
+        if (!unavailableVariants.isEmpty()) {
+            log.error("Not enough stock for variants: {}", unavailableVariants);
+            throw new com.challengeteam.shop.exceptionHandling.exception.order.OrderCreationException(
+                    "Not enough stock for variants: " + unavailableVariants);
+        }
+    }
+
+    private void updateVariantStock(ProductVariant variant, int orderedQuantity) {
+        int remainingStock = variant.getStock() - orderedQuantity;
+        variant.setStock(remainingStock);
+        variant.setStatus(ProductStatusResolver.resolve(remainingStock));
+        log.info("Updated variant stock for variant: {} with remaining stock: {}",
+                variant.getId(), remainingStock);
+    }
+
+    private void syncPhoneStockFromVariants(Phone phone) {
+        List<ProductVariant> variants = productVariantRepository.findAllByPhoneIdOrderByPriceAscIdAsc(phone.getId());
+        int stock = variants.stream().mapToInt(ProductVariant::getStock).sum();
+        phone.setStock(stock);
+        phone.setStatus(ProductStatusResolver.resolve(stock));
+        variants.stream().map(ProductVariant::getPrice).min(BigDecimal::compareTo).ifPresent(phone::setPrice);
     }
 
     private String resolvePickupPointId(OrderRequestDto request) {

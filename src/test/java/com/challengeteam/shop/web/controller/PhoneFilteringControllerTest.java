@@ -12,11 +12,13 @@ import com.challengeteam.shop.entity.phone.Phone;
 import com.challengeteam.shop.entity.phone.PhoneCharacteristics;
 import com.challengeteam.shop.entity.phone.PhoneColor;
 import com.challengeteam.shop.entity.phone.ProductStatus;
+import com.challengeteam.shop.entity.phone.ProductVariant;
 import com.challengeteam.shop.entity.phone.StorageCapacity;
 import com.challengeteam.shop.entity.user.User;
 import com.challengeteam.shop.persistence.repository.FavoriteRepository;
 import com.challengeteam.shop.persistence.repository.OrderRepository;
 import com.challengeteam.shop.persistence.repository.PhoneRepository;
+import com.challengeteam.shop.persistence.repository.ProductVariantRepository;
 import com.challengeteam.shop.persistence.repository.UserRepository;
 import com.challengeteam.shop.testContainer.ContainerExtension;
 import com.challengeteam.shop.testContainer.TestContextConfigurator;
@@ -55,6 +57,9 @@ class PhoneFilteringControllerTest {
     private PhoneRepository phoneRepository;
 
     @Autowired
+    private ProductVariantRepository productVariantRepository;
+
+    @Autowired
     private FavoriteRepository favoriteRepository;
 
     @Autowired
@@ -82,9 +87,10 @@ class PhoneFilteringControllerTest {
     void setUp() {
         favoriteRepository.deleteAll();
         orderRepository.deleteAll();
+        productVariantRepository.deleteAll();
         phoneRepository.deleteAll();
 
-        phoneRepository.saveAll(List.of(
+        List<Phone> phones = phoneRepository.saveAll(List.of(
                 // Apple
                 buildPhone("iPhone 15 Pro", "Apple", new BigDecimal("999"), 10, ProductStatus.IN_STOCK,
                         Set.of(PhoneColor.BLUE, PhoneColor.BLACK),
@@ -104,8 +110,41 @@ class PhoneFilteringControllerTest {
                         Set.of(PhoneColor.WHITE),
                         Set.of(StorageCapacity.CAPACITY_512GB))
         ));
+        phones.forEach(this::createVariants);
 
         token = testAuthHelper.authorizeLikeTestUser();
+    }
+
+    private void createVariants(Phone phone) {
+        Set<PhoneColor> colors = phone.getPhoneCharacteristics().getPhoneColors();
+        Set<StorageCapacity> storageCapacities = phone.getPhoneCharacteristics().getStorageCapacities();
+        List<ProductVariant> variants = colors.stream()
+                .flatMap(color -> storageCapacities.stream().map(storage -> variant(phone, color, storage)))
+                .toList();
+        distributeStock(phone.getStock(), variants);
+        productVariantRepository.saveAll(variants);
+    }
+
+    private ProductVariant variant(Phone phone, PhoneColor color, StorageCapacity storage) {
+        ProductVariant variant = new ProductVariant();
+        variant.setPhone(phone);
+        variant.setSku("%s-%s-%s".formatted(phone.getSku(), color.name(), storage.name()));
+        variant.setColor(color);
+        variant.setStorageCapacity(storage);
+        variant.setPrice(phone.getPrice());
+        variant.setStock(0);
+        variant.setStatus(phone.getStatus());
+        return variant;
+    }
+
+    private void distributeStock(int totalStock, List<ProductVariant> variants) {
+        int baseStock = variants.isEmpty() ? 0 : totalStock / variants.size();
+        int remainder = variants.isEmpty() ? 0 : totalStock % variants.size();
+        for (int index = 0; index < variants.size(); index++) {
+            int stock = baseStock + (index < remainder ? 1 : 0);
+            variants.get(index).setStock(stock);
+            variants.get(index).setStatus(stock == 0 ? ProductStatus.OUT_OF_STOCK : ProductStatus.IN_STOCK);
+        }
     }
 
     // ─────────────────────────────────────────────────────────────────────────

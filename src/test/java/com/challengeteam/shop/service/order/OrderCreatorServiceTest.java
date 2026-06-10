@@ -25,6 +25,7 @@ import com.challengeteam.shop.mapper.order.OrderMapper;
 import com.challengeteam.shop.mapper.order.ShippingAddressOrderMapper;
 import com.challengeteam.shop.persistence.repository.OrderRepository;
 import com.challengeteam.shop.persistence.repository.PhoneRepository;
+import com.challengeteam.shop.persistence.repository.ProductVariantRepository;
 import com.challengeteam.shop.service.delivery.DeliveryProvider;
 import com.challengeteam.shop.service.delivery.DeliveryProviderResolver;
 import com.challengeteam.shop.service.notification.NotificationSenderService;
@@ -47,6 +48,8 @@ import org.springframework.security.core.Authentication;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -64,6 +67,8 @@ class OrderCreatorServiceTest {
 
     @Mock
     private PhoneRepository phoneRepository;
+    @Mock
+    private ProductVariantRepository productVariantRepository;
     @Mock
     private OrderRepository orderRepository;
     @Mock
@@ -167,6 +172,47 @@ class OrderCreatorServiceTest {
         return phone;
     }
 
+    private ProductVariant variant(Phone phone) {
+        ProductVariant variant = new ProductVariant();
+        variant.setId(phone.getId());
+        variant.setPhone(phone);
+        variant.setSku(phone.getSku() + "-GOLD-128");
+        variant.setColor(PhoneColor.GOLD);
+        variant.setStorageCapacity(StorageCapacity.CAPACITY_128GB);
+        variant.setPrice(phone.getPrice());
+        variant.setStock(phone.getStock());
+        variant.setStatus(phone.getStatus());
+        return variant;
+    }
+
+    private void stubVariants(Phone... phones) {
+        List<ProductVariant> variants = Arrays.stream(phones)
+                .map(this::variant)
+                .toList();
+
+        lenient().when(productVariantRepository.findByPhoneIdAndColorAndStorageCapacity(any(), any(), any()))
+                .thenAnswer(invocation -> variants.stream()
+                        .filter(variant -> variant.getPhone().getId().equals(invocation.getArgument(0)))
+                        .filter(variant -> variant.getColor() == invocation.getArgument(1))
+                        .filter(variant -> variant.getStorageCapacity() == invocation.getArgument(2))
+                        .findFirst());
+        lenient().when(productVariantRepository.findAllByIdWithPhone(any()))
+                .thenAnswer(invocation -> {
+                    Collection<Long> ids = invocation.getArgument(0);
+                    return variants.stream()
+                            .filter(variant -> ids.contains(variant.getId()))
+                            .toList();
+                });
+        lenient().when(productVariantRepository.findAllByPhoneIdOrderByPriceAscIdAsc(any()))
+                .thenAnswer(invocation -> variants.stream()
+                        .filter(variant -> variant.getPhone().getId().equals(invocation.getArgument(0)))
+                        .toList());
+        lenient().when(productVariantRepository.saveAll(any()))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+        lenient().when(phoneRepository.saveAll(any()))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+    }
+
     private OrderItemRequestDto item(Long phoneId, int quantity) {
         return new OrderItemRequestDto(phoneId, quantity, PhoneColor.GOLD, StorageCapacity.CAPACITY_128GB);
     }
@@ -238,7 +284,7 @@ class OrderCreatorServiceTest {
         @Test
         @DisplayName("Should throw PhoneNotFoundException when phone ID does not exist in DB")
         void shouldThrowPhoneNotFoundException_whenPhoneDoesNotExist() {
-            when(phoneRepository.findAllById(any())).thenReturn(List.of());
+            stubVariants();
 
             assertThatThrownBy(() ->
                     orderCreatorService.create(cardCourierRequest(List.of(item(999L, 1))), null))
@@ -252,7 +298,7 @@ class OrderCreatorServiceTest {
         @DisplayName("Should throw PhoneNotFoundException when some phone IDs are missing in DB")
         void shouldThrowPhoneNotFoundException_whenSomePhoneIdsAreMissing() {
             Phone existingPhone = buildPhoneInStock(1L, BigDecimal.valueOf(999), 10);
-            when(phoneRepository.findAllById(any())).thenReturn(List.of(existingPhone));
+            stubVariants(existingPhone);
 
             List<OrderItemRequestDto> items = List.of(item(1L, 1), item(999L, 1));
 
@@ -267,7 +313,7 @@ class OrderCreatorServiceTest {
         @DisplayName("Should throw OrderCreationException when phone stock is 0")
         void shouldThrowOrderCreationException_whenPhoneIsOutOfStock() {
             Phone outOfStock = buildPhoneOutOfStock(1L);
-            when(phoneRepository.findAllById(any())).thenReturn(List.of(outOfStock));
+            stubVariants(outOfStock);
 
             assertThatThrownBy(() ->
                     orderCreatorService.create(cardCourierRequest(List.of(item(1L, 1))), null))
@@ -280,7 +326,7 @@ class OrderCreatorServiceTest {
         @DisplayName("Should throw OrderCreationException when requested quantity exceeds available stock")
         void shouldThrowOrderCreationException_whenQuantityExceedsStock() {
             Phone phone = buildPhoneInStock(1L, BigDecimal.valueOf(999), 2);
-            when(phoneRepository.findAllById(any())).thenReturn(List.of(phone));
+            stubVariants(phone);
 
             assertThatThrownBy(() ->
                     orderCreatorService.create(cardCourierRequest(List.of(item(1L, 5))), null))
@@ -303,7 +349,7 @@ class OrderCreatorServiceTest {
         @DisplayName("Should create order without linked user when authentication is null")
         void shouldCreateGuestOrder_whenAuthenticationIsNull() {
             Phone phone = buildPhoneInStock(1L, BigDecimal.valueOf(999), 10);
-            when(phoneRepository.findAllById(any())).thenReturn(List.of(phone));
+            stubVariants(phone);
             when(paymentProvider.pay(any(), any())).thenReturn(successfulPayment());
 
             orderCreatorService.create(cardCourierRequest(List.of(item(1L, 1))), null);
@@ -324,7 +370,7 @@ class OrderCreatorServiceTest {
                     .thenReturn(Optional.of(registeredUser));
 
             Phone phone = buildPhoneInStock(1L, BigDecimal.valueOf(999), 10);
-            when(phoneRepository.findAllById(any())).thenReturn(List.of(phone));
+            stubVariants(phone);
             when(paymentProvider.pay(any(), any())).thenReturn(successfulPayment());
 
             orderCreatorService.create(cardCourierRequest(List.of(item(1L, 1))), authentication);
@@ -349,7 +395,7 @@ class OrderCreatorServiceTest {
         @DisplayName("Should save order with PAID status and transactionId when payment succeeds")
         void shouldSaveOrder_withPaidStatusAndTransactionId_whenPaymentSucceeds() {
             Phone phone = buildPhoneInStock(1L, BigDecimal.valueOf(999), 10);
-            when(phoneRepository.findAllById(any())).thenReturn(List.of(phone));
+            stubVariants(phone);
             when(paymentProvider.pay(any(), any())).thenReturn(successfulPayment());
 
             orderCreatorService.create(cardCourierRequest(List.of(item(1L, 1))), null);
@@ -366,7 +412,7 @@ class OrderCreatorServiceTest {
         @DisplayName("Should throw PaymentFailedException and not save order when payment fails")
         void shouldThrowPaymentFailedException_andNotSaveOrder_whenPaymentFails() {
             Phone phone = buildPhoneInStock(1L, BigDecimal.valueOf(999), 10);
-            when(phoneRepository.findAllById(any())).thenReturn(List.of(phone));
+            stubVariants(phone);
             when(paymentProvider.pay(any(), any())).thenReturn(failedPayment());
 
             assertThatThrownBy(() ->
@@ -381,7 +427,7 @@ class OrderCreatorServiceTest {
         @DisplayName("Should throw PaymentFailedException and not save order when card payment is pending")
         void shouldThrowPaymentFailedException_andNotSaveOrder_whenCardPaymentIsPending() {
             Phone phone = buildPhoneInStock(1L, BigDecimal.valueOf(999), 10);
-            when(phoneRepository.findAllById(any())).thenReturn(List.of(phone));
+            stubVariants(phone);
             when(paymentProvider.pay(any(), any())).thenReturn(pendingPayment());
 
             assertThatThrownBy(() ->
@@ -397,7 +443,7 @@ class OrderCreatorServiceTest {
         @DisplayName("Should call payment service with correctly calculated total amount")
         void shouldCallPaymentService_withCorrectTotalAmount() {
             Phone phone = buildPhoneInStock(1L, BigDecimal.valueOf(500), 10);
-            when(phoneRepository.findAllById(any())).thenReturn(List.of(phone));
+            stubVariants(phone);
             when(paymentProvider.pay(any(), any())).thenReturn(successfulPayment());
 
             orderCreatorService.create(cardCourierRequest(List.of(item(1L, 3))), null);
@@ -419,7 +465,7 @@ class OrderCreatorServiceTest {
         @DisplayName("Should not call payment service when payment method is CASH_ON_DELIVERY")
         void shouldNotCallPaymentService_whenCashOnDelivery() {
             Phone phone = buildPhoneInStock(1L, BigDecimal.valueOf(999), 10);
-            when(phoneRepository.findAllById(any())).thenReturn(List.of(phone));
+            stubVariants(phone);
 
             orderCreatorService.create(cashPickupRequest(List.of(item(1L, 1))), null);
 
@@ -430,7 +476,7 @@ class OrderCreatorServiceTest {
         @DisplayName("Should save order with PENDING payment status when payment method is CASH_ON_DELIVERY")
         void shouldSaveOrder_withPendingPaymentStatus_whenCashOnDelivery() {
             Phone phone = buildPhoneInStock(1L, BigDecimal.valueOf(999), 10);
-            when(phoneRepository.findAllById(any())).thenReturn(List.of(phone));
+            stubVariants(phone);
 
             orderCreatorService.create(cashPickupRequest(List.of(item(1L, 1))), null);
 
@@ -454,7 +500,7 @@ class OrderCreatorServiceTest {
         @DisplayName("Should calculate correct total for a single item")
         void shouldCalculateCorrectTotal_forSingleItem() {
             Phone phone = buildPhoneInStock(1L, BigDecimal.valueOf(999), 10);
-            when(phoneRepository.findAllById(any())).thenReturn(List.of(phone));
+            stubVariants(phone);
             when(paymentProvider.pay(any(), any())).thenReturn(successfulPayment());
 
             orderCreatorService.create(cardCourierRequest(List.of(item(1L, 2))), null);
@@ -470,7 +516,7 @@ class OrderCreatorServiceTest {
         void shouldCalculateCorrectTotal_forMultipleItems() {
             Phone phone1 = buildPhoneInStock(1L, BigDecimal.valueOf(999), 10);
             Phone phone2 = buildPhoneInStock(2L, BigDecimal.valueOf(500), 10);
-            when(phoneRepository.findAllById(any())).thenReturn(List.of(phone1, phone2));
+            stubVariants(phone1, phone2);
             when(paymentProvider.pay(any(), any())).thenReturn(successfulPayment());
 
             orderCreatorService.create(
@@ -499,7 +545,7 @@ class OrderCreatorServiceTest {
         @DisplayName("Should save order with correct customer details from request")
         void shouldSaveOrder_withCorrectCustomerDetails() {
             Phone phone = buildPhoneInStock(1L, BigDecimal.valueOf(999), 10);
-            when(phoneRepository.findAllById(any())).thenReturn(List.of(phone));
+            stubVariants(phone);
             when(paymentProvider.pay(any(), any())).thenReturn(successfulPayment());
 
             orderCreatorService.create(cardCourierRequest(List.of(item(1L, 1))), null);
@@ -518,7 +564,7 @@ class OrderCreatorServiceTest {
         @DisplayName("Should save order with NEW status")
         void shouldSaveOrder_withNewStatus() {
             Phone phone = buildPhoneInStock(1L, BigDecimal.valueOf(999), 10);
-            when(phoneRepository.findAllById(any())).thenReturn(List.of(phone));
+            stubVariants(phone);
             when(paymentProvider.pay(any(), any())).thenReturn(successfulPayment());
 
             orderCreatorService.create(cardCourierRequest(List.of(item(1L, 1))), null);
@@ -533,7 +579,7 @@ class OrderCreatorServiceTest {
         void shouldSaveOrder_withCorrectNumberOfItems() {
             Phone phone1 = buildPhoneInStock(1L, BigDecimal.valueOf(999), 10);
             Phone phone2 = buildPhoneInStock(2L, BigDecimal.valueOf(500), 10);
-            when(phoneRepository.findAllById(any())).thenReturn(List.of(phone1, phone2));
+            stubVariants(phone1, phone2);
             when(paymentProvider.pay(any(), any())).thenReturn(successfulPayment());
 
             orderCreatorService.create(
@@ -548,7 +594,7 @@ class OrderCreatorServiceTest {
         @DisplayName("Should set unit price from DB value, not from client request")
         void shouldSetUnitPrice_fromDatabase() {
             Phone phone = buildPhoneInStock(1L, BigDecimal.valueOf(999), 10);
-            when(phoneRepository.findAllById(any())).thenReturn(List.of(phone));
+            stubVariants(phone);
             when(paymentProvider.pay(any(), any())).thenReturn(successfulPayment());
 
             orderCreatorService.create(cardCourierRequest(List.of(item(1L, 1))), null);
@@ -563,7 +609,7 @@ class OrderCreatorServiceTest {
         @DisplayName("Should set calculated total on the saved order entity")
         void shouldSetTotal_onSavedOrderEntity() {
             Phone phone = buildPhoneInStock(1L, BigDecimal.valueOf(500), 10);
-            when(phoneRepository.findAllById(any())).thenReturn(List.of(phone));
+            stubVariants(phone);
             when(paymentProvider.pay(any(), any())).thenReturn(successfulPayment());
 
             orderCreatorService.create(cardCourierRequest(List.of(item(1L, 2))), null);
@@ -578,7 +624,7 @@ class OrderCreatorServiceTest {
         @DisplayName("Should include delivery price in saved order total")
         void shouldIncludeDeliveryPrice_inSavedOrderTotal() {
             Phone phone = buildPhoneInStock(1L, BigDecimal.valueOf(500), 10);
-            when(phoneRepository.findAllById(any())).thenReturn(List.of(phone));
+            stubVariants(phone);
             when(deliveryProvider.quote(any(), any(), any()))
                     .thenReturn(new DeliveryQuote("mock", new BigDecimal("9.99"), LocalDate.of(2026, 1, 3)));
             when(paymentProvider.pay(any(), any())).thenReturn(successfulPayment());
@@ -610,7 +656,7 @@ class OrderCreatorServiceTest {
         @DisplayName("Should send email notification after successful order creation")
         void shouldSendEmailNotification_afterSuccessfulOrderCreation() {
             Phone phone = buildPhoneInStock(1L, BigDecimal.valueOf(999), 10);
-            when(phoneRepository.findAllById(any())).thenReturn(List.of(phone));
+            stubVariants(phone);
             when(paymentProvider.pay(any(), any())).thenReturn(successfulPayment());
 
             orderCreatorService.create(cardCourierRequest(List.of(item(1L, 1))), null);
@@ -622,7 +668,7 @@ class OrderCreatorServiceTest {
         @DisplayName("Should not send notification when payment fails")
         void shouldNotSendNotification_whenPaymentFails() {
             Phone phone = buildPhoneInStock(1L, BigDecimal.valueOf(999), 10);
-            when(phoneRepository.findAllById(any())).thenReturn(List.of(phone));
+            stubVariants(phone);
             when(paymentProvider.pay(any(), any())).thenReturn(failedPayment());
 
             assertThatThrownBy(() ->
@@ -636,7 +682,7 @@ class OrderCreatorServiceTest {
         @DisplayName("Should call mapper exactly once after order is saved")
         void shouldCallMapper_exactlyOnce() {
             Phone phone = buildPhoneInStock(1L, BigDecimal.valueOf(999), 10);
-            when(phoneRepository.findAllById(any())).thenReturn(List.of(phone));
+            stubVariants(phone);
             when(paymentProvider.pay(any(), any())).thenReturn(successfulPayment());
 
             orderCreatorService.create(cardCourierRequest(List.of(item(1L, 1))), null);
@@ -650,7 +696,7 @@ class OrderCreatorServiceTest {
             Phone phone = buildPhoneInStock(1L, BigDecimal.valueOf(999), 10);
             OrderResponseDto expectedResponse = buildStubOrderResponse();
 
-            when(phoneRepository.findAllById(any())).thenReturn(List.of(phone));
+            stubVariants(phone);
             when(paymentProvider.pay(any(), any())).thenReturn(successfulPayment());
             when(orderMapper.toDto(any(Order.class))).thenReturn(expectedResponse);
 

@@ -5,12 +5,17 @@ import com.challengeteam.shop.dto.admin.product.AdminProductDetailsResponseDto;
 import com.challengeteam.shop.dto.admin.product.AdminProductFilterDto;
 import com.challengeteam.shop.dto.admin.product.AdminProductListItemResponseDto;
 import com.challengeteam.shop.dto.admin.product.AdminProductUpdateRequestDto;
+import com.challengeteam.shop.dto.admin.product.AdminProductVariantRequestDto;
+import com.challengeteam.shop.dto.admin.product.AdminProductVariantUpdateRequestDto;
 import com.challengeteam.shop.dto.image.ImageMetadataResponseDto;
 import com.challengeteam.shop.dto.pagination.paginationRequest.PageRequestDto;
 import com.challengeteam.shop.dto.pagination.paginationResponse.PageResponseDto;
+import com.challengeteam.shop.dto.phone.response.ProductVariantResponseDto;
 import com.challengeteam.shop.entity.image.Image;
+import com.challengeteam.shop.entity.phone.ProductVariant;
 import com.challengeteam.shop.exceptionHandling.exception.InvalidPriceRangeException;
 import com.challengeteam.shop.mapper.image.ImageMapper;
+import com.challengeteam.shop.mapper.phone.ProductVariantMapper;
 import com.challengeteam.shop.service.admin.AdminProductCommandService;
 import com.challengeteam.shop.service.admin.AdminProductQueryService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -55,6 +60,7 @@ public class AdminProductController {
     private final AdminProductQueryService adminProductQueryService;
     private final AdminProductCommandService adminProductCommandService;
     private final ImageMapper imageMapper;
+    private final ProductVariantMapper productVariantMapper;
 
     @Operation(
             summary = "Get admin product list",
@@ -121,6 +127,34 @@ public class AdminProductController {
     public ResponseEntity<Void> deleteProduct(@PathVariable Long id) {
         log.debug("Delete admin product request id={}", id);
         adminProductCommandService.deleteProduct(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @Operation(summary = "Add admin product variant", description = "Adds a sellable variant to a product.")
+    @PostMapping("/{id:\\d+}/variants")
+    public ResponseEntity<ProductVariantResponseDto> addProductVariant(
+            @PathVariable Long id, @Valid @RequestBody AdminProductVariantRequestDto request) {
+        log.debug("Add admin product variant request productId={} sku={}", id, request.sku());
+        ProductVariant variant = adminProductCommandService.addProductVariant(id, request);
+        return ResponseEntity.ok(productVariantMapper.toResponse(variant));
+    }
+
+    @Operation(summary = "Update admin product variant", description = "Updates a sellable product variant.")
+    @PutMapping("/{id:\\d+}/variants/{variantId:\\d+}")
+    public ResponseEntity<ProductVariantResponseDto> updateProductVariant(
+            @PathVariable Long id,
+            @PathVariable Long variantId,
+            @Valid @RequestBody AdminProductVariantUpdateRequestDto request) {
+        log.debug("Update admin product variant request productId={} variantId={}", id, variantId);
+        ProductVariant variant = adminProductCommandService.updateProductVariant(id, variantId, request);
+        return ResponseEntity.ok(productVariantMapper.toResponse(variant));
+    }
+
+    @Operation(summary = "Delete admin product variant", description = "Deletes a sellable product variant.")
+    @DeleteMapping("/{id:\\d+}/variants/{variantId:\\d+}")
+    public ResponseEntity<Void> deleteProductVariant(@PathVariable Long id, @PathVariable Long variantId) {
+        log.debug("Delete admin product variant request productId={} variantId={}", id, variantId);
+        adminProductCommandService.deleteProductVariant(id, variantId);
         return ResponseEntity.noContent().build();
     }
 

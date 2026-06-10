@@ -5,6 +5,7 @@ import com.challengeteam.shop.dto.cart.CartItemRemoveRequestDto;
 import com.challengeteam.shop.entity.cart.Cart;
 import com.challengeteam.shop.entity.cart.CartItem;
 import com.challengeteam.shop.entity.phone.Phone;
+import com.challengeteam.shop.entity.phone.ProductVariant;
 import com.challengeteam.shop.exceptionHandling.exception.ResourceNotFoundException;
 import com.challengeteam.shop.service.CartService;
 import org.junit.jupiter.api.Nested;
@@ -357,6 +358,7 @@ class UserCartServiceImplTest {
                     .id(1L)
                     .cart(cart)
                     .phone(buildPhone())
+                    .variant(buildVariant())
                     .amount(amount)
                     .build();
         }
@@ -365,6 +367,15 @@ class UserCartServiceImplTest {
             return Phone.builder()
                     .id(PHONE_ID)
                     .price(BigDecimal.valueOf(100))
+                    .build();
+        }
+
+        static ProductVariant buildVariant() {
+            return ProductVariant.builder()
+                    .id(PHONE_ID)
+                    .phone(buildPhone())
+                    .price(BigDecimal.valueOf(100))
+                    .stock(10)
                     .build();
         }
 
