@@ -1,14 +1,7 @@
 # Architecture
 
-> System design notes for Gadget Room Backend.
-
-## Goals
-
-- Provide a clean REST API for an online phone store.
-- Keep domain logic independent from HTTP and persistence details.
-- Support authenticated customer workflows and protected admin workflows.
-- Store relational business data in PostgreSQL and binary product images in MinIO.
-- Keep deployments reproducible with Docker, Flyway and environment-based configuration.
+> Design notes for Gadget Room Backend. This document stays short on purpose: it explains the decisions that matter
+> during review, debugging and release preparation.
 
 ## System Context
 
@@ -19,101 +12,71 @@ flowchart LR
     Frontend[Frontend Application]
     Backend[Gadget Room Backend]
     PostgreSQL[(PostgreSQL)]
+    Redis[(Redis)]
     MinIO[(MinIO)]
-    SMTP[(SMTP Provider)]
+    SMTP[(SMTP)]
+    Payment[Payment Provider]
 
     Customer --> Frontend
     Admin --> Frontend
     Frontend --> Backend
     Backend --> PostgreSQL
+    Backend --> Redis
     Backend --> MinIO
     Backend --> SMTP
+    Payment --> Backend
 ```
 
-## Container View
+## Runtime Components
 
-```mermaid
-flowchart TB
-    subgraph Runtime[Docker Compose Runtime]
-        App[Spring Boot Application<br/>Java 21]
-        DB[(PostgreSQL<br/>Business data)]
-        Redis[(Redis<br/>Revoked tokens)]
-        ObjectStorage[(MinIO<br/>Product images)]
-    end
+| Component | Responsibility |
+| --- | --- |
+| REST controllers | HTTP contracts, validation entry points and response codes. |
+| Security filters | JWT parsing, auth rate limiting, role checks and stateless session handling. |
+| Services | Application use cases: catalog, cart, checkout, orders, users, reviews and admin analytics. |
+| Repositories | PostgreSQL access through Spring Data JPA and specifications. |
+| Mappers | DTO/entity conversion with MapStruct. |
+| Validators | Business input checks for checkout, payment, delivery, filters and user data. |
+| Storage adapter | Product image upload and download through MinIO. |
+| Notification adapter | Order and status emails through SMTP and Thymeleaf templates. |
 
-    Browser[Client / Admin UI]
-    MailProvider[SMTP Provider]
-
-    Browser -->|HTTPS / REST| App
-    App -->|JDBC| DB
-    App -->|Spring Data Redis| Redis
-    App -->|S3-compatible API| ObjectStorage
-    App -->|SMTP| MailProvider
-```
-
-## Component View
-
-```mermaid
-flowchart LR
-    Controllers[REST Controllers]
-    Security[Security Filter Chain<br/>JWT + Rate Limit Filters]
-    DTOs[DTO Contracts]
-    Validators[Custom Validators]
-    Services[Application Services]
-    Mappers[MapStruct Mappers]
-    Repositories[JPA Repositories<br/>Specifications]
-    Storage[MinIO Image Storage]
-    Notifications[Email Notification Sender]
-    ErrorHandling[Global Exception Handler]
-
-    Controllers --> Security
-    Controllers --> DTOs
-    Controllers --> Services
-    Controllers --> ErrorHandling
-    DTOs --> Validators
-    Services --> Mappers
-    Services --> Repositories
-    Services --> Storage
-    Services --> Notifications
-```
-
-## Runtime Flows
+## Main Flows
 
 ### Authentication
 
 ```mermaid
 sequenceDiagram
     participant Client
-    participant API as AuthController
-    participant Users as UserService
-    participant JWT as JwtService
-    participant DB as PostgreSQL
+    participant API as Auth API
+    participant Users as User Service
+    participant JWT as JWT Service
+    participant Redis
 
     Client->>API: POST /api/auth/login
-    API->>Users: validate credentials
-    Users->>DB: load user and role
-    Users-->>API: authenticated user
-    API->>JWT: issue access and refresh tokens
-    JWT-->>Client: token pair
+    API->>Users: Validate credentials
+    Users-->>API: User and role
+    API->>JWT: Issue access and refresh tokens
+    JWT-->>Client: Token pair
+    Client->>API: POST /api/v1/logout
+    API->>Redis: Store revoked token until expiration
 ```
 
-### Order Creation
+### Checkout
 
 ```mermaid
 sequenceDiagram
     participant Client
-    participant API as OrderController
-    participant Orders as OrderCreatorService
-    participant Phones as PhoneRepository
+    participant Orders as Order API
+    participant Service as Checkout Service
     participant DB as PostgreSQL
-    participant Mail as EmailNotificationSender
+    participant Mail as Email Sender
 
-    Client->>API: POST /api/v1/orders
-    API->>Orders: create order
-    Orders->>Phones: validate products and stock
-    Orders->>DB: persist order and order items
-    Orders->>Mail: send confirmation email
-    Orders-->>Client: order response
+    Client->>Orders: POST /api/v1/orders/checkout
+    Orders->>Service: Validate cart, delivery and payment details
+    Service->>DB: Create order and order items
+    Service->>DB: Decrease variant stock
+    Service->>Mail: Send confirmation email
+    Service-->>Client: Order response
 ```
 
 ### Product Image Upload
@@ -121,65 +84,62 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     participant Admin
-    participant API as Product Controller
-    participant Images as ImageService
-    participant Storage as MinIO
+    participant API as Admin Product API
+    participant Images as Image Service
+    participant MinIO
     participant DB as PostgreSQL
 
-    Admin->>API: multipart image upload
-    API->>Images: validate and store image
-    Images->>Storage: upload binary object
-    Images->>DB: persist image metadata
-    Images-->>Admin: image metadata
+    Admin->>API: POST multipart image
+    API->>Images: Validate file metadata
+    Images->>MinIO: Store binary object
+    Images->>DB: Save image metadata
+    Images-->>Admin: Image response
 ```
 
 ## Data Ownership
 
 | Data | Owner | Storage |
 | --- | --- | --- |
-| Users and roles | User domain | PostgreSQL |
-| Phones and characteristics | Catalog domain | PostgreSQL |
-| Carts and cart items | Cart domain | PostgreSQL |
-| Orders, payments and shipping | Order domain | PostgreSQL |
-| Product image metadata | Image domain | PostgreSQL |
-| Product image binaries | Image storage adapter | MinIO |
-| Password reset tokens | Auth domain | PostgreSQL |
+| Users, roles and password reset tokens | Auth/User domain | PostgreSQL |
 | Revoked access and refresh tokens | Auth domain | Redis |
+| Phones, variants, colors and storage options | Catalog domain | PostgreSQL |
+| Product images metadata | Image domain | PostgreSQL |
+| Product images binaries | Image storage adapter | MinIO |
+| Carts and cart items | Cart domain | PostgreSQL |
+| Orders, order items, delivery and payment metadata | Order domain | PostgreSQL |
+| Reviews and favorites | Customer domain | PostgreSQL |
 
 ## Security Model
 
-- Public endpoints: authentication, selected catalog endpoints, delivery lookup, payment webhooks, order creation and health checks.
-- Local/dev-only endpoints: API documentation and `/api/v1/test-data/**`.
-- Production profile: disables public API documentation and does not register test-data endpoints.
-- Authenticated endpoints: user profile, cart and customer order history.
-- Admin endpoints: `/api/v1/admin/**`.
-- Actuator: health endpoints are public; non-health actuator endpoints require the admin role and are exposed only when explicitly configured.
-- Rate limiting: login, refresh token, forgot password and reset password are limited per client IP and endpoint.
-- Token model: access token, refresh token, remember-me refresh token and reset token.
-- Password storage: BCrypt.
-- Session model: stateless.
+- Session policy is stateless.
+- Passwords are hashed with BCrypt.
+- JWT access tokens protect authenticated and admin-only endpoints.
+- Redis stores revoked access and refresh tokens until expiration.
+- Admin APIs are grouped under `/api/v1/admin/**`.
+- Swagger and `/api/v1/test-data/**` are not available in the production profile.
+- Login, refresh token, forgot password and reset password are rate-limited.
+- Health probes are public; non-health actuator endpoints require admin access.
 
-## Observability
+## Persistence
 
-- Spring Boot Actuator exposes health probes at `/actuator/health`, `/actuator/health/liveness` and `/actuator/health/readiness`.
-- Readiness includes PostgreSQL, Redis and MinIO health contributors.
-- Health details are hidden from unauthenticated callers and available to authorized actuator access.
+- Flyway owns schema changes.
+- `dev` loads both production migrations and `db/migration-dev` seed data.
+- `prod` uses only production migrations.
+- JPA validates the schema on startup instead of generating it.
+- Product binaries stay outside PostgreSQL; the database stores only image metadata and MinIO keys.
 
 ## Quality Gates
 
-- Pull requests to `develop` and `main` run the CI pipeline.
-- CI executes `mvn -B clean verify -Dspring.profiles.active=dev`.
-- JaCoCo enforces 70% minimum line coverage.
+- CI runs on pull requests to `develop` and `main`.
+- The verification command is `mvn -B clean verify -Dspring.profiles.active=dev`.
 - Integration tests use Testcontainers for PostgreSQL, Redis and MinIO.
-- Test datasource pools are capped to avoid exhausting PostgreSQL connections when Spring creates multiple integration-test contexts.
+- JaCoCo enforces a 70% minimum line coverage threshold.
+- Production-readiness behavior is covered by profile-specific tests.
 
-## Design Decisions
+## Release Risks To Watch
 
-| Decision | Reason |
-| --- | --- |
-| PostgreSQL for business data | Strong relational consistency for users, carts, orders and catalog data. |
-| MinIO for images | Keeps binary files out of the relational database and provides S3-compatible storage. |
-| Flyway migrations | Makes schema evolution explicit and repeatable across environments. |
-| JWT authentication | Enables stateless API security for frontend clients. |
-| MapStruct | Keeps DTO mapping compile-time checked and easy to review. |
-| Testcontainers | Validates integration behavior against real infrastructure dependencies. |
+- Flyway migrations are irreversible in shared environments; review SQL names and order carefully.
+- `spring.jpa.open-in-view` still uses the Spring Boot default. Disabling it should be handled as a separate code change
+  with query-loading fixes and regression tests.
+- Payment webhooks are public by design; provider signature validation must stay aligned with the active provider.
+- Docker volumes keep local data between runs. Use the documented reset command before testing migration changes.
