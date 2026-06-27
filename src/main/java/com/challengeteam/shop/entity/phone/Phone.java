@@ -10,6 +10,7 @@ import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 
 @Getter
@@ -54,6 +55,9 @@ public class Phone extends BaseEntity {
 
     @OneToMany(mappedBy = "phone")
     private List<Image> images;
+
+    @OneToMany(mappedBy = "phone", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ProductVariant> variants = new ArrayList<>();
 
     @Override
     public String toString() {

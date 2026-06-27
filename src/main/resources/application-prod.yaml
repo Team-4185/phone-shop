@@ -3,6 +3,9 @@ server:
   shutdown: graceful
 
 spring:
+  config:
+    import:
+      optional:file:.env[.properties]
   application:
     name: gadgetroom
   mail:
@@ -31,6 +34,16 @@ spring:
     hibernate:
       ddl-auto: none
     show-sql: false
+  data:
+    redis:
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT:6379}
+
+springdoc:
+  api-docs:
+    enabled: false
+  swagger-ui:
+    enabled: false
 
 security:
   cors:
@@ -41,6 +54,14 @@ security:
     allow-credentials: ${CORS_ALLOW_CREDENTIALS}
 
   frontend-url: ${FRONTEND_URL}
+
+  cookies:
+    secure: ${SECURE_COOKIES:true}
+
+  rate-limit:
+    enabled: true
+    requests-per-window: ${AUTH_RATE_LIMIT_REQUESTS_PER_WINDOW:10}
+    window: ${AUTH_RATE_LIMIT_WINDOW:1m}
 
   jwt:
     private-key: ${JWT_PRIVATE_KEY}
@@ -55,6 +76,16 @@ minio:
   url: ${MINIO_URL}
   username: ${MINIO_USERNAME}
   password: ${MINIO_PASSWORD}
+
+payment:
+  provider: ${PAYMENT_PROVIDER:mock}
+  stripe:
+    secret-key: ${STRIPE_SECRET_KEY:}
+    webhook-secret: ${STRIPE_WEBHOOK_SECRET:}
+    currency: ${STRIPE_CURRENCY:usd}
+
+delivery:
+  provider: ${DELIVERY_PROVIDER:mock}
 
 logging:
   level:

@@ -1,34 +1,22 @@
 # Gadget Room Backend
 
-> Production-ready REST API for an online phone store: catalog, cart, orders, admin dashboard, JWT authentication,
-> image storage, email notifications and CI quality gates.
+> REST API for an online phone store. The backend covers catalog browsing, cart and checkout flows, admin operations,
+> JWT security, image storage, email notifications, payment webhooks and CI quality gates.
 
-## Core Features
+## What Is Included
 
-- [x] **Authentication:** registration, login, access tokens, refresh tokens and password reset flow.
-- [x] **Catalog:** phone listing, product details, filtering, sorting, pagination and brand discovery.
-- [x] **Cart:** authenticated user cart with add, remove, clear and total recalculation operations.
-- [x] **Orders:** order creation, customer order history, delivery details and payment details validation.
-- [x] **Admin Panel API:** product, order, customer and dashboard endpoints protected by admin role.
-- [x] **Image Storage:** product image upload, metadata retrieval and binary image serving through MinIO.
-- [x] **Email Notifications:** order confirmation emails with server-side templates.
-- [x] **API Documentation:** OpenAPI documentation with JWT bearer authentication support.
-
-## Engineering Highlights
-
-- [x] **Layered Architecture:** controllers, services, repositories, mappers, validators and DTO contracts are separated.
-- [x] **Database Versioning:** Flyway migrations keep schema changes explicit and reproducible.
-- [x] **Security:** stateless JWT authentication, BCrypt password hashing, role-based authorization and configurable CORS.
-- [x] **Object Storage:** MinIO integration isolates image files from relational data.
-- [x] **Validation:** custom validators cover order delivery, payment details, cart rules and filter constraints.
-- [x] **Testing:** unit and integration tests cover controllers, services, storage and validation logic.
-- [x] **Quality Gate:** JaCoCo enforces a 70% minimum line coverage threshold in CI.
-- [x] **Containerization:** Docker and Docker Compose provide reproducible local and production environments.
+- [x] **Authentication:** registration, login, refresh tokens, logout, password reset and token revocation.
+- [x] **Catalog:** phone listing, product details, filtering, sorting, pagination, brands, variants and images.
+- [x] **Customer area:** user profile, cart, favorites, reviews and order history.
+- [x] **Checkout:** direct order creation, cart checkout, delivery data, payment data and customer cancellation rules.
+- [x] **Admin API:** product management, variants, images, customers, orders, KPI cards and dashboard analytics.
+- [x] **Integrations:** PostgreSQL, Redis, MinIO, SMTP email sender, mock payment provider and Stripe webhook support.
+- [x] **Operations:** Docker Compose, Flyway migrations, Actuator health checks, OpenAPI docs and JaCoCo coverage gate.
 
 ## Tech Stack
 
-`Java 21` | `Spring Boot 3.5` | `Spring Security` | `Spring Data JPA` | `PostgreSQL` | `Flyway` | `MinIO` | `JWT` |
-`MapStruct` | `Lombok` | `Docker` | `JUnit 5` | `Mockito` | `Testcontainers` | `JaCoCo` | `OpenAPI`
+`Java 21` | `Spring Boot 3.5` | `Spring Security` | `Spring Data JPA` | `PostgreSQL` | `Flyway` | `Redis` | `MinIO` |
+`JWT` | `MapStruct` | `Lombok` | `Docker` | `JUnit 5` | `Mockito` | `Testcontainers` | `JaCoCo` | `OpenAPI`
 
 ## Architecture
 
@@ -36,89 +24,97 @@
 flowchart LR
     Client[Web / Mobile Client]
     Admin[Admin Client]
-
     API[Gadget Room Backend<br/>Spring Boot REST API]
-    Auth[JWT Security<br/>Access / Refresh / Reset Tokens]
+    Security[Security Layer<br/>JWT / Roles / Rate Limits]
     Domain[Domain Services<br/>Catalog / Cart / Orders / Admin]
-    Validation[Validation Layer<br/>DTOs / Custom Validators]
-    Persistence[Persistence Layer<br/>JPA Repositories / Specifications]
-    Storage[Image Storage Adapter<br/>MinIO Client]
-    Mail[Notification Adapter<br/>SMTP / Thymeleaf]
-
-    DB[(PostgreSQL<br/>Flyway-managed schema)]
+    Data[(PostgreSQL<br/>Flyway schema)]
+    Redis[(Redis<br/>Revoked tokens)]
     MinIO[(MinIO<br/>Product images)]
-    SMTP[(SMTP Provider<br/>Order emails)]
-    Docs[OpenAPI / Swagger UI]
+    Mail[SMTP Provider<br/>Order emails]
+    Payments[Payment Provider<br/>Mock / Stripe]
 
     Client --> API
     Admin --> API
-    API --> Auth
+    API --> Security
     API --> Domain
-    API --> Docs
-    Domain --> Validation
-    Domain --> Persistence
-    Domain --> Storage
+    Security --> Redis
+    Domain --> Data
+    Domain --> MinIO
     Domain --> Mail
-    Persistence --> DB
-    Storage --> MinIO
-    Mail --> SMTP
+    Domain --> Payments
 ```
 
-Detailed architecture notes: [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)
+More details are in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
-## Main API Areas
+## Documentation
 
-| Area | Base path |
+| Document | Purpose |
 | --- | --- |
-| Authentication | `/api/auth` |
-| Users | `/api/v1/users` |
-| Phones | `/api/v1/phones` |
-| Filtering | `/api/v1/filter` |
-| Images | `/api/v1/images` |
-| Cart | `/api/v1/me/cart` |
-| Orders | `/api/v1/orders` |
-| Admin | `/api/v1/admin/**` |
+| [Project showcase](docs/SHOWCASE.md) | Resume-friendly overview for recruiters and technical reviewers. |
+| [Architecture](docs/ARCHITECTURE.md) | Runtime design, flows, data ownership and release risks. |
+| [API documentation](docs/API.md) | OpenAPI contract and readable Swagger screenshots. |
+| [Security model](docs/SECURITY_MODEL.md) | Authentication, authorization, production exposure and reviewer checklist. |
+| [Quality and release readiness](docs/QUALITY.md) | Test strategy, CI, coverage and release checklist. |
+
+## API Map
+
+| Area | Base path | Access |
+| --- | --- | --- |
+| Authentication | `/api/auth/**` | Public |
+| Logout | `/api/v1/logout` | Authenticated |
+| Phones | `/api/v1/phones/**` | Public read, admin write |
+| Filtering | `/api/v1/filter/**` | Public |
+| Images | `/api/v1/images/**` | Public read |
+| Delivery | `/api/v1/delivery/**` | Public |
+| Cart | `/api/v1/me/cart/**` | Authenticated |
+| Favorites | `/api/v1/me/favorites/**` | Authenticated |
+| Reviews | `/api/v1/phones/{phoneId}/reviews/**` | Public read, authenticated write |
+| Orders | `/api/v1/orders/**` | Authenticated |
+| Payment webhooks | `/api/v1/payments/webhooks/**` | Public provider callback |
+| Admin | `/api/v1/admin/**` | Admin |
+| Health | `/actuator/health/**` | Public |
+
+## Screenshots
+
+The project exposes OpenAPI documentation in local and development profiles:
+
+![Swagger UI overview](docs/assets/swagger-ui-overview.png)
+
+Full Swagger UI screenshots are split into readable sections in [docs/API.md](docs/API.md).
+
+The CI pipeline also produces a JaCoCo report and enforces the configured coverage gate:
+
+![JaCoCo coverage report](docs/assets/jacoco-report.png)
+
 
 ## API Documentation
 
-- Production Swagger UI: `https://gadget-room.up.railway.app/docs`
-- Production OpenAPI JSON: `https://gadget-room.up.railway.app/docs/api-docs`
-- Local Swagger UI: `http://localhost:8080/docs`
+Swagger is available only outside the production profile:
 
-## Run
+- Swagger UI: `http://localhost:8080/swagger-ui.html`
+- OpenAPI JSON: `http://localhost:8080/v3/api-docs`
+- Full API screenshot gallery: [docs/API.md](docs/API.md)
+- Saved development OpenAPI contract: [docs/api/openapi-dev.json](docs/api/openapi-dev.json)
 
-```bash
-docker compose --env-file test.env up --build
-```
+The production profile disables public API docs and test-data endpoints.
 
-```bash
-docker compose down
-```
 
-## Local Development
+## Production Notes
 
-```bash
-docker compose -f docker-compose-dev.yml up -d
-mvn spring-boot:run -Dspring-boot.run.profiles=dev
-```
+- `prod` disables `/api/v1/test-data/**`, Swagger UI and `/v3/api-docs`.
+- `/actuator/health`, `/actuator/health/liveness` and `/actuator/health/readiness` stay public.
+- Non-health actuator endpoints require the admin role and must be explicitly exposed.
+- Auth-sensitive endpoints are rate-limited: login, refresh token, forgot password and reset password.
+- Readiness checks include PostgreSQL, Redis and MinIO.
 
-## Tests
-
-```bash
-mvn clean verify -Dspring.profiles.active=dev
-```
-
-Coverage report:
+Rate limits can be tuned with:
 
 ```text
-target/site/jacoco/index.html
+AUTH_RATE_LIMIT_REQUESTS_PER_WINDOW=10
+AUTH_RATE_LIMIT_WINDOW=1m
 ```
 
-## CI
+## QA Guides
 
-GitHub Actions runs on pull requests to `develop` and `main`:
-
-- build
-- tests
-- JaCoCo coverage check
-- coverage report artifact
+- [English QA guide](qa/guide_en.md)
+- [Ukrainian QA guide](qa/guide_ua.md)

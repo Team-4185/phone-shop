@@ -11,8 +11,11 @@ import com.challengeteam.shop.entity.phone.Phone_;
 import com.challengeteam.shop.entity.phone.StorageCapacity;
 import com.challengeteam.shop.mapper.phone.PhoneMapper;
 import com.challengeteam.shop.persistence.repository.PhoneRepository;
+import com.challengeteam.shop.service.CatalogProductResponseAssembler;
+import com.challengeteam.shop.service.ProductBadgeService;
 import com.challengeteam.shop.utility.pagination.filter.specefication.PhoneFilterSpecificationBuilder;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -41,6 +44,10 @@ class PhoneFilteringAndSortingServiceTest {
     private PhoneRepository phoneRepository;
     @Mock
     private PhoneMapper phoneMapper;
+    @Mock
+    private ProductBadgeService productBadgeService;
+    @Mock
+    private CatalogProductResponseAssembler catalogProductResponseAssembler;
     @InjectMocks
     private PhoneFilteringAndSortingServiceImpl phoneFilteringAndSortingServiceImpl;
 
@@ -66,6 +73,14 @@ class PhoneFilteringAndSortingServiceTest {
     private static final String nokiaBrand = "Nokia";
 
     private static final Pageable page = PageRequest.of(0, 10);
+
+    @BeforeEach
+    void configureBadgeService() {
+        lenient().when(productBadgeService.applyBadges(anyList(), anyList()))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+        lenient().when(catalogProductResponseAssembler.toResponses(anyList()))
+                .thenAnswer(invocation -> phoneMapper.toResponseList(invocation.getArgument(0)));
+    }
 
     @BeforeAll
 

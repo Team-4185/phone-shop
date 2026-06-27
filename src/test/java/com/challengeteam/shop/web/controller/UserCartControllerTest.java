@@ -2,11 +2,19 @@ package com.challengeteam.shop.web.controller;
 
 import com.challengeteam.shop.dto.cart.CartItemAddRequestDto;
 import com.challengeteam.shop.dto.cart.CartItemRemoveRequestDto;
+import com.challengeteam.shop.entity.image.Image;
+import com.challengeteam.shop.entity.image.MIMEType;
 import com.challengeteam.shop.entity.phone.Phone;
 import com.challengeteam.shop.entity.phone.PhoneCharacteristics;
+import com.challengeteam.shop.entity.phone.PhoneColor;
 import com.challengeteam.shop.entity.phone.ProductStatus;
+import com.challengeteam.shop.entity.phone.ProductVariant;
+import com.challengeteam.shop.entity.phone.StorageCapacity;
 import com.challengeteam.shop.persistence.repository.CartRepository;
+import com.challengeteam.shop.persistence.repository.ImageRepository;
+import com.challengeteam.shop.persistence.repository.MIMETypeRepository;
 import com.challengeteam.shop.persistence.repository.PhoneRepository;
+import com.challengeteam.shop.persistence.repository.ProductVariantRepository;
 import com.challengeteam.shop.service.UserCartService;
 import com.challengeteam.shop.testContainer.ContainerExtension;
 import com.challengeteam.shop.testContainer.TestContextConfigurator;
@@ -27,6 +35,7 @@ import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.math.BigDecimal;
+import java.util.Set;
 
 import static com.challengeteam.shop.web.controller.UserCartControllerTest.TestCartItem.*;
 import static com.challengeteam.shop.web.controller.UserCartControllerTest.TestResources.*;
@@ -46,7 +55,13 @@ class UserCartControllerTest {
     @Autowired
     private CartRepository cartRepository;
     @Autowired
+    private ImageRepository imageRepository;
+    @Autowired
+    private MIMETypeRepository mimeTypeRepository;
+    @Autowired
     private PhoneRepository phoneRepository;
+    @Autowired
+    private ProductVariantRepository productVariantRepository;
     @Autowired
     private MockMvc mockMvc;
     @Autowired
@@ -67,6 +82,8 @@ class UserCartControllerTest {
     public void setup() {
         // clear all
         cartRepository.deleteAll();
+        imageRepository.deleteAll();
+        productVariantRepository.deleteAll();
         phoneRepository.deleteAll();
 
         // add 3 phones
@@ -97,9 +114,21 @@ class UserCartControllerTest {
                         .frontCamera(testPhone.frontCamera)
                         .mainCamera(testPhone.mainCamera)
                         .batteryCapacity(testPhone.batteryCapacity)
+                        .phoneColors(Set.of(PhoneColor.BLACK))
+                        .storageCapacities(Set.of(StorageCapacity.CAPACITY_128GB))
                         .build()
         );
-        return phoneRepository.save(phone).getId();
+        Phone savedPhone = phoneRepository.save(phone);
+        productVariantRepository.save(ProductVariant.builder()
+                .phone(savedPhone)
+                .sku(savedPhone.getSku() + "-BLACK-128")
+                .color(PhoneColor.BLACK)
+                .storageCapacity(StorageCapacity.CAPACITY_128GB)
+                .price(savedPhone.getPrice())
+                .stock(savedPhone.getStock())
+                .status(savedPhone.getStatus())
+                .build());
+        return savedPhone.getId();
     }
 
     private String buildSku(TestPhone testPhone) {
@@ -114,6 +143,7 @@ class UserCartControllerTest {
         @Test
         void whenValidRequest_thenStatus200AndReturnCart() throws Exception {
             userCartService.putItemToUserCart(userId, buildCartItemAddRequestDto(phoneId1, CART_ITEM_1.amount));
+            addPreviewImage(phoneId1);
 
             mockMvc.perform(get(URL)
                             .header(HttpHeaders.AUTHORIZATION, auth(token)))
@@ -125,7 +155,15 @@ class UserCartControllerTest {
                     .andExpect(jsonPath("$.cartItems").isArray())
                     .andExpect(jsonPath("$.cartItems", hasSize(1)))
                     .andExpect(jsonPath("$.cartItems[0].phoneId").value(phoneId1))
-                    .andExpect(jsonPath("$.cartItems[0].amount").value(CART_ITEM_1.amount));
+                    .andExpect(jsonPath("$.cartItems[0].productName").value(TestPhone.PHONE_1.name))
+                    .andExpect(jsonPath("$.cartItems[0].brand").value(TestPhone.PHONE_1.brand))
+                    .andExpect(jsonPath("$.cartItems[0].price").value(999.99))
+                    .andExpect(jsonPath("$.cartItems[0].previewImage.name").value("iphone-preview.jpg"))
+                    .andExpect(jsonPath("$.cartItems[0].stock").value(10))
+                    .andExpect(jsonPath("$.cartItems[0].status").value("IN_STOCK"))
+                    .andExpect(jsonPath("$.cartItems[0].quantity").value(CART_ITEM_1.amount))
+                    .andExpect(jsonPath("$.cartItems[0].amount").value(CART_ITEM_1.amount))
+                    .andExpect(jsonPath("$.cartItems[0].lineTotal").value(1999.98));
         }
 
         @Test
@@ -597,6 +635,22 @@ class UserCartControllerTest {
                             .header(HttpHeaders.AUTHORIZATION, auth("some_invalid_text")))
                     .andExpect(status().isUnauthorized());
         }
+    }
+
+    private void addPreviewImage(Long phoneId) {
+        MIMEType mimeType = mimeTypeRepository.findByExtension("jpg")
+                .orElseGet(() -> mimeTypeRepository.save(MIMEType.builder()
+                        .extension("jpg")
+                        .type("image/jpeg")
+                        .build()));
+        Phone phone = phoneRepository.findById(phoneId).orElseThrow();
+        imageRepository.save(Image.builder()
+                .name("iphone-preview.jpg")
+                .storageKey("test/iphone-preview.jpg")
+                .size(123L)
+                .mimeType(mimeType)
+                .phone(phone)
+                .build());
     }
 
     static class TestResources {

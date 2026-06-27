@@ -3,6 +3,7 @@ package com.challengeteam.shop.entity.order;
 import com.challengeteam.shop.entity.BaseEntity;
 import com.challengeteam.shop.entity.phone.Phone;
 import com.challengeteam.shop.entity.phone.PhoneColor;
+import com.challengeteam.shop.entity.phone.ProductVariant;
 import com.challengeteam.shop.entity.phone.StorageCapacity;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -32,6 +33,10 @@ public class OrderItem extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "fk_phone_id")
     private Phone phone;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "fk_variant_id")
+    private ProductVariant variant;
 
     @Column(nullable = false)
     private String productName;

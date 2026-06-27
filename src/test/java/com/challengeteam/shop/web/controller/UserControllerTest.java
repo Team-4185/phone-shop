@@ -1,13 +1,30 @@
 package com.challengeteam.shop.web.controller;
 
-import com.challengeteam.shop.dto.user.CreateUserDto;
-import com.challengeteam.shop.dto.user.UpdateProfileDto;
+import com.challengeteam.shop.constants.security.jwt.JwtTokenNameConstants;
+import com.challengeteam.shop.dto.security.jwt.JwtPublicResponseDto;
+import com.challengeteam.shop.dto.user.request.CreateUserDto;
+import com.challengeteam.shop.dto.user.request.UpdateProfileDto;
+import com.challengeteam.shop.dto.user.request.sensetiveData.UpdateUserSensitiveDataDto;
+import com.challengeteam.shop.entity.favorite.Favorite;
+import com.challengeteam.shop.entity.order.DeliveryMethod;
+import com.challengeteam.shop.entity.order.Order;
+import com.challengeteam.shop.entity.order.OrderItem;
+import com.challengeteam.shop.entity.order.OrderStatus;
+import com.challengeteam.shop.entity.order.payment.PaymentDetails;
+import com.challengeteam.shop.entity.order.payment.PaymentMethod;
+import com.challengeteam.shop.entity.order.payment.PaymentStatus;
+import com.challengeteam.shop.entity.phone.*;
+import com.challengeteam.shop.entity.user.User;
+import com.challengeteam.shop.persistence.repository.FavoriteRepository;
+import com.challengeteam.shop.persistence.repository.OrderRepository;
+import com.challengeteam.shop.persistence.repository.PhoneRepository;
 import com.challengeteam.shop.persistence.repository.UserRepository;
 import com.challengeteam.shop.service.UserService;
 import com.challengeteam.shop.testContainer.ContainerExtension;
 import com.challengeteam.shop.testContainer.TestContextConfigurator;
 import com.challengeteam.shop.web.TestAuthHelper;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -21,9 +38,15 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 
-import static com.challengeteam.shop.web.controller.PhoneControllerTest.TestResources.auth;
+import java.math.BigDecimal;
+import java.util.Set;
+
 import static com.challengeteam.shop.web.controller.UserControllerTest.TestResources.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.Matchers.hasSize;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -31,16 +54,31 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @ExtendWith(ContainerExtension.class)
 class UserControllerTest {
-    @Autowired private TestAuthHelper testAuthHelper;
-    @Autowired private UserRepository userRepository;
-    @Autowired private UserService userService;
-    @Autowired private MockMvc mockMvc;
-    @Autowired private ObjectMapper objectMapper;
+    @Autowired
+    private TestAuthHelper testAuthHelper;
+    @Autowired
+    private UserRepository userRepository;
+    @Autowired
+    private UserService userService;
+    @Autowired
+    private MockMvc mockMvc;
+    @Autowired
+    private ObjectMapper objectMapper;
+    @Autowired
+    private OrderRepository orderRepository;
+    @Autowired
+    private FavoriteRepository favoriteRepository;
+    @Autowired
+    private PhoneRepository phoneRepository;
 
     private String token;
+    private String adminToken;
     private Long user1;
     private Long user2;
     private Long user3;
+
+    private String accessToken;
+    private String refreshToken;
 
     @DynamicPropertySource
     static void loadPropertiesForTest(DynamicPropertyRegistry propertyRegistry) {
@@ -49,6 +87,9 @@ class UserControllerTest {
 
     @BeforeEach
     public void setup() {
+        orderRepository.deleteAll();
+        favoriteRepository.deleteAll();
+        phoneRepository.deleteAll();
         userRepository.deleteAll();
 
         user1 = userService.createDefaultUser(buildCreateUserDto(TestUserCredentials.USER_1));
@@ -56,6 +97,9 @@ class UserControllerTest {
         user3 = userService.createDefaultUser(buildCreateUserDto(TestUserCredentials.USER_3));
 
         token = testAuthHelper.authorizeLikeTestUser();
+        adminToken = testAuthHelper.authorizeAsAdmin("admin.users.com");
+        accessToken = testAuthHelper.authorizeAndReturnTokens().accessToken();
+        refreshToken = testAuthHelper.authorizeAndReturnTokens().refreshToken();
     }
 
     @Nested
@@ -66,13 +110,20 @@ class UserControllerTest {
         @Test
         void whenValidRequest_thenStatus200AndReturnUsers() throws Exception {
             mockMvc.perform(get(URL)
-                            .header(HttpHeaders.AUTHORIZATION, auth(token)))
+                            .header(HttpHeaders.AUTHORIZATION, auth(adminToken)))
                     .andExpect(status().isOk())
                     .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                     .andExpect(jsonPath("$").isArray())
-                    .andExpect(jsonPath("$.length()").value(4))
+                    .andExpect(jsonPath("$.length()").value(5))
                     .andExpect(jsonPath("$[0].id").exists())
                     .andExpect(jsonPath("$[0].email").exists());
+        }
+
+        @Test
+        void whenCustomerRequestsUsers_thenStatus403() throws Exception {
+            mockMvc.perform(get(URL)
+                            .header(HttpHeaders.AUTHORIZATION, auth(token)))
+                    .andExpect(status().isForbidden());
         }
 
         @Test
@@ -97,7 +148,7 @@ class UserControllerTest {
         @Test
         void whenExists_thenStatus200AndReturnUser() throws Exception {
             mockMvc.perform(get(URL, user1)
-                            .header(HttpHeaders.AUTHORIZATION, auth(token)))
+                            .header(HttpHeaders.AUTHORIZATION, auth(adminToken)))
                     .andExpect(status().isOk())
                     .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                     .andExpect(jsonPath("$.id").value(user1))
@@ -107,7 +158,7 @@ class UserControllerTest {
         @Test
         void whenDoesntExist_thenStatus404() throws Exception {
             mockMvc.perform(get(URL, NON_EXISTING_ID)
-                            .header(HttpHeaders.AUTHORIZATION, auth(token)))
+                            .header(HttpHeaders.AUTHORIZATION, auth(adminToken)))
                     .andExpect(status().isNotFound());
         }
 
@@ -128,7 +179,7 @@ class UserControllerTest {
         void whenIdIsNotInteger_thenStatus404() throws Exception {
             var request = get(URL, "not_integer")
                     .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-                    .header(HttpHeaders.AUTHORIZATION, auth(token));
+                    .header(HttpHeaders.AUTHORIZATION, auth(adminToken));
 
             mockMvc.perform(request)
                     .andExpect(status().isNotFound());
@@ -145,7 +196,7 @@ class UserControllerTest {
             CreateUserDto request = buildCreateUserDto(TestUserCredentials.VALID_USER);
 
             mockMvc.perform(post(URL)
-                            .header(HttpHeaders.AUTHORIZATION, auth(token))
+                            .header(HttpHeaders.AUTHORIZATION, auth(adminToken))
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isCreated())
@@ -157,7 +208,7 @@ class UserControllerTest {
             CreateUserDto request = buildCreateUserDto(TestUserCredentials.VALID_USER_BOUNDARY_MIN);
 
             mockMvc.perform(post(URL)
-                            .header(HttpHeaders.AUTHORIZATION, auth(token))
+                            .header(HttpHeaders.AUTHORIZATION, auth(adminToken))
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isCreated());
@@ -168,7 +219,7 @@ class UserControllerTest {
             CreateUserDto request = buildCreateUserDto(TestUserCredentials.VALID_USER_BOUNDARY_MAX);
 
             mockMvc.perform(post(URL)
-                            .header(HttpHeaders.AUTHORIZATION, auth(token))
+                            .header(HttpHeaders.AUTHORIZATION, auth(adminToken))
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isCreated());
@@ -266,21 +317,21 @@ class UserControllerTest {
         }
 
         @Test
-        void whenEmailAlreadyExists_thenReturn400() throws Exception {
+        void whenEmailAlreadyExists_thenReturn409() throws Exception {
             CreateUserDto request = buildCreateUserDto(TestUserCredentials.USER_1);
 
             mockMvc.perform(post(URL)
-                            .header(HttpHeaders.AUTHORIZATION, auth(token))
+                            .header(HttpHeaders.AUTHORIZATION, auth(adminToken))
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
-                    .andExpect(status().isBadRequest());
+                    .andExpect(status().isConflict());
         }
 
         private void expect400WithInvalidBody(TestUserCredentials credentials) throws Exception {
             CreateUserDto request = buildCreateUserDto(credentials);
 
             mockMvc.perform(post(URL)
-                            .header(HttpHeaders.AUTHORIZATION, auth(token))
+                            .header(HttpHeaders.AUTHORIZATION, auth(adminToken))
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isBadRequest());
@@ -297,7 +348,7 @@ class UserControllerTest {
             UpdateProfileDto request = buildUpdateProfileDto(TestUserProfile.VALID_PROFILE);
 
             mockMvc.perform(patch(URL, user1)
-                            .header(HttpHeaders.AUTHORIZATION, auth(token))
+                            .header(HttpHeaders.AUTHORIZATION, auth(adminToken))
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isNoContent());
@@ -308,7 +359,7 @@ class UserControllerTest {
             UpdateProfileDto request = buildUpdateProfileDto(TestUserProfile.VALID_PROFILE_BOUNDARY_MIN);
 
             mockMvc.perform(patch(URL, user1)
-                            .header(HttpHeaders.AUTHORIZATION, auth(token))
+                            .header(HttpHeaders.AUTHORIZATION, auth(adminToken))
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isNoContent());
@@ -319,7 +370,7 @@ class UserControllerTest {
             UpdateProfileDto request = buildUpdateProfileDto(TestUserProfile.VALID_PROFILE_BOUNDARY_MAX);
 
             mockMvc.perform(patch(URL, user1)
-                            .header(HttpHeaders.AUTHORIZATION, auth(token))
+                            .header(HttpHeaders.AUTHORIZATION, auth(adminToken))
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isNoContent());
@@ -330,7 +381,7 @@ class UserControllerTest {
             UpdateProfileDto request = buildUpdateProfileDto(TestUserProfile.VALID_PROFILE_WITH_HYPHEN);
 
             mockMvc.perform(patch(URL, user1)
-                            .header(HttpHeaders.AUTHORIZATION, auth(token))
+                            .header(HttpHeaders.AUTHORIZATION, auth(adminToken))
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isNoContent());
@@ -341,7 +392,7 @@ class UserControllerTest {
             UpdateProfileDto request = buildUpdateProfileDto(TestUserProfile.VALID_PROFILE_WITH_APOSTROPHE);
 
             mockMvc.perform(patch(URL, user1)
-                            .header(HttpHeaders.AUTHORIZATION, auth(token))
+                            .header(HttpHeaders.AUTHORIZATION, auth(adminToken))
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isNoContent());
@@ -352,7 +403,7 @@ class UserControllerTest {
             UpdateProfileDto request = buildUpdateProfileDto(TestUserProfile.VALID_PROFILE_WITH_SPACE);
 
             mockMvc.perform(patch(URL, user1)
-                            .header(HttpHeaders.AUTHORIZATION, auth(token))
+                            .header(HttpHeaders.AUTHORIZATION, auth(adminToken))
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isNoContent());
@@ -363,7 +414,7 @@ class UserControllerTest {
             UpdateProfileDto request = buildUpdateProfileDto(TestUserProfile.VALID_PROFILE_LATIN);
 
             mockMvc.perform(patch(URL, user1)
-                            .header(HttpHeaders.AUTHORIZATION, auth(token))
+                            .header(HttpHeaders.AUTHORIZATION, auth(adminToken))
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isNoContent());
@@ -374,7 +425,7 @@ class UserControllerTest {
             UpdateProfileDto request = buildUpdateProfileDto(TestUserProfile.VALID_PROFILE_CYRILLIC);
 
             mockMvc.perform(patch(URL, user1)
-                            .header(HttpHeaders.AUTHORIZATION, auth(token))
+                            .header(HttpHeaders.AUTHORIZATION, auth(adminToken))
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isNoContent());
@@ -385,7 +436,7 @@ class UserControllerTest {
             UpdateProfileDto request = buildUpdateProfileDto(TestUserProfile.VALID_PROFILE_WITHOUT_PHONE);
 
             mockMvc.perform(patch(URL, user1)
-                            .header(HttpHeaders.AUTHORIZATION, auth(token))
+                            .header(HttpHeaders.AUTHORIZATION, auth(adminToken))
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isNoContent());
@@ -396,7 +447,7 @@ class UserControllerTest {
             UpdateProfileDto request = buildUpdateProfileDto(TestUserProfile.VALID_PROFILE_PHONE_WITHOUT_PLUS);
 
             mockMvc.perform(patch(URL, user1)
-                            .header(HttpHeaders.AUTHORIZATION, auth(token))
+                            .header(HttpHeaders.AUTHORIZATION, auth(adminToken))
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isNoContent());
@@ -427,7 +478,7 @@ class UserControllerTest {
         void whenIdIsNotInteger_thenStatus404() throws Exception {
             var request = put(URL, "not_integer")
                     .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-                    .header(HttpHeaders.AUTHORIZATION, auth(token));
+                    .header(HttpHeaders.AUTHORIZATION, auth(adminToken));
 
             mockMvc.perform(request)
                     .andExpect(status().isNotFound());
@@ -438,7 +489,7 @@ class UserControllerTest {
             UpdateProfileDto request = buildUpdateProfileDto(TestUserProfile.VALID_PROFILE);
 
             mockMvc.perform(patch(URL, NON_EXISTING_ID)
-                            .header(HttpHeaders.AUTHORIZATION, auth(token))
+                            .header(HttpHeaders.AUTHORIZATION, auth(adminToken))
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isNotFound());
@@ -588,7 +639,7 @@ class UserControllerTest {
             UpdateProfileDto request = buildUpdateProfileDto(profile);
 
             mockMvc.perform(patch(URL, user1)
-                            .header(HttpHeaders.AUTHORIZATION, auth(token))
+                            .header(HttpHeaders.AUTHORIZATION, auth(adminToken))
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isBadRequest());
@@ -603,14 +654,14 @@ class UserControllerTest {
         @Test
         void whenExists_thenStatus204() throws Exception {
             mockMvc.perform(delete(URL, user1)
-                            .header(HttpHeaders.AUTHORIZATION, auth(token)))
+                            .header(HttpHeaders.AUTHORIZATION, auth(adminToken)))
                     .andExpect(status().isNoContent());
         }
 
         @Test
         void whenDoesntExist_thenStatus404() throws Exception {
             mockMvc.perform(delete(URL, NON_EXISTING_ID)
-                            .header(HttpHeaders.AUTHORIZATION, auth(token)))
+                            .header(HttpHeaders.AUTHORIZATION, auth(adminToken)))
                     .andExpect(status().isNotFound());
         }
 
@@ -631,12 +682,397 @@ class UserControllerTest {
         void whenIdIsNotInteger_thenStatus404() throws Exception {
             var request = delete(URL, "not_integer")
                     .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-                    .header(HttpHeaders.AUTHORIZATION, auth(token));
+                    .header(HttpHeaders.AUTHORIZATION, auth(adminToken));
 
             mockMvc.perform(request)
                     .andExpect(status().isNotFound());
         }
     }
+
+    @Nested
+    @DisplayName("GET /api/v1/users/me")
+    class GetCurrentUserTest {
+        private static final String URL = "/api/v1/users/me";
+
+        private User currentUser;
+        private Phone phone;
+
+        @BeforeEach
+        void setup() {
+            currentUser = userRepository
+                    .findByEmail(TestAuthHelper.TEST_COMPONENT_EMAIL)
+                    .orElseThrow();
+
+            phone = phoneRepository.save(Phone.builder()
+                    .name("iPhone 15")
+                    .description("Test phone")
+                    .price(BigDecimal.valueOf(999.99))
+                    .brand("Apple")
+                    .releaseYear(2023)
+                    .sku("TEST-SKU-001")
+                    .stock(10)
+                    .status(ProductStatus.IN_STOCK)
+                    .phoneCharacteristics(PhoneCharacteristics.builder()
+                            .cpu("A17 Pro")
+                            .coresNumber(6)
+                            .screenSize("6.1\"")
+                            .frontCamera("12MP")
+                            .mainCamera("48MP")
+                            .batteryCapacity("3274mAh")
+                            .phoneColors(Set.of(PhoneColor.BLACK))
+                            .storageCapacities(Set.of(StorageCapacity.CAPACITY_128GB))
+                            .build())
+                    .build());
+        }
+
+        @Test
+        void whenNoToken_thenStatus401() throws Exception {
+            mockMvc.perform(get(URL))
+                    .andExpect(status().isUnauthorized());
+        }
+
+        @Test
+        void whenInvalidToken_thenStatus401() throws Exception {
+            mockMvc.perform(get(URL)
+                            .header(HttpHeaders.AUTHORIZATION, auth("invalid_token")))
+                    .andExpect(status().isUnauthorized());
+        }
+
+        @Test
+        void whenValidToken_thenStatus200() throws Exception {
+            mockMvc.perform(get(URL)
+                            .header(HttpHeaders.AUTHORIZATION, auth(token)))
+                    .andExpect(status().isOk());
+        }
+
+        @Test
+        void whenValidToken_thenReturnsCorrectUserFields() throws Exception {
+            mockMvc.perform(get(URL)
+                            .header(HttpHeaders.AUTHORIZATION, auth(token)))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.id").value(currentUser.getId()))
+                    .andExpect(jsonPath("$.email").value(currentUser.getEmail()))
+                    .andExpect(jsonPath("$.role.name").isNotEmpty());
+        }
+
+        @Test
+        void whenValidToken_thenCartIsPresent() throws Exception {
+            mockMvc.perform(get(URL)
+                            .header(HttpHeaders.AUTHORIZATION, auth(token)))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.cart").isNotEmpty())
+                    .andExpect(jsonPath("$.cart.totalPrice").value(0));
+        }
+
+        @Test
+        void whenUserHasNoOrders_thenOrdersIsEmpty() throws Exception {
+            mockMvc.perform(get(URL)
+                            .header(HttpHeaders.AUTHORIZATION, auth(token)))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.orders").isArray())
+                    .andExpect(jsonPath("$.orders", hasSize(0)));
+        }
+
+        @Test
+        void whenUserHasOrders_thenOrdersReturned() throws Exception {
+            orderRepository.save(buildOrder(currentUser, phone));
+
+            mockMvc.perform(get(URL)
+                            .header(HttpHeaders.AUTHORIZATION, auth(token)))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.orders").isArray())
+                    .andExpect(jsonPath("$.orders", hasSize(1)));
+        }
+
+        @Test
+        void whenUserHasNoFavorites_thenFavoritesIsEmpty() throws Exception {
+            mockMvc.perform(get(URL)
+                            .header(HttpHeaders.AUTHORIZATION, auth(token)))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.favorites").isArray())
+                    .andExpect(jsonPath("$.favorites", hasSize(0)));
+        }
+
+        @Test
+        void whenUserHasFavorites_thenFavoritesReturned() throws Exception {
+            favoriteRepository.save(new Favorite(currentUser, phone));
+
+            mockMvc.perform(get(URL)
+                            .header(HttpHeaders.AUTHORIZATION, auth(token)))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.favorites").isArray())
+                    .andExpect(jsonPath("$.favorites", hasSize(1)));
+        }
+
+        private Order buildOrder(User user, Phone phone) {
+            Order order = Order.builder()
+                    .user(user)
+                    .customerEmail(user.getEmail())
+                    .customerFirstName("John")
+                    .customerLastName("Doe")
+                    .customerPhoneNumber("+380991234567")
+                    .status(OrderStatus.NEW)
+                    .paymentMethod(PaymentMethod.CARD)
+                    .deliveryMethod(DeliveryMethod.PICKUP)
+                    .paymentDetails(new PaymentDetails(PaymentStatus.PENDING, null))
+                    .total(BigDecimal.valueOf(999.99))
+                    .build();
+
+            OrderItem item = OrderItem.builder()
+                    .productName(phone.getName())
+                    .sku(phone.getSku())
+                    .unitPrice(phone.getPrice())
+                    .selectedColor(PhoneColor.BLACK)
+                    .selectedStorage(StorageCapacity.CAPACITY_128GB)
+                    .quantity(1)
+                    .totalPrice(phone.getPrice())
+                    .build();
+
+            order.addItem(item);
+            return order;
+        }
+    }
+
+    @Nested
+    @DisplayName("PATCH /sensitive — change password")
+    class ChangePasswordTests {
+        private static final String URL = "/api/v1/users/sensitive";
+
+        @Test
+        @DisplayName("valid request — 200, returns new access token and Set-Cookie with new refresh")
+        void changePassword_validRequest_returns200WithNewTokens() throws Exception {
+            var dto = new UpdateUserSensitiveDataDto(
+                    "NewPass9@", "NewPass9@",
+                    TestAuthHelper.TEST_COMPONENT_PASSWORD, null);
+
+            MvcResult result = mockMvc.perform(patchSensitive(dto, URL)
+                            .header(HttpHeaders.AUTHORIZATION, auth(accessToken)))
+                    .andExpect(status().isOk())
+                    .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                    .andExpect(jsonPath("$.accessToken").isNotEmpty())
+                    .andExpect(jsonPath("$.email").value(TestAuthHelper.TEST_COMPONENT_EMAIL))
+                    .andExpect(jsonPath("$.userId").isNumber())
+                    .andReturn();
+
+            String setCookie = result.getResponse().getHeader(HttpHeaders.SET_COOKIE);
+            assertThat(setCookie)
+                    .startsWith(JwtTokenNameConstants.REFRESH_TOKEN_HEADER + "=");
+            JwtPublicResponseDto response = objectMapper.readValue(
+                    result.getResponse().getContentAsString(), JwtPublicResponseDto.class);
+            assertThat(response.accessToken()).isNotBlank();
+        }
+
+        @Test
+        @DisplayName("old token is revoked after password change")
+        void changePassword_oldAccessTokenRevoked() throws Exception {
+            var dto = new UpdateUserSensitiveDataDto(
+                    "NewPass9@", "NewPass9@",
+                    TestAuthHelper.TEST_COMPONENT_PASSWORD, null);
+
+            mockMvc.perform(patchSensitive(dto, URL)
+                    .header(HttpHeaders.AUTHORIZATION, auth(accessToken)) //new
+            ).andExpect(status().isOk());
+
+            mockMvc.perform(patch(URL)
+                            .header(HttpHeaders.AUTHORIZATION, auth(accessToken))
+                            .cookie(new jakarta.servlet.http.Cookie(JwtTokenNameConstants.REFRESH_TOKEN_TYPE, refreshToken))
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(dto)))
+                    .andExpect(status().isUnauthorized());
+        }
+
+        @Test
+        @DisplayName("wrong old password — 400")
+        void changePassword_wrongOldPassword_returns400() throws Exception {
+            var dto = new UpdateUserSensitiveDataDto(
+                    "NewPass9@", "NewPass9@",
+                    "WrongOldPass1!", null);
+
+            mockMvc.perform(patchSensitive(dto, URL))
+                    .andExpect(status().isBadRequest());
+        }
+
+        @Test
+        @DisplayName("newPassword and confirmPassword mismatch — 400")
+        void changePassword_confirmMismatch_returns400() throws Exception {
+            var dto = new UpdateUserSensitiveDataDto(
+                    "NewPass9@", "DifferentPass9@",
+                    TestAuthHelper.TEST_COMPONENT_PASSWORD, null);
+
+            mockMvc.perform(patchSensitive(dto, URL))
+//                            .header(HttpHeaders.AUTHORIZATION, auth(accessToken)))
+                    .andExpect(status().isBadRequest());
+        }
+
+        @Test
+        @DisplayName("new password same as old — 400")
+        void changePassword_sameAsOld_returns400() throws Exception {
+            var dto = new UpdateUserSensitiveDataDto(
+                    TestAuthHelper.TEST_COMPONENT_PASSWORD,
+                    TestAuthHelper.TEST_COMPONENT_PASSWORD,
+                    TestAuthHelper.TEST_COMPONENT_PASSWORD, null);
+
+            mockMvc.perform(patchSensitive(dto, URL))
+                    .andExpect(status().isBadRequest());
+        }
+
+        @Test
+        @DisplayName("new password fails pattern validation — 400")
+        void changePassword_invalidPattern_returns400() throws Exception {
+            var dto = new UpdateUserSensitiveDataDto(
+                    "weakpassword", "weakpassword",
+                    TestAuthHelper.TEST_COMPONENT_PASSWORD, null);
+
+            mockMvc.perform(patchSensitive(dto, URL))
+                    .andExpect(status().isBadRequest());
+        }
+    }
+
+    // ─── change email ─────────────────────────────────────────────────────────
+
+    @Nested
+    @DisplayName("PATCH /sensitive — change email")
+    class ChangeEmailTests {
+        private static final String URL = "/api/v1/users/sensitive";
+
+        @Test
+        @DisplayName("valid request — 200, email updated in response and DB")
+        void changeEmail_validRequest_returns200WithUpdatedEmail() throws Exception {
+            var dto = new UpdateUserSensitiveDataDto(null, null, null, "changed@example.com");
+
+            mockMvc.perform(patchSensitive(dto, URL))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.email").value("changed@example.com"))
+                    .andExpect(jsonPath("$.accessToken").isNotEmpty());
+
+            assertThat(userRepository.existsByEmail("changed@example.com")).isTrue();
+            assertThat(userRepository.existsByEmail(TestAuthHelper.TEST_COMPONENT_EMAIL)).isFalse();
+        }
+
+        @Test
+        @DisplayName("same email as current — 400")
+        void changeEmail_sameAsCurrent_returns400() throws Exception {
+            var dto = new UpdateUserSensitiveDataDto(
+                    null, null, null, TestAuthHelper.TEST_COMPONENT_EMAIL);
+
+            mockMvc.perform(patchSensitive(dto, URL))
+                    .andExpect(status().isBadRequest());
+        }
+
+        @Test
+        @DisplayName("invalid email format — 400")
+        void changeEmail_invalidFormat_returns400() throws Exception {
+            var dto = new UpdateUserSensitiveDataDto(null, null, null, "not-an-email");
+
+            mockMvc.perform(patchSensitive(dto, URL))
+                    .andExpect(status().isBadRequest());
+        }
+
+        @Test
+        @DisplayName("email already taken by another user — 409")
+        void changeEmail_alreadyTaken_returns409() throws Exception {
+            CreateUserDto request = buildCreateUserDto(TestUserCredentials.USER_1);
+
+            var dto = new UpdateUserSensitiveDataDto(
+                    null, null, null, TestUserCredentials.USER_1.email);
+
+            mockMvc.perform(patchSensitive(dto, URL))
+                    .andExpect(status().isConflict());
+        }
+    }
+
+    // ─── change both ──────────────────────────────────────────────────────────
+
+    @Nested
+    @DisplayName("PATCH /me/sensitive — change both")
+    class ChangeBothTests {
+        private static final String URL = "/api/v1/users/sensitive";
+
+        @Test
+        @DisplayName("valid request with both fields — 200, both updated")
+        void changeBoth_validRequest_returns200() throws Exception {
+            var dto = new UpdateUserSensitiveDataDto(
+                    "NewPass9@", "NewPass9@",
+                    TestAuthHelper.TEST_COMPONENT_PASSWORD,
+                    "newboth@example.com");
+
+            mockMvc.perform(patchSensitive(dto, URL))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.email").value("newboth@example.com"))
+                    .andExpect(jsonPath("$.accessToken").isNotEmpty());
+
+            assertThat(userRepository.existsByEmail("newboth@example.com")).isTrue();
+        }
+    }
+
+    // ─── no data ──────────────────────────────────────────────────────────────
+
+    @Nested
+    @DisplayName("PATCH /me/sensitive — no new data")
+    class NoDataTests {
+        private static final String URL = "/api/v1/users/sensitive";
+
+        @Test
+        @DisplayName("all fields null — 400")
+        void noNewData_returns400() throws Exception {
+            var dto = new UpdateUserSensitiveDataDto(null, null, null, null);
+
+            mockMvc.perform(patchSensitive(dto, URL))
+                    .andExpect(status().isBadRequest());
+        }
+    }
+
+    // ─── auth guards ─────────────────────────────────────────────────────────
+
+    @Nested
+    @DisplayName("PATCH /me/sensitive — auth guards")
+    class AuthGuardTests {
+        private static final String URL = "/api/v1/users/sensitive";
+
+        @Test
+        @DisplayName("missing Authorization header — 401")
+        void noAuthHeader_returns401() throws Exception {
+            var dto = new UpdateUserSensitiveDataDto(
+                    "NewPass9@", "NewPass9@",
+                    TestAuthHelper.TEST_COMPONENT_PASSWORD, null);
+
+            mockMvc.perform(patch(URL)
+                            .cookie(new Cookie(JwtTokenNameConstants.REFRESH_TOKEN_HEADER, refreshToken))
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(dto)))
+                    .andExpect(status().isUnauthorized());
+        }
+
+        @Test
+        @DisplayName("missing refresh cookie — 400")
+        void noRefreshCookie_returns400() throws Exception {
+            var dto = new UpdateUserSensitiveDataDto(
+                    "NewPass9@", "NewPass9@",
+                    TestAuthHelper.TEST_COMPONENT_PASSWORD, null);
+
+            mockMvc.perform(patch(URL)
+                            .header(HttpHeaders.AUTHORIZATION, auth(accessToken))
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(dto)))
+                    .andExpect(status().isBadRequest());
+        }
+
+        @Test
+        @DisplayName("invalid JWT — 401")
+        void invalidJwt_returns401() throws Exception {
+            var dto = new UpdateUserSensitiveDataDto(
+                    "NewPass9@", "NewPass9@",
+                    TestAuthHelper.TEST_COMPONENT_PASSWORD, null);
+
+            mockMvc.perform(patch(URL)
+                            .header(HttpHeaders.AUTHORIZATION, auth("invalid.jwt.token"))
+                            .cookie(new Cookie(JwtTokenNameConstants.REFRESH_TOKEN_HEADER, refreshToken))
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(dto)))
+                    .andExpect(status().isUnauthorized());
+        }
+    }
+
 
     static class TestResources {
         static final long NON_EXISTING_ID = 99_999L;
@@ -764,5 +1200,13 @@ class UserControllerTest {
             this.city = city;
             this.phoneNumber = phoneNumber;
         }
+    }
+
+    private MockHttpServletRequestBuilder patchSensitive(Object dto, String URL) throws Exception {
+        return patch(URL)
+                .header(HttpHeaders.AUTHORIZATION, auth(accessToken))
+                .cookie(new Cookie(JwtTokenNameConstants.REFRESH_TOKEN_HEADER, refreshToken))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(dto));
     }
 }

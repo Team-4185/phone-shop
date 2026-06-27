@@ -5,7 +5,7 @@ import com.challengeteam.shop.dto.auth.ResetPasswordRequestDto;
 import com.challengeteam.shop.dto.auth.UserLoginRequestDto;
 import com.challengeteam.shop.dto.auth.UserRegisterRequestDto;
 import com.challengeteam.shop.dto.security.jwt.JwtResponseDto;
-import com.challengeteam.shop.dto.user.CreateUserDto;
+import com.challengeteam.shop.dto.user.request.CreateUserDto;
 import com.challengeteam.shop.entity.token.PasswordResetToken;
 import com.challengeteam.shop.entity.user.Role;
 import com.challengeteam.shop.entity.user.User;
@@ -137,7 +137,7 @@ public class AuthControllerTest {
                     .accept(MediaType.APPLICATION_JSON);
 
             mockMvc.perform(request)
-                    .andExpect(status().isBadRequest());
+                    .andExpect(status().isConflict());
         }
 
         @Test

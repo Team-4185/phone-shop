@@ -11,9 +11,9 @@ public interface CartService {
 
     Cart putItemToCart(Cart cart, CartItemAddRequestDto cartItemAddRequestDto);
 
-    Cart updateAmountCartItem(Cart cart, Long phoneId, Integer amount);
+    Cart updateAmountCartItem(Cart cart, Long variantId, Integer amount);
 
-    Cart removeItemFromCart(Cart cart, Long phoneId);
+    Cart removeItemFromCart(Cart cart, Long variantId);
 
     Cart clearCart(Cart cart);
 

@@ -2,8 +2,11 @@ package com.challengeteam.shop.service.admin.impl;
 
 import com.challengeteam.shop.dto.admin.product.AdminProductCreateRequestDto;
 import com.challengeteam.shop.dto.admin.product.AdminProductUpdateRequestDto;
+import com.challengeteam.shop.dto.admin.product.AdminProductVariantRequestDto;
+import com.challengeteam.shop.dto.admin.product.AdminProductVariantUpdateRequestDto;
 import com.challengeteam.shop.entity.image.Image;
 import com.challengeteam.shop.entity.phone.Phone;
+import com.challengeteam.shop.entity.phone.ProductVariant;
 import com.challengeteam.shop.exceptionHandling.exception.CriticalSystemException;
 import com.challengeteam.shop.exceptionHandling.exception.InvalidAPIRequestException;
 import com.challengeteam.shop.exceptionHandling.exception.ResourceNotFoundException;
@@ -11,6 +14,7 @@ import com.challengeteam.shop.mapper.admin.AdminProductMapper;
 import com.challengeteam.shop.persistence.repository.ImageRepository;
 import com.challengeteam.shop.persistence.repository.PhoneRepository;
 import com.challengeteam.shop.service.ImageService;
+import com.challengeteam.shop.service.ProductVariantService;
 import com.challengeteam.shop.service.admin.AdminProductCommandService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -34,6 +38,7 @@ public class AdminProductCommandServiceImpl implements AdminProductCommandServic
   private final PhoneRepository phoneRepository;
   private final ImageRepository imageRepository;
   private final ImageService imageService;
+  private final ProductVariantService productVariantService;
   private final AdminProductMapper adminProductMapper;
 
   @Transactional
@@ -47,6 +52,7 @@ public class AdminProductCommandServiceImpl implements AdminProductCommandServic
     validateSkuForCreate(normalizedSku);
 
     Phone phone = phoneRepository.save(adminProductMapper.toEntity(request, normalizedSku));
+    productVariantService.createInitialVariants(phone, request.variants());
     attachImages(phone, images);
 
     log.info(
@@ -73,6 +79,8 @@ public class AdminProductCommandServiceImpl implements AdminProductCommandServic
 
     adminProductMapper.updateEntity(phone, request, normalizedSku);
     phoneRepository.save(phone);
+    productVariantService.syncSingleVariantFromPhone(phone);
+    productVariantService.syncPhoneDisplayFields(phone);
     log.info("Updated admin product id={} sku={}", id, phone.getSku());
   }
 
@@ -89,6 +97,31 @@ public class AdminProductCommandServiceImpl implements AdminProductCommandServic
     }
     phoneRepository.delete(phone);
     log.info("Deleted admin product id={} imageCount={}", id, images.size());
+  }
+
+  @Transactional
+  @Override
+  public ProductVariant addProductVariant(Long productId, AdminProductVariantRequestDto request) {
+    Objects.requireNonNull(productId, "productId");
+    Objects.requireNonNull(request, "request");
+
+    Phone phone = getProductEntity(productId);
+    ProductVariant variant = productVariantService.createVariant(phone, request);
+    productVariantService.syncPhoneDisplayFields(phone);
+    return variant;
+  }
+
+  @Transactional
+  @Override
+  public ProductVariant updateProductVariant(
+      Long productId, Long variantId, AdminProductVariantUpdateRequestDto request) {
+    return productVariantService.updateVariant(productId, variantId, request);
+  }
+
+  @Transactional
+  @Override
+  public void deleteProductVariant(Long productId, Long variantId) {
+    productVariantService.deleteVariant(productId, variantId);
   }
 
   @Transactional(readOnly = true)

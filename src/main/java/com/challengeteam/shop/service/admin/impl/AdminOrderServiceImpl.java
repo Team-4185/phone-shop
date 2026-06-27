@@ -1,18 +1,28 @@
 package com.challengeteam.shop.service.admin.impl;
 
+import com.challengeteam.shop.constants.notification.type.Notification_type;
 import com.challengeteam.shop.dto.admin.order.AdminOrderDetailsResponseDto;
 import com.challengeteam.shop.dto.admin.order.AdminOrderFilterDto;
 import com.challengeteam.shop.dto.admin.order.AdminOrderKpiResponseDto;
 import com.challengeteam.shop.dto.admin.order.AdminOrderListItemResponseDto;
+import com.challengeteam.shop.dto.email.Notification;
+import com.challengeteam.shop.dto.payment.TransactionResult;
 import com.challengeteam.shop.entity.order.Order;
 import com.challengeteam.shop.entity.order.OrderStatus;
+import com.challengeteam.shop.entity.order.payment.PaymentMethod;
+import com.challengeteam.shop.entity.order.payment.PaymentStatus;
 import com.challengeteam.shop.exceptionHandling.exception.InvalidPriceRangeException;
 import com.challengeteam.shop.exceptionHandling.exception.ResourceNotFoundException;
+import com.challengeteam.shop.exceptionHandling.exception.order.InvalidOrderStatusTransitionException;
+import com.challengeteam.shop.exceptionHandling.exception.order.PaymentFailedException;
 import com.challengeteam.shop.mapper.admin.AdminOrderMapper;
 import com.challengeteam.shop.persistence.repository.OrderRepository;
 import com.challengeteam.shop.persistence.specification.AdminOrderSpecification;
 import com.challengeteam.shop.service.admin.AdminOrderService;
 import com.challengeteam.shop.service.admin.AdminOrderWorkflowService;
+import com.challengeteam.shop.service.notification.NotificationSenderService;
+import com.challengeteam.shop.service.payment.PaymentProviderResolver;
+import com.challengeteam.shop.utility.notification.email.OrderStatusEmailBuilder;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
@@ -43,6 +53,9 @@ public class AdminOrderServiceImpl implements AdminOrderService {
   private final OrderRepository orderRepository;
   private final AdminOrderMapper adminOrderMapper;
   private final AdminOrderWorkflowService adminOrderWorkflowService;
+  private final NotificationSenderService notificationSenderService;
+  private final OrderStatusEmailBuilder orderStatusEmailBuilder;
+  private final PaymentProviderResolver paymentProviderResolver;
 
   @Override
   public Page<AdminOrderListItemResponseDto> getOrders(
@@ -110,7 +123,9 @@ public class AdminOrderServiceImpl implements AdminOrderService {
     OrderStatus targetStatus = adminOrderWorkflowService.resolveTargetStatus(previousStatus, action);
 
     order.setStatus(targetStatus);
+    refundIfNeeded(order, targetStatus);
     Order savedOrder = orderRepository.save(order);
+    sendStatusChangedNotification(savedOrder, previousStatus, targetStatus);
     log.info(
         "Admin order status changed orderId={} action={} from={} to={}",
         id,
@@ -119,6 +134,70 @@ public class AdminOrderServiceImpl implements AdminOrderService {
         targetStatus);
 
     return adminOrderMapper.toDetails(savedOrder);
+  }
+
+  @Override
+  @Transactional
+  public AdminOrderDetailsResponseDto shipOrder(Long id, String trackingNumber) {
+    Order order = findOrderWithDetails(id);
+    OrderStatus previousStatus = order.getStatus();
+    OrderStatus targetStatus =
+        adminOrderWorkflowService.resolveTargetStatus(previousStatus, "ship");
+
+    if (trackingNumber != null && !trackingNumber.isBlank()) {
+      if (order.getShippingAddress() == null) {
+        throw new InvalidOrderStatusTransitionException(
+            "Cannot assign tracking number to an order without shipping address");
+      }
+      order.getShippingAddress().setTrackingNumber(trackingNumber.strip());
+    }
+
+    order.setStatus(targetStatus);
+    Order savedOrder = orderRepository.save(order);
+    sendStatusChangedNotification(savedOrder, previousStatus, targetStatus);
+    return adminOrderMapper.toDetails(savedOrder);
+  }
+
+  private void refundIfNeeded(Order order, OrderStatus targetStatus) {
+    if (targetStatus != OrderStatus.CANCELLED
+        || order.getPaymentMethod() == PaymentMethod.CASH_ON_DELIVERY
+        || order.getPaymentDetails().getPaymentStatus() != PaymentStatus.PAID) {
+      return;
+    }
+
+    String transactionId = order.getPaymentDetails().getTransactionId();
+    if (transactionId == null || transactionId.isBlank()) {
+      throw new PaymentFailedException("Cannot refund paid order without payment transaction id");
+    }
+
+    TransactionResult refundResult =
+        paymentProviderResolver
+        .getProvider(order.getPaymentProvider())
+        .refund(order.getPaymentDetails().getTransactionId(), order.getTotal());
+
+    if (refundResult.paymentStatus() != PaymentStatus.REFUNDED) {
+      String message =
+          refundResult.errorMessage() == null || refundResult.errorMessage().isBlank()
+              ? "Refund was not completed"
+              : refundResult.errorMessage();
+      log.error(
+          "Refund failed for orderId={} provider={} transactionId={} status={} error={}",
+          order.getId(),
+          order.getPaymentProvider(),
+          transactionId,
+          refundResult.paymentStatus(),
+          message);
+      throw new PaymentFailedException(message);
+    }
+
+    order.getPaymentDetails().setPaymentStatus(PaymentStatus.REFUNDED);
+  }
+
+  private void sendStatusChangedNotification(
+      Order order, OrderStatus previousStatus, OrderStatus targetStatus) {
+    Notification notification =
+        orderStatusEmailBuilder.buildOrderStatusChangedNotification(order, previousStatus, targetStatus);
+    notificationSenderService.sendNotification(notification, Notification_type.EMAIL);
   }
 
   private Order findOrderWithDetails(Long id) {

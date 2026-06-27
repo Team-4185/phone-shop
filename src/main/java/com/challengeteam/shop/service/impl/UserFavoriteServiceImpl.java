@@ -5,10 +5,10 @@ import com.challengeteam.shop.entity.favorite.Favorite;
 import com.challengeteam.shop.entity.phone.Phone;
 import com.challengeteam.shop.entity.user.User;
 import com.challengeteam.shop.exceptionHandling.exception.ResourceNotFoundException;
-import com.challengeteam.shop.mapper.phone.PhoneMapper;
 import com.challengeteam.shop.persistence.repository.FavoriteRepository;
 import com.challengeteam.shop.persistence.repository.PhoneRepository;
 import com.challengeteam.shop.persistence.repository.UserRepository;
+import com.challengeteam.shop.service.CatalogProductResponseAssembler;
 import com.challengeteam.shop.service.UserFavoriteService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -24,18 +24,18 @@ public class UserFavoriteServiceImpl implements UserFavoriteService {
     private final FavoriteRepository favoriteRepository;
     private final UserRepository userRepository;
     private final PhoneRepository phoneRepository;
-    private final PhoneMapper phoneMapper;
+    private final CatalogProductResponseAssembler catalogProductResponseAssembler;
 
     @Transactional(readOnly = true)
     @Override
     public List<PhoneResponseDto> getUserFavorites(Long userId) {
         Objects.requireNonNull(userId, "userId");
 
-        return phoneMapper.toResponseList(
-                favoriteRepository.findAllByUserIdWithPhoneImages(userId).stream()
-                        .map(Favorite::getPhone)
-                        .toList()
-        );
+        List<Phone> phones = favoriteRepository.findAllByUserIdWithPhoneImages(userId).stream()
+                .map(Favorite::getPhone)
+                .toList();
+
+        return catalogProductResponseAssembler.toResponses(phones);
     }
 
     @Transactional

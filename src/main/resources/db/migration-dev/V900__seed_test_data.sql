@@ -1,21 +1,14 @@
--- roles
-INSERT INTO roles (id, name, created_at, updated_at)
-    OVERRIDING SYSTEM VALUE
-VALUES (1, 'ROLE_ADMIN', NOW(), NULL),
-       (2, 'ROLE_USER', NOW(), NULL)
-ON CONFLICT (id) DO NOTHING;
-
 -- users pass: asdASD1!
 INSERT INTO users (id, email, password, first_name, last_name, city, phone_number, fk_role_id, created_at, updated_at)
     OVERRIDING SYSTEM VALUE
 VALUES (1, 'admin@email.com', '$2a$10$uBadJkAdWOox4Dtdwv65XOpUFJdL0y6eiboIHaJ5do38RTMBfrLdW', 'Admin', 'Admin', NULL,
-        NULL, 1, NOW(), NULL),
+        NULL, 2, NOW(), NULL),
        (2, 'us1@email.com', '$2a$10$uBadJkAdWOox4Dtdwv65XOpUFJdL0y6eiboIHaJ5do38RTMBfrLdW', 'User1', 'User1', 'Kiev',
-        NULL, 2, NOW(), NULL),
+        NULL, 1, NOW(), NULL),
        (3, 'us2@email.com', '$2a$10$uBadJkAdWOox4Dtdwv65XOpUFJdL0y6eiboIHaJ5do38RTMBfrLdW', 'User2', 'User2', NULL,
-        NULL, 2, NOW(), NULL),
+        NULL, 1, NOW(), NULL),
        (4, 'us3@email.com', '$2a$10$uBadJkAdWOox4Dtdwv65XOpUFJdL0y6eiboIHaJ5do38RTMBfrLdW', 'User3', 'User3', 'Lviv',
-        NULL, 2, NOW(), NULL)
+        NULL, 1, NOW(), NULL)
 ON CONFLICT (id) DO NOTHING;
 
 -- phones
@@ -81,51 +74,52 @@ INSERT INTO orders (id, fk_user_id, customer_email, customer_first_name, custome
                     apartment_number, house_number, logistics_company, logistic_post_office, tracking_number,
                     street, city, region, country, zip_code,
                     payment_status, transaction_id,
+                    payment_provider, delivery_provider, delivery_price,
                     total, created_at, updated_at)
     OVERRIDING SYSTEM VALUE
 VALUES
 -- anon CARD, COURIER, DELIVERED, PAID
 (1, NULL, 'anon1@email.com', 'John', 'Doe', '+380991234567', 'DELIVERED', 'CARD', 'COURIER', '12A', '25', 'DHL', NULL,
- 'TRK-001', 'Khreshchatyk St', 'Kyiv', 'Kyiv Oblast', 'Ukraine', '01001', 'PAID', 'TXN-001', 999.99,
- NOW() - INTERVAL '30 days', NOW() - INTERVAL '25 days'),
+ 'TRK-001', 'Khreshchatyk St', 'Kyiv', 'Kyiv Oblast', 'Ukraine', '01001', 'PAID', 'TXN-001',
+ 'mock', 'mock', 0.00, 999.99, NOW() - INTERVAL '30 days', NOW() - INTERVAL '25 days'),
 -- anon, CASH_ON_DELIVERY, POST_OFFICE, CANCELLED, PENDING
 (2, NULL, 'anon2@email.com', 'Anna', 'Smith', '+380992345678', 'CANCELLED', 'CASH_ON_DELIVERY', 'POST_OFFICE', NULL,
  '10', 'NOVA_POSHTA', 'NP #5 Lviv', NULL, 'Svobody Ave', 'Lviv', 'Lviv Oblast', 'Ukraine', '79000', 'PENDING', NULL,
- 449.99, NOW() - INTERVAL '20 days', NOW() - INTERVAL '18 days'),
+ 'mock', 'mock', 0.00, 449.99, NOW() - INTERVAL '20 days', NOW() - INTERVAL '18 days'),
 -- anon, CARD, PICKUP, PROCESSING, PAID
 (3, NULL, 'anon3@email.com', 'Mike', 'Brown', '+380993456789', 'PROCESSING', 'CARD', 'PICKUP', NULL, NULL, NULL, NULL,
- 'TRK-003', NULL, NULL, NULL, NULL, NULL, 'PAID', 'TXN-003', 1199.99,
- NOW() - INTERVAL '5 days', NULL),
+ 'TRK-003', NULL, NULL, NULL, NULL, NULL, 'PAID', 'TXN-003',
+ 'mock', 'mock', 0.00, 1199.99, NOW() - INTERVAL '5 days', NULL),
 -- us1, CARD, COURIER, NEW, PENDING
 (4, 2, 'us1@email.com', 'User1', 'User1', '+380994567890', 'NEW', 'CARD', 'COURIER', '5B', '33', 'NOVA_POSHTA', NULL,
  NULL,
- 'Derybasivska St', 'Odesa', 'Odesa Oblast', 'Ukraine', '65000', 'PENDING', NULL, 799.99, NOW() - INTERVAL '1 day',
+ 'Derybasivska St', 'Odesa', 'Odesa Oblast', 'Ukraine', '65000', 'PENDING', NULL, 'mock', 'mock', 0.00, 799.99, NOW() - INTERVAL '1 day',
  NULL),
 -- us1, CASH_ON_DELIVERY, POST_OFFICE, SHIPPED, PENDING
 (5, 2, 'us1@email.com', 'User1', 'User1', '+380994567890', 'SHIPPED', 'CASH_ON_DELIVERY', 'POST_OFFICE', NULL, NULL,
  'UKR_POSHTA', 'UP #12 Dnipro', 'TRK-005', NULL, 'Dnipro', 'Dnipro Oblast', 'Ukraine', '49000', 'PENDING',
- NULL, 249.99, NOW() - INTERVAL '10 days', NOW() - INTERVAL '7 days'),
+ NULL, 'mock', 'mock', 0.00, 249.99, NOW() - INTERVAL '10 days', NOW() - INTERVAL '7 days'),
 -- us2, CARD, COURIER, CONFIRMED, PAID
 (6, 3, 'us2@email.com', 'User2', 'User2', '+380995678901', 'CONFIRMED', 'CARD', 'COURIER', '3', '15', 'DHL', NULL, NULL,
- 'Shevchenko Blvd', 'Zaporizhzhia', 'Zaporizhzhia Oblast', 'Ukraine', '69000', 'PAID', 'TXN-006', 1799.98,
- NOW() - INTERVAL '3 days', NOW() - INTERVAL '2 days'),
+ 'Shevchenko Blvd', 'Zaporizhzhia', 'Zaporizhzhia Oblast', 'Ukraine', '69000', 'PAID', 'TXN-006',
+ 'mock', 'mock', 0.00, 1799.98, NOW() - INTERVAL '3 days', NOW() - INTERVAL '2 days'),
 -- us2, CARD, PICKUP, DELIVERED, PAID
 (7, 3, 'us2@email.com', 'User2', 'User2', '+380995678901', 'DELIVERED', 'CARD', 'PICKUP', NULL, NULL, NULL, NULL,
- 'TRK-007', NULL, NULL, NULL, NULL, NULL, 'PAID', 'TXN-007', 599.99,
- NOW() - INTERVAL '45 days', NOW() - INTERVAL '40 days'),
+ 'TRK-007', NULL, NULL, NULL, NULL, NULL, 'PAID', 'TXN-007',
+ 'mock', 'mock', 0.00, 599.99, NOW() - INTERVAL '45 days', NOW() - INTERVAL '40 days'),
 -- us3, CASH_ON_DELIVERY, POST_OFFICE, DELIVERED, PAID
 (8, 4, 'us3@email.com', 'User3', 'User3', '+380996789012', 'DELIVERED', 'CASH_ON_DELIVERY', 'POST_OFFICE', NULL, '88',
  'NOVA_POSHTA', 'NP #3 Kharkiv', 'TRK-008', NULL, 'Kharkiv', 'Kharkiv Oblast', 'Ukraine', '61022', 'PAID', NULL,
- 899.99, NOW() - INTERVAL '60 days', NOW() - INTERVAL '55 days'),
+ 'mock', 'mock', 0.00, 899.99, NOW() - INTERVAL '60 days', NOW() - INTERVAL '55 days'),
 -- us3, CARD, COURIER, PROCESSING, FAILED
 (9, 4, 'us3@email.com', 'User3', 'User3', '+380996789012', 'PROCESSING', 'CARD', 'COURIER', '1A', '4', 'DHL', NULL,
  NULL,
- 'Lesi Ukrainky Blvd', 'Kyiv', 'Kyiv Oblast', 'Ukraine', '01133', 'FAILED', 'TXN-009', 1299.99,
- NOW() - INTERVAL '2 days', NULL),
+ 'Lesi Ukrainky Blvd', 'Kyiv', 'Kyiv Oblast', 'Ukraine', '01133', 'FAILED', 'TXN-009',
+ 'mock', 'mock', 0.00, 1299.99, NOW() - INTERVAL '2 days', NULL),
 -- anon, CARD, POST_OFFICE, NEW, PENDING
 (10, NULL, 'anon4@email.com', 'Kate', 'Wilson', '+380997890123', 'NEW', 'CARD', 'POST_OFFICE', NULL, '19',
  'NOVA_POSHTA', 'NP #7 Odesa', NULL, 'Velyka Arnautska', 'Odesa', 'Odesa Oblast', 'Ukraine', '65012', 'PENDING', NULL,
- 699.99, NOW(), NULL)
+ 'mock', 'mock', 0.00, 699.99, NOW(), NULL)
 ON CONFLICT (id) DO NOTHING;
 
 -- orders_items
@@ -178,13 +172,6 @@ VALUES
  NOW(),
  NULL)
 ON CONFLICT (id) DO NOTHING;
--- set sequences
-SELECT setval(pg_get_serial_sequence('roles', 'id'), (SELECT MAX(id) FROM roles));
-SELECT setval(pg_get_serial_sequence('users', 'id'), (SELECT MAX(id) FROM users));
-SELECT setval(pg_get_serial_sequence('phones', 'id'), (SELECT MAX(id) FROM phones));
-SELECT setval(pg_get_serial_sequence('orders', 'id'), (SELECT MAX(id) FROM orders));
-SELECT setval(pg_get_serial_sequence('orders_items', 'id'), (SELECT MAX(id) FROM orders_items));
-
 
 -- phone_colors
 INSERT INTO phone_colors (phone_id, color)
@@ -389,3 +376,97 @@ VALUES
 (25, 'CAPACITY_256GB'),
 (25, 'CAPACITY_512GB')
 ON CONFLICT DO NOTHING;
+
+-- product variants
+WITH variant_options AS (
+    SELECT p.id AS phone_id,
+           p.sku AS phone_sku,
+           p.price,
+           p.stock AS phone_stock,
+           COALESCE(pc.color, 'BLACK') AS color,
+           COALESCE(ps.storage, 'CAPACITY_128GB') AS storage_capacity,
+           ROW_NUMBER() OVER (PARTITION BY p.id ORDER BY COALESCE(pc.color, 'BLACK'), COALESCE(ps.storage, 'CAPACITY_128GB')) AS row_number,
+           COUNT(*) OVER (PARTITION BY p.id) AS variant_count
+    FROM phones p
+    LEFT JOIN phone_colors pc ON pc.phone_id = p.id
+    LEFT JOIN phone_storages ps ON ps.phone_id = p.id
+),
+variant_stock AS (
+    SELECT *,
+           (phone_stock / variant_count)
+               + CASE WHEN row_number <= MOD(phone_stock, variant_count) THEN 1 ELSE 0 END AS stock
+    FROM variant_options
+)
+INSERT INTO product_variants (fk_phone_id, sku, color, storage_capacity, price, stock, status)
+SELECT phone_id,
+       LEFT(phone_sku || '-' || color || '-' || REPLACE(storage_capacity, 'CAPACITY_', ''), 64),
+       color,
+       storage_capacity,
+       price,
+       stock,
+       CASE
+           WHEN stock = 0 THEN 'OUT_OF_STOCK'
+           WHEN stock <= 9 THEN 'LOW_STOCK'
+           ELSE 'IN_STOCK'
+       END
+FROM variant_stock
+ON CONFLICT (fk_phone_id, color, storage_capacity) DO NOTHING;
+
+UPDATE orders_items oi
+SET fk_variant_id = (
+    SELECT pv.id
+    FROM product_variants pv
+    WHERE pv.fk_phone_id = oi.fk_phone_id
+      AND pv.color = oi.selected_color
+      AND pv.storage_capacity = oi.selected_storage
+    ORDER BY pv.id ASC
+    LIMIT 1
+)
+WHERE oi.fk_variant_id IS NULL;
+
+-- carts
+INSERT INTO carts (id, fk_user_id, total_price, created_at, updated_at)
+    OVERRIDING SYSTEM VALUE
+VALUES
+-- us1 (id=2): cart with 2 items
+(1, 2, 1049.98, NOW(), NULL),
+-- us2 (id=3): cart with 1 item
+(2, 3, 1199.99, NOW(), NULL),
+-- us3 (id=4): empty cart
+(3, 4, 0.00, NOW(), NULL)
+ON CONFLICT (id) DO NOTHING;
+
+-- cart_items
+INSERT INTO carts_items (id, fk_cart_id, fk_phone_id, fk_variant_id, amount)
+    OVERRIDING SYSTEM VALUE
+VALUES
+-- us1: iPhone 15 (id=2) x1 + Xiaomi Redmi Note 13 (id=15) x1
+(1, 1, 2,  (SELECT id FROM product_variants WHERE fk_phone_id = 2 ORDER BY price ASC, id ASC LIMIT 1), 1),
+(2, 1, 15, (SELECT id FROM product_variants WHERE fk_phone_id = 15 ORDER BY price ASC, id ASC LIMIT 1), 1),
+-- us2: Samsung Galaxy S24 Ultra (id=5) x1
+(3, 2, 5,  (SELECT id FROM product_variants WHERE fk_phone_id = 5 ORDER BY price ASC, id ASC LIMIT 1), 1)
+ON CONFLICT (id) DO NOTHING;
+
+-- favorites
+INSERT INTO favorites (id, fk_user_id, fk_phone_id, created_at, updated_at)
+    OVERRIDING SYSTEM VALUE
+VALUES
+-- us1 (id=2): 3 favorites
+(1,  2, 1,  NOW(), NULL),
+(2,  2, 5,  NOW(), NULL),
+(3,  2, 10, NOW(), NULL),
+-- us2 (id=3): empty
+-- us3 (id=4): 2 favorites
+(4,  4, 3,  NOW(), NULL),
+(5,  4, 16, NOW(), NULL)
+ON CONFLICT (id) DO NOTHING;
+
+--  sequences
+SELECT setval(pg_get_serial_sequence('users', 'id'),       (SELECT MAX(id) FROM users));
+SELECT setval(pg_get_serial_sequence('phones', 'id'),      (SELECT MAX(id) FROM phones));
+SELECT setval(pg_get_serial_sequence('orders', 'id'),      (SELECT MAX(id) FROM orders));
+SELECT setval(pg_get_serial_sequence('orders_items', 'id'), (SELECT MAX(id) FROM orders_items));
+SELECT setval(pg_get_serial_sequence('product_variants', 'id'), (SELECT MAX(id) FROM product_variants));
+SELECT setval(pg_get_serial_sequence('carts', 'id'),       (SELECT MAX(id) FROM carts));
+SELECT setval(pg_get_serial_sequence('carts_items', 'id'), (SELECT MAX(id) FROM carts_items));
+SELECT setval(pg_get_serial_sequence('favorites', 'id'),   (SELECT MAX(id) FROM favorites));

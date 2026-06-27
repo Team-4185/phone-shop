@@ -8,6 +8,7 @@ import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 /**
  * Admin-only partial update contract for Product Management.
@@ -52,4 +53,38 @@ public record AdminProductUpdateRequestDto(
         String mainCamera,
     @Pattern(regexp = "^\\d+ mAh$", message = "Format: 4323 mAh")
         @Size(max = 10, message = "Battery capacity must be at most {max} characters long")
-        String batteryCapacity) {}
+        String batteryCapacity,
+    @jakarta.validation.Valid List<AdminProductVariantUpdateRequestDto> variants) {
+  public AdminProductUpdateRequestDto(
+      String name,
+      String description,
+      BigDecimal price,
+      String brand,
+      Integer releaseYear,
+      String sku,
+      Integer stock,
+      ProductStatus status,
+      String cpu,
+      Integer coresNumber,
+      String screenSize,
+      String frontCamera,
+      String mainCamera,
+      String batteryCapacity) {
+    this(
+        name,
+        description,
+        price,
+        brand,
+        releaseYear,
+        sku,
+        stock,
+        status,
+        cpu,
+        coresNumber,
+        screenSize,
+        frontCamera,
+        mainCamera,
+        batteryCapacity,
+        null);
+  }
+}

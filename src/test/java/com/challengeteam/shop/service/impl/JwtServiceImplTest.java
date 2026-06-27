@@ -67,6 +67,7 @@ class JwtServiceImplTest {
             assertThat(jwtService.isValid(token)).isTrue();
             assertThat(jwtService.getEmailFromToken(token)).isEqualTo(USER_EMAIL);
             assertThat(jwtService.isAccessToken(token)).isTrue();
+            assertThat(jwtService.getTokenVersion(token)).isZero();
             verify(jwtProperties).getAccessTokenExpiration();
         }
 
@@ -91,6 +92,7 @@ class JwtServiceImplTest {
             assertThat(jwtService.isValid(token)).isTrue();
             assertThat(jwtService.getEmailFromToken(token)).isEqualTo(USER_EMAIL);
             assertThat(jwtService.isRefreshToken(token)).isTrue();
+            assertThat(jwtService.getTokenVersion(token)).isZero();
             verify(jwtProperties).getRefreshTokenExpiration();
         }
 

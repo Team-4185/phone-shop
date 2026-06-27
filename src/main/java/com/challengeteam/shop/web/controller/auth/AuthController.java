@@ -14,6 +14,7 @@ import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -27,6 +28,9 @@ public class AuthController {
     private final PasswordResetService passwordResetService;
 
     private final JwtProperties jwtProperties;
+
+    @Value("${security.cookies.secure:false}")
+    private boolean secureRefreshTokenCookie;
 
     @Operation(
             summary = "Endpoint for user sign up",
@@ -117,7 +121,7 @@ public class AuthController {
 
         Cookie cookie = new Cookie("refreshToken", refreshToken);
         cookie.setHttpOnly(true);
-        cookie.setSecure(false);
+        cookie.setSecure(secureRefreshTokenCookie);
         cookie.setPath("/api");
         cookie.setMaxAge(maxAge);
         httpServletResponse.addCookie(cookie);

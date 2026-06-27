@@ -1,7 +1,7 @@
 package com.challengeteam.shop.service;
 
-import com.challengeteam.shop.dto.user.CreateUserDto;
-import com.challengeteam.shop.dto.user.UpdateProfileDto;
+import com.challengeteam.shop.dto.user.request.CreateUserDto;
+import com.challengeteam.shop.dto.user.request.UpdateProfileDto;
 import com.challengeteam.shop.entity.user.User;
 
 import java.util.List;

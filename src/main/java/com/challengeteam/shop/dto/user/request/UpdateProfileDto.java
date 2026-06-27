@@ -1,4 +1,4 @@
-package com.challengeteam.shop.dto.user;
+package com.challengeteam.shop.dto.user.request;
 
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;

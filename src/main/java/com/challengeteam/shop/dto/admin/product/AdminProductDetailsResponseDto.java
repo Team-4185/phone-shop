@@ -5,6 +5,7 @@ import com.challengeteam.shop.entity.phone.ProductStatus;
 
 import java.math.BigDecimal;
 import java.util.List;
+import com.challengeteam.shop.dto.phone.response.ProductVariantResponseDto;
 
 public record AdminProductDetailsResponseDto(
     Long id,
@@ -22,4 +23,5 @@ public record AdminProductDetailsResponseDto(
     String frontCamera,
     String mainCamera,
     String batteryCapacity,
+    List<ProductVariantResponseDto> variants,
     List<ImageMetadataResponseDto> images) {}

@@ -6,9 +6,13 @@ import com.challengeteam.shop.exceptionHandling.exception.order.InvalidOrderStat
 import com.challengeteam.shop.exceptionHandling.exception.order.OrderCreationException;
 import com.challengeteam.shop.exceptionHandling.exception.order.OrderNotFoundException;
 import com.challengeteam.shop.exceptionHandling.exception.order.PaymentFailedException;
+import com.challengeteam.shop.exceptionHandling.exception.payment.PaymentWebhookException;
 import com.challengeteam.shop.exceptionHandling.exception.phone.PhoneAlreadyInCartException;
 import com.challengeteam.shop.exceptionHandling.exception.phone.PhoneNotFoundException;
 import com.challengeteam.shop.exceptionHandling.exception.security.*;
+import com.challengeteam.shop.exceptionHandling.exception.user.InvalidUserCredentialsException;
+import com.challengeteam.shop.exceptionHandling.exception.user.UsernameMissingException;
+import com.challengeteam.shop.exceptionHandling.exception.user.inputData.InvalidInputUserDataException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
@@ -61,16 +65,9 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ProblemDetail> handleCriticalSystemException(CriticalSystemException e) {
         log.error("500  A critical error occurred that should not have occurred: {}", e.getMessage(), e);
 
-        // todo: error showing should be cut out after developing end
-        String message = """
-                Occurred an unexpected error on the server side. We are already working on it. Please, try again later.
-                
-                error occurred:
-                %s
-                """.formatted(e.getMessage());
         var problem = ProblemDetail.forStatus(HttpStatus.INTERNAL_SERVER_ERROR.value());
         problem.setTitle("Unexpected Internal Server Error");
-        problem.setDetail(message);
+        problem.setDetail("An unexpected server error occurred. Please try again later.");
 
         return ResponseEntity
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -90,16 +87,9 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ProblemDetail> handleException(Exception e) {
         log.error("500  Unhandled exception: {}", e.getMessage(), e);
 
-        // todo: error showing should be cut out after developing end
-        String message = """
-                Occurred unhandled error on the server side. We are already working on it. Please, try again later.
-                
-                error occurred:
-                %s
-                """.formatted(e.getMessage());
         var problem = ProblemDetail.forStatus(HttpStatus.INTERNAL_SERVER_ERROR.value());
         problem.setTitle("Internal Server Error");
-        problem.setDetail(message);
+        problem.setDetail("An unexpected server error occurred. Please try again later.");
 
         return ResponseEntity
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -167,14 +157,14 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(EmailAlreadyExistsException.class)
     public ResponseEntity<ProblemDetail> handleEmailAlreadyExistsException(EmailAlreadyExistsException e) {
-        log.warn("400  {}", e.getMessage());
+        log.warn("409  {}", e.getMessage());
 
-        var problem = ProblemDetail.forStatus(HttpStatus.BAD_REQUEST.value());
+        var problem = ProblemDetail.forStatus(HttpStatus.CONFLICT.value());
         problem.setTitle("Email Already Taken");
         problem.setDetail(e.getMessage());
 
         return ResponseEntity
-                .status(HttpStatus.BAD_REQUEST)
+                .status(HttpStatus.CONFLICT)
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(problem);
     }
@@ -485,6 +475,18 @@ public class GlobalExceptionHandler {
         problem.setInstance(URI.create(request.getRequestURI()));
         return ResponseEntity.status(HttpStatus.PAYMENT_REQUIRED).body(problem);
     }
+
+    @ExceptionHandler(PaymentWebhookException.class)
+    public ResponseEntity<ProblemDetail> handlePaymentWebhookException(
+            PaymentWebhookException ex, HttpServletRequest request) {
+        log.warn("400 Payment webhook error: {}", ex.getMessage());
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(
+                HttpStatus.BAD_REQUEST, ex.getMessage());
+        problem.setTitle("Payment Webhook Error");
+        problem.setInstance(URI.create(request.getRequestURI()));
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(problem);
+    }
+
     @ExceptionHandler(OrderNotFoundException.class)
     public ResponseEntity<ProblemDetail> handleOrderNotFoundException(
             OrderNotFoundException ex, HttpServletRequest request) {
@@ -505,5 +507,38 @@ public class GlobalExceptionHandler {
         problem.setTitle("Unauthorized");
         problem.setInstance(URI.create(request.getRequestURI()));
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(problem);
+    }
+
+    @ExceptionHandler(UsernameMissingException.class)
+    public ResponseEntity<ProblemDetail> handleUnauthorizedException(
+            UsernameMissingException ex, HttpServletRequest request) {
+        log.warn("401 {}", ex.getMessage());
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(
+                HttpStatus.UNAUTHORIZED, ex.getMessage());
+        problem.setTitle("Unauthorized");
+        problem.setInstance(URI.create(request.getRequestURI()));
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(problem);
+    }
+
+    @ExceptionHandler(InvalidUserCredentialsException.class)
+    public ResponseEntity<ProblemDetail> handleUnauthorizedException(
+            InvalidUserCredentialsException ex, HttpServletRequest request) {
+        log.warn("401 {}", ex.getMessage());
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(
+                HttpStatus.BAD_REQUEST, ex.getMessage());
+        problem.setTitle("Bad request");
+        problem.setInstance(URI.create(request.getRequestURI()));
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(problem);
+    }
+
+    @ExceptionHandler(InvalidInputUserDataException.class)
+    public ResponseEntity<ProblemDetail> handleInvalidInputUserDataException(
+            InvalidInputUserDataException ex, HttpServletRequest request) {
+        log.warn("400 {}", ex.getMessage());
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(
+                HttpStatus.BAD_REQUEST, ex.getMessage());
+        problem.setTitle("Bad request");
+        problem.setInstance(URI.create(request.getRequestURI()));
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(problem);
     }
 }

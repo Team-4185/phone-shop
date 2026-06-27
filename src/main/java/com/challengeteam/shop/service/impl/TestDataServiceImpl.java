@@ -1,8 +1,8 @@
 package com.challengeteam.shop.service.impl;
 
 import com.challengeteam.shop.dto.phone.request.PhoneCreateRequestDto;
-import com.challengeteam.shop.dto.user.CreateUserDto;
-import com.challengeteam.shop.dto.user.UpdateProfileDto;
+import com.challengeteam.shop.dto.user.request.CreateUserDto;
+import com.challengeteam.shop.dto.user.request.UpdateProfileDto;
 import com.challengeteam.shop.entity.phone.PhoneColor;
 import com.challengeteam.shop.entity.phone.ProductStatus;
 import com.challengeteam.shop.entity.phone.StorageCapacity;

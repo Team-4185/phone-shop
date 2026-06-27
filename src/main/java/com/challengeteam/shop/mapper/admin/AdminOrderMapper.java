@@ -27,6 +27,8 @@ public class AdminOrderMapper {
                 order.getPaymentMethod(),
                 order.getPaymentDetails().getPaymentStatus(),
                 order.getDeliveryMethod(),
+                order.getPaymentProvider(),
+                order.getDeliveryProvider(),
                 order.getTotal(),
                 order.getItems().stream().mapToInt(OrderItem::getQuantity).sum(),
                 order.getCreatedAt(),
@@ -48,6 +50,14 @@ public class AdminOrderMapper {
                 order.getPaymentMethod(),
                 order.getPaymentDetails().getPaymentStatus(),
                 order.getDeliveryMethod(),
+                order.getPaymentProvider(),
+                order.getDeliveryProvider(),
+                order.getPickupPointId(),
+                order.getShippingAddress() == null
+                        ? null
+                        : order.getShippingAddress().getTrackingNumber(),
+                order.getEstimatedDeliveryDate(),
+                order.getDeliveryPrice(),
                 order.getTotal(),
                 adminOrderWorkflowService.getAvailableActions(order.getStatus()),
                 order.getItems().stream().map(this::toItem).toList(),
@@ -57,12 +67,16 @@ public class AdminOrderMapper {
 
     private AdminOrderItemResponseDto toItem(OrderItem item) {
         Long phoneId = item.getPhone() == null ? null : item.getPhone().getId();
+        Long variantId = item.getVariant() == null ? null : item.getVariant().getId();
 
         return new AdminOrderItemResponseDto(
                 item.getId(),
                 phoneId,
+                variantId,
                 item.getProductName(),
                 item.getSku(),
+                item.getSelectedColor(),
+                item.getSelectedStorage(),
                 item.getUnitPrice(),
                 item.getQuantity(),
                 item.getTotalPrice());

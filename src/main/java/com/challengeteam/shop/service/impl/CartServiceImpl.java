@@ -4,10 +4,12 @@ import com.challengeteam.shop.dto.cart.CartItemAddRequestDto;
 import com.challengeteam.shop.entity.cart.Cart;
 import com.challengeteam.shop.entity.cart.CartItem;
 import com.challengeteam.shop.entity.phone.Phone;
+import com.challengeteam.shop.entity.phone.ProductVariant;
 import com.challengeteam.shop.exceptionHandling.exception.ResourceNotFoundException;
 import com.challengeteam.shop.exceptionHandling.exception.phone.PhoneAlreadyInCartException;
 import com.challengeteam.shop.persistence.repository.CartItemRepository;
 import com.challengeteam.shop.persistence.repository.CartRepository;
+import com.challengeteam.shop.persistence.repository.ProductVariantRepository;
 import com.challengeteam.shop.service.CartService;
 import com.challengeteam.shop.service.PhoneService;
 import com.challengeteam.shop.service.impl.validator.CartValidator;
@@ -32,6 +34,8 @@ public class CartServiceImpl implements CartService {
 
     private final PhoneService phoneService;
 
+    private final ProductVariantRepository productVariantRepository;
+
     private final CartValidator cartValidator;
 
     @Transactional(readOnly = true)
@@ -49,31 +53,27 @@ public class CartServiceImpl implements CartService {
         Objects.requireNonNull(cart, "cart");
         Objects.requireNonNull(cartItemAddRequestDto, "cartItemAddRequestDto");
 
-        Long phoneId = cartItemAddRequestDto.phoneId();
-        Integer amount = cartItemAddRequestDto.amount();
-
         cartValidator.validateItemAmount(cartItemAddRequestDto.amount());
 
-        Phone phone = phoneService.getById(phoneId)
-                .orElseThrow(() -> new ResourceNotFoundException("Phone with id " + phoneId + " not found"));
+        ProductVariant variant = resolveVariant(cartItemAddRequestDto);
+        Long variantId = variant.getId();
+        Integer amount = cartItemAddRequestDto.amount();
 
-        boolean isCartHasPhone = CartUtility.isCartHasPhone(cart, phoneId);
+        Phone phone = variant.getPhone();
 
-        if (isCartHasPhone) {
-            throw new PhoneAlreadyInCartException("Phone with id " + phoneId + " already in cart with id " + cart.getId());
-        } else {
-            CartItem cartItem = CartItem.builder()
-                    .phone(phone)
-                    .cart(cart)
-                    .amount(amount)
-                    .build();
+        ensureVariantIsNotInCart(cart, variantId);
+        CartItem cartItem = CartItem.builder()
+                .phone(phone)
+                .variant(variant)
+                .cart(cart)
+                .amount(amount)
+                .build();
 
-            cart.getCartItems().add(cartItem);
+        cart.getCartItems().add(cartItem);
 
-            cartValidator.validateTotalAmount(cart);
-            cartItemRepository.save(cartItem);
-            log.debug("Added new phone {} to cart {}", phoneId, cart.getId());
-        }
+        cartValidator.validateTotalAmount(cart);
+        cartItemRepository.save(cartItem);
+        log.debug("Added variant {} to cart {}", variantId, cart.getId());
 
         cart.setTotalPrice(CartUtility.countCartTotalPrice(cart));
         cartRepository.save(cart);
@@ -83,17 +83,17 @@ public class CartServiceImpl implements CartService {
 
     @Transactional
     @Override
-    public Cart updateAmountCartItem(Cart cart, Long phoneId, Integer amount) {
+    public Cart updateAmountCartItem(Cart cart, Long variantId, Integer amount) {
         Objects.requireNonNull(cart, "cart");
-        Objects.requireNonNull(phoneId, "phoneId");
+        Objects.requireNonNull(variantId, "variantId");
         Objects.requireNonNull(amount, "amount");
 
         cartValidator.validateItemAmount(amount);
 
         CartItem cartItem = cart.getCartItems().stream()
-                .filter(i -> i.getPhone().getId().equals(phoneId))
+                .filter(i -> i.getVariant() != null && i.getVariant().getId().equals(variantId))
                 .findFirst()
-                .orElseThrow(() -> new ResourceNotFoundException("Phone with id " + phoneId + " not found in cart"));
+                .orElseThrow(() -> new ResourceNotFoundException("Variant with id " + variantId + " not found in cart"));
 
         cartItem.setAmount(amount);
         cartValidator.validateTotalAmount(cart);
@@ -102,18 +102,18 @@ public class CartServiceImpl implements CartService {
         cart.setTotalPrice(CartUtility.countCartTotalPrice(cart));
         cartRepository.save(cart);
 
-        log.debug("Updated phone in cart: {}", cartItem);
+        log.debug("Updated variant in cart: {}", cartItem);
         return cart;
     }
 
     @Transactional
     @Override
-    public Cart removeItemFromCart(Cart cart, Long phoneId) {
+    public Cart removeItemFromCart(Cart cart, Long variantId) {
         Objects.requireNonNull(cart, "cart");
-        Objects.requireNonNull(phoneId, "phoneId");
+        Objects.requireNonNull(variantId, "variantId");
 
-        CartItem cartItem = cartItemRepository.findByCartIdAndPhoneId(cart.getId(), phoneId)
-                .orElseThrow(() -> new ResourceNotFoundException("Phone with id " + phoneId + " not found in cart"));
+        CartItem cartItem = cartItemRepository.findByCartIdAndVariantId(cart.getId(), variantId)
+                .orElseThrow(() -> new ResourceNotFoundException("Variant with id " + variantId + " not found in cart"));
 
         cart.getCartItems().remove(cartItem);
         cartItemRepository.delete(cartItem);
@@ -121,7 +121,7 @@ public class CartServiceImpl implements CartService {
         cart.setTotalPrice(CartUtility.countCartTotalPrice(cart));
         cartRepository.save(cart);
 
-        log.debug("Removed phone in cart: {}", cartItem);
+        log.debug("Removed variant from cart: {}", cartItem);
         return cart;
     }
 
@@ -148,6 +148,36 @@ public class CartServiceImpl implements CartService {
         log.debug("Get cartId by userId: {}", userId);
 
         return cartRepository.findByUserId(userId);
+    }
+
+    private ProductVariant resolveVariant(CartItemAddRequestDto request) {
+        return Optional.ofNullable(request.variantId())
+                .map(this::getVariantById)
+                .orElseGet(() -> resolveDefaultVariantByPhoneId(request.phoneId()));
+    }
+
+    private ProductVariant getVariantById(Long variantId) {
+        return productVariantRepository.findById(variantId)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Product variant with id " + variantId + " not found"));
+    }
+
+    private ProductVariant resolveDefaultVariantByPhoneId(Long phoneId) {
+        Long resolvedPhoneId = Optional.ofNullable(phoneId)
+                .orElseThrow(() -> new ResourceNotFoundException("Product variant id or phone id must be provided"));
+        phoneService.getById(resolvedPhoneId)
+                .orElseThrow(() -> new ResourceNotFoundException("Phone with id " + resolvedPhoneId + " not found"));
+        return productVariantRepository.findAllByPhoneIdOrderByPriceAscIdAsc(resolvedPhoneId).stream()
+                .findFirst()
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Product variant for phone with id " + resolvedPhoneId + " not found"));
+    }
+
+    private void ensureVariantIsNotInCart(Cart cart, Long variantId) {
+        if (CartUtility.isCartHasVariant(cart, variantId)) {
+            throw new PhoneAlreadyInCartException(
+                    "Variant with id " + variantId + " already in cart with id " + cart.getId());
+        }
     }
 
 }

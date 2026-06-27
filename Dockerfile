@@ -3,24 +3,26 @@ FROM maven:3.9.6-eclipse-temurin-21 AS builder
 
 WORKDIR /app
 
+ARG MAVEN_PROFILE=prod
+
 COPY pom.xml .
-RUN mvn dependency:go-offline -P dev
+RUN mvn dependency:go-offline -P "${MAVEN_PROFILE}"
 
 COPY src ./src
 
-RUN mvn clean package -DskipTests -P dev
+RUN mvn clean package -DskipTests -P "${MAVEN_PROFILE}"
 
 # Stage 2: Execute
-# Використовуємо офіційний образ amazoncorretto
 FROM amazoncorretto:21
 
 WORKDIR /app
 
-# Копіюємо jar файл нашого додатку в контейнер
+ARG SPRING_PROFILE=prod
+
 COPY --from=builder /app/target/*.jar app.jar
 
-# Відкриваємо порт 8080
 EXPOSE 8080
 
-# Команда для запуску додатку
-CMD ["java", "-jar", "app.jar", "--spring.profiles.active=dev"]
+ENV SPRING_PROFILES_ACTIVE=${SPRING_PROFILE}
+
+ENTRYPOINT ["java", "-jar", "app.jar"]

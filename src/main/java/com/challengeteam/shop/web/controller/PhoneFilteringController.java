@@ -2,7 +2,9 @@ package com.challengeteam.shop.web.controller;
 
 import com.challengeteam.shop.dto.pagination.paginationRequest.PhoneMultipleFilterRequest;
 import com.challengeteam.shop.dto.pagination.paginationResponse.PageResponseDto;
+import com.challengeteam.shop.dto.phone.response.CatalogFilterMetadataResponseDto;
 import com.challengeteam.shop.dto.phone.response.PhoneResponseDto;
+import com.challengeteam.shop.service.CatalogFilterMetadataService;
 import com.challengeteam.shop.service.pagination.PhoneFilteringAndSortingService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -30,6 +32,7 @@ import org.springframework.web.bind.annotation.*;
 public class PhoneFilteringController {
 
     private final PhoneFilteringAndSortingService phoneFilteringAndSortingService;
+    private final CatalogFilterMetadataService catalogFilterMetadataService;
 
     @Operation(
             summary = "Filter and sort phones",
@@ -61,5 +64,14 @@ public class PhoneFilteringController {
         Pageable pageable = PageRequest.of(page - 1, size);
         PageResponseDto<PhoneResponseDto> response = phoneFilteringAndSortingService.filterAndSort(filterRequest, pageable);
         return ResponseEntity.ok(response);
+    }
+
+    @Operation(
+            summary = "Get catalog filter metadata",
+            description = "Returns available brands, colors, storage capacities, price range, stock options and badges."
+    )
+    @GetMapping("/metadata")
+    public ResponseEntity<CatalogFilterMetadataResponseDto> getFilterMetadata() {
+        return ResponseEntity.ok(catalogFilterMetadataService.getMetadata());
     }
 }

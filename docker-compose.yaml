@@ -1,16 +1,25 @@
 services:
   shop:
-    container_name: gadget-room
-    build: .
+    build:
+      context: .
+      args:
+        MAVEN_PROFILE: ${MAVEN_PROFILE:-prod}
     depends_on:
-      - db
-      - image-storage
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      image-storage:
+        condition: service_started
     ports:
       - "${PORT}:8080"
     environment:
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-dev}
       DB_URL: jdbc:postgresql://db:5432/${DB_NAME}
       DB_USERNAME: ${DB_USERNAME}
       DB_PASSWORD: ${DB_PASSWORD}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
       JWT_ACCESS_TOKEN_EXPIRATION: ${JWT_ACCESS_TOKEN_EXPIRATION}
       JWT_REFRESH_TOKEN_EXPIRATION: ${JWT_REFRESH_TOKEN_EXPIRATION}
       JWT_REMEMBER_ME_REFRESH_TOKEN_EXPIRATION: ${JWT_REMEMBER_ME_REFRESH_TOKEN_EXPIRATION}
@@ -19,7 +28,7 @@ services:
       JWT_PUBLIC_KEY: ${JWT_PUBLIC_KEY}
       JWT_RESET_SECRET: ${JWT_RESET_SECRET}
       PORT: 8080
-      FRONTEND_URL: ${FRONTEND_URL}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:5173}
       MINIO_URL: http://image-storage:9000
       MINIO_USERNAME: ${MINIO_USERNAME}
       MINIO_PASSWORD: ${MINIO_PASSWORD}
@@ -28,14 +37,17 @@ services:
       CORS_ALLOWED_HEADERS: ${CORS_ALLOWED_HEADERS}
       CORS_MAX_CACHE_AGE: ${CORS_MAX_CACHE_AGE}
       CORS_ALLOW_CREDENTIALS: ${CORS_ALLOW_CREDENTIALS}
-      GMAIL_APP_PASSWORD: ${GMAIL_APP_PASSWORD}
-      GMAIL_USERNAME: ${GMAIL_USERNAME}
-      LOG_LEVEL: ${LOG_LEVEL}
+      GMAIL_APP_PASSWORD: ${GMAIL_APP_PASSWORD:-}
+      GMAIL_USERNAME: ${GMAIL_USERNAME:-}
+      PAYMENT_PROVIDER: ${PAYMENT_PROVIDER:-mock}
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-}
+      STRIPE_CURRENCY: ${STRIPE_CURRENCY:-usd}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
     networks:
       - gadget-room-network
 
   db:
-    container_name: gadget-room-postgres
     image: postgres:14
     environment:
       POSTGRES_DB: ${DB_NAME}
@@ -45,11 +57,30 @@ services:
       - "${DB_PORT}:5432"
     volumes:
       - gadget-room-postgres-volume:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${DB_USERNAME} -d ${DB_NAME}" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - gadget-room-network
+
+  redis:
+    image: redis:7.4-alpine
+    command: redis-server --appendonly yes
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - gadget-room-redis-volume:/data
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     networks:
       - gadget-room-network
 
   image-storage:
-    container_name: gadget-room-minio
     image: minio/minio
     ports:
       - "${MINIO_STORAGE_PORT}:9000"
@@ -65,6 +96,7 @@ services:
 
 volumes:
   gadget-room-postgres-volume:
+  gadget-room-redis-volume:
   gadget-room-minio-volume:
 
 networks:

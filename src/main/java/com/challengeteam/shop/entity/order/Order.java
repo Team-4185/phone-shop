@@ -10,6 +10,7 @@ import lombok.*;
 import lombok.experimental.SuperBuilder;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -67,6 +68,22 @@ public class Order extends BaseEntity {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private DeliveryMethod deliveryMethod;
+
+    @Column(nullable = false)
+    @Builder.Default
+    private String paymentProvider = "mock";
+
+    @Column(nullable = false)
+    @Builder.Default
+    private String deliveryProvider = "mock";
+
+    private String pickupPointId;
+
+    private LocalDate estimatedDeliveryDate;
+
+    @Column(nullable = false, precision = 10, scale = 2)
+    @Builder.Default
+    private BigDecimal deliveryPrice = BigDecimal.ZERO;
 
     @Embedded
     private ShippingAddress shippingAddress;

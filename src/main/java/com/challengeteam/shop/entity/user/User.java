@@ -6,8 +6,6 @@ import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 
-import java.time.Instant;
-
 @Getter
 @Setter
 @NoArgsConstructor
@@ -21,6 +19,10 @@ public class User extends BaseEntity {
 
     @Column(nullable = false)
     private String password;
+
+    @Builder.Default
+    @Column(nullable = false)
+    private Long tokenVersion = 0L;
 
     @Column(nullable = true)
     private String firstName;
@@ -41,11 +43,14 @@ public class User extends BaseEntity {
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
     private Cart cart;
 
+    public void incrementTokenVersion() {
+        tokenVersion = tokenVersion == null ? 1L : tokenVersion + 1L;
+    }
+
     @Override
     public String toString() {
         return "User{" +
                "email='" + email + '\'' +
-               ", password='" + password + '\'' +
                ", firstName='" + firstName + '\'' +
                ", lastName='" + lastName + '\'' +
                ", newCity='" + city + '\'' +
