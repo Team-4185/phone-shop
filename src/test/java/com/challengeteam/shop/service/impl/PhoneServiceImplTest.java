@@ -532,6 +532,57 @@ class PhoneServiceImplTest {
     }
 
     @Nested
+    class GetNewArrivalsTest {
+
+        @Test
+        void whenNewArrivalsExist_thenReturnFourNewestPhonesWithImagesInRepositoryOrder() {
+            // given
+            List<Phone> newestPhones = List.of(
+                    buildPhone(5L),
+                    buildPhone(4L),
+                    buildPhone(3L),
+                    buildPhone(2L)
+            );
+            List<Phone> phonesWithImages = List.of(
+                    newestPhones.get(2),
+                    newestPhones.get(0),
+                    newestPhones.get(3),
+                    newestPhones.get(1)
+            );
+
+            Mockito.when(phoneRepository.findTop4ByOrderByCreatedAtDescIdDesc())
+                    .thenReturn(newestPhones);
+            Mockito.when(phoneRepository.findAllWithImages(newestPhones))
+                    .thenReturn(phonesWithImages);
+
+            // when
+            List<Phone> result = phoneService.getNewArrivals();
+
+            // then
+            assertThat(result)
+                    .extracting(Phone::getId)
+                    .containsExactly(5L, 4L, 3L, 2L);
+            Mockito.verify(phoneRepository).findTop4ByOrderByCreatedAtDescIdDesc();
+            Mockito.verify(phoneRepository).findAllWithImages(newestPhones);
+        }
+
+        @Test
+        void whenNoNewArrivalsExist_thenReturnEmptyListAndSkipImageFetch() {
+            // given
+            Mockito.when(phoneRepository.findTop4ByOrderByCreatedAtDescIdDesc())
+                    .thenReturn(List.of());
+
+            // when
+            List<Phone> result = phoneService.getNewArrivals();
+
+            // then
+            assertThat(result).isEmpty();
+            Mockito.verify(phoneRepository).findTop4ByOrderByCreatedAtDescIdDesc();
+            Mockito.verify(phoneRepository, Mockito.never()).findAllWithImages(any());
+        }
+    }
+
+    @Nested
     class GetByIdTest {
 
         @Test

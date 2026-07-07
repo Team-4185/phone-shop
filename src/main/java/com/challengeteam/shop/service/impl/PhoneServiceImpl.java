@@ -79,6 +79,25 @@ public class PhoneServiceImpl implements PhoneService {
         return new PageImpl<>(orderedPhones, pageable, phonesPage.getTotalElements());
     }
 
+    @Transactional(readOnly = true)
+    @Override
+    public List<Phone> getNewArrivals() {
+        log.debug("Get newest phones for homepage");
+
+        List<Phone> phones = phoneRepository.findTop4ByOrderByCreatedAtDescIdDesc();
+        if (phones.isEmpty()) {
+            return List.of();
+        }
+
+        List<Phone> phonesWithImages = phoneRepository.findAllWithImages(phones);
+        Map<Long, Phone> phonesById = phonesWithImages.stream()
+                .collect(Collectors.toMap(Phone::getId, phone -> phone));
+
+        return phones.stream()
+                .map(phone -> phonesById.getOrDefault(phone.getId(), phone))
+                .toList();
+    }
+
     private Sort buildSort(String sortParam) {
         return switch (sortParam) {
             case "name_desc" -> Sort.by("name").descending();

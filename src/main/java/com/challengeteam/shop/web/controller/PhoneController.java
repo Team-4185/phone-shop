@@ -68,6 +68,15 @@ public class PhoneController {
         return ResponseEntity.ok(PageResponseDto.of(response));
     }
 
+    @Operation(
+            summary = "Get new arrival phones",
+            description = "Returns the four most recently added phones for the homepage New Arrivals section."
+    )
+    @GetMapping("/new-arrivals")
+    public ResponseEntity<List<PhoneResponseDto>> getNewArrivals() {
+        List<Phone> phones = phoneService.getNewArrivals();
+        return ResponseEntity.ok(catalogProductResponseAssembler.toResponses(phones));
+    }
 
     @Operation(
             summary = "Get phone by id",

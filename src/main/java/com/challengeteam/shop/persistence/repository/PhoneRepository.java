@@ -38,6 +38,8 @@ public interface PhoneRepository extends JpaRepository<Phone, Long>, JpaSpecific
     @Query("SELECT p FROM Phone p LEFT JOIN FETCH p.images WHERE p IN :phones")
     List<Phone> findAllWithImages(@Param("phones") List<Phone> phones);
 
+    List<Phone> findTop4ByOrderByCreatedAtDescIdDesc();
+
     @Query("""
             SELECT p FROM Phone p
             WHERE (:brand IS NULL OR p.brand = :brand)

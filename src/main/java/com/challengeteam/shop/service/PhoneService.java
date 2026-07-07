@@ -18,6 +18,8 @@ public interface PhoneService {
 
     Page<Phone> getPhones(int page, int size, PhoneFilterDto filterDto);
 
+    List<Phone> getNewArrivals();
+
     Long create(PhoneCreateRequestDto phoneCreateRequestDto, List<MultipartFile> images);
 
     void update(Long id, PhoneUpdateRequestDto phoneUpdateRequestDto);
