@@ -596,6 +596,49 @@ class PhoneControllerTest {
     }
 
     @Nested
+    @DisplayName("GET /api/v1/phones/new-arrivals")
+    class GetNewArrivalsTest {
+        private final static String URL = "/api/v1/phones/new-arrivals";
+
+        @Test
+        void whenNewArrivalsExist_thenStatus200AndReturnFourNewestPhones() throws Exception {
+            phoneService.create(
+                    buildPhoneCreateRequestDto(VALID_PHONE_BOUNDARY_MIN),
+                    new ArrayList<>()
+            );
+            phoneService.create(
+                    buildPhoneCreateRequestDto(TestPhone.VALID_PHONE),
+                    new ArrayList<>()
+            );
+
+            mockMvc.perform(get(URL))
+                    .andExpect(status().isOk())
+                    .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                    .andExpect(jsonPath("$").isArray())
+                    .andExpect(jsonPath("$", hasSize(4)))
+                    .andExpect(jsonPath("$[0].name").value(TestPhone.VALID_PHONE.name))
+                    .andExpect(jsonPath("$[1].name").value(VALID_PHONE_BOUNDARY_MIN.name))
+                    .andExpect(jsonPath("$[2].name").value(TestPhone.PHONE_3.name))
+                    .andExpect(jsonPath("$[3].name").value(TestPhone.PHONE_2.name))
+                    .andExpect(jsonPath("$[*].id").exists())
+                    .andExpect(jsonPath("$[*].price").exists())
+                    .andExpect(jsonPath("$[*].brand").exists())
+                    .andExpect(jsonPath("$[*].status").exists())
+                    .andExpect(jsonPath("$[*].images").exists());
+        }
+
+        @Test
+        void whenOnlyThreePhonesExist_thenReturnAvailableNewestPhones() throws Exception {
+            mockMvc.perform(get(URL))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$", hasSize(3)))
+                    .andExpect(jsonPath("$[0].name").value(TestPhone.PHONE_3.name))
+                    .andExpect(jsonPath("$[1].name").value(TestPhone.PHONE_2.name))
+                    .andExpect(jsonPath("$[2].name").value(TestPhone.PHONE_1.name));
+        }
+    }
+
+    @Nested
     @DisplayName("GET /api/v1/phones/{phoneId}")
     class GetPhoneByIdTest {
         private final static String URL = "/api/v1/phones/{phoneId}";
